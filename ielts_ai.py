@@ -815,11 +815,6 @@ with st.sidebar:
             st.session_state.essay_count = 0
             st.rerun()
 
-    else:
-        mode = st.session_state.mode
-        topic = "Free choice"
-        target_band = st.session_state.target_band
-
     st.divider()
 
     # Mode specific action buttons
