@@ -1106,4 +1106,3 @@ if needs_response:
                     st.error("Rate limit hit. Wait 30 seconds and try again.")
                 except Exception as e:
                     st.error(f"Something went wrong: {str(e)}")
-                    
