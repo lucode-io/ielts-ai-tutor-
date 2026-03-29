@@ -1,5 +1,5 @@
 # ============================================================
-# IELTS AI Tutor — Complete Version
+# IELTS AI Tutor — Production Version 2.0
 # Built with Claude API + Streamlit
 # Author: Logshir (lucode-io)
 # ============================================================
@@ -7,11 +7,62 @@
 import streamlit as st
 import anthropic
 
+# ============================================================
+# PAGE CONFIG
+# ============================================================
+
 st.set_page_config(
     page_title="IELTS AI Tutor",
     page_icon="🎓",
     layout="wide"
 )
+
+# ============================================================
+# CONSTANTS
+# ============================================================
+
+MODES = [
+    "Speaking — Part 1 (Personal questions)",
+    "Speaking — Part 2 (Long turn / cue card)",
+    "Speaking — Part 3 (Discussion)",
+    "Writing — Task 1 (Graph/Chart description)",
+    "Writing — Task 2 (Essay)",
+    "Listening — Section 1 (Conversation)",
+    "Listening — Section 2 (Monologue)",
+    "Listening — Section 3 (Academic discussion)",
+    "Listening — Section 4 (Academic lecture)",
+    "Reading — Academic passage",
+    "Vocabulary Builder",
+    "General Practice"
+]
+
+TOPICS = [
+    "Technology", "Environment", "Education", "Health",
+    "Work and Career", "Culture and Society", "Travel",
+    "Food", "Family", "Crime and Law", "Economy", "Free choice"
+]
+
+# ============================================================
+# SESSION STATE INITIALIZATION
+# ============================================================
+
+def init_session_state():
+    defaults = {
+        "messages": [],
+        "mode": MODES[0],
+        "task": "General Practice",
+        "essay_count": 0,
+        "target_band": 7.0
+    }
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+init_session_state()
+
+# ============================================================
+# SYSTEM PROMPTS
+# ============================================================
 
 def get_system_prompt(mode, task, target_band):
     base = f"""
@@ -243,7 +294,7 @@ Give specific feedback on their sentence.
 """
 
     else:
-        return base + f"""
+        return base + """
 YOU ARE NOW: Personal IELTS Tutor
 
 Help the student with whatever they need.
@@ -252,6 +303,9 @@ Give vocabulary tips. Explain grammar rules.
 Encourage them. Point them toward the right practice mode.
 """
 
+# ============================================================
+# CLAUDE API CALL
+# ============================================================
 
 def chat_with_claude(messages, mode, task, target_band, api_key):
     client = anthropic.Anthropic(api_key=api_key)
@@ -263,25 +317,21 @@ def chat_with_claude(messages, mode, task, target_band, api_key):
     )
     return response.content[0].text
 
+# ============================================================
+# HELPER — START SESSION CLEANLY
+# ============================================================
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+def start_session(mode, topic, starter_message):
+    st.session_state.mode = mode
+    st.session_state.messages = [{"role": "user", "content": starter_message}]
+    st.rerun()
 
-if "mode" not in st.session_state:
-    st.session_state.mode = "Speaking — Part 1 (Personal questions)"
-
-if "task" not in st.session_state:
-    st.session_state.task = "General Practice"
-
-if "essay_count" not in st.session_state:
-    st.session_state.essay_count = 0
-
-if "target_band" not in st.session_state:
-    st.session_state.target_band = 7.0
-
+# ============================================================
+# SIDEBAR
+# ============================================================
 
 with st.sidebar:
-    st.title("Settings")
+    st.title("⚙️ Settings")
 
     api_key = st.secrets.get("ANTHROPIC_API_KEY", "") or st.text_input(
         "Claude API Key",
@@ -293,47 +343,26 @@ with st.sidebar:
     st.divider()
 
     st.subheader("Practice Mode")
-    mode = st.selectbox(
-        "Choose what to practice:",
-        [
-            "Speaking — Part 1 (Personal questions)",
-            "Speaking — Part 2 (Long turn / cue card)",
-            "Speaking — Part 3 (Discussion)",
-            "Writing — Task 1 (Graph/Chart description)",
-            "Writing — Task 2 (Essay)",
-            "Listening — Section 1 (Conversation)",
-            "Listening — Section 2 (Monologue)",
-            "Listening — Section 3 (Academic discussion)",
-            "Listening — Section 4 (Academic lecture)",
-            "Reading — Academic passage",
-            "Vocabulary Builder",
-            "General Practice"
-        ]
-    )
+    mode = st.selectbox("Choose what to practice:", MODES)
     st.session_state.mode = mode
 
-    if "Speaking" in mode:
-        st.info("Type your answers as if speaking. Claude scores each answer and asks the next question.")
-    elif "Task 1" in mode:
-        st.info("Ask for a graph question or paste your essay. 20 minutes. 150 words minimum.")
-    elif "Task 2" in mode:
-        st.info("Ask for an essay question or paste your essay. 40 minutes. 250 words minimum.")
-    elif "Listening" in mode:
-        st.info("Claude generates a script. Read it once carefully. Then answer questions from memory.")
-    elif "Reading" in mode:
-        st.info("Claude generates a passage and 13 questions. When in doubt — NOT GIVEN.")
+    mode_hints = {
+        "Speaking": "Type your answers as if speaking. Claude scores each answer and asks the next question.",
+        "Task 1": "Ask for a graph question or paste your essay. 20 minutes. 150 words minimum.",
+        "Task 2": "Ask for an essay question or paste your essay. 40 minutes. 250 words minimum.",
+        "Listening": "Claude generates a script. Read it once carefully. Then answer questions from memory.",
+        "Reading": "Claude generates a passage and 13 questions. When in doubt — NOT GIVEN.",
+        "Vocabulary": "Claude teaches 5 words then quizzes you. Daily habit builds to 450 words by June."
+    }
+    for key, hint in mode_hints.items():
+        if key in mode:
+            st.info(hint)
+            break
 
     st.divider()
 
     st.subheader("Topic")
-    topic = st.selectbox(
-        "Choose a topic:",
-        [
-            "Technology", "Environment", "Education", "Health",
-            "Work and Career", "Culture and Society", "Travel",
-            "Food", "Family", "Crime and Law", "Economy", "Free choice"
-        ]
-    )
+    topic = st.selectbox("Choose a topic:", TOPICS)
 
     st.divider()
 
@@ -346,136 +375,171 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button("Clear Chat", use_container_width=True):
+    if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.essay_count = 0
         st.rerun()
 
-    st.subheader("Quick Start")
+    st.divider()
 
-# Universal shortcut buttons
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("🎤 Speaking", use_container_width=True):
-        st.session_state.mode = "Speaking — Part 1 (Personal questions)"
-        starter = f"Please start my IELTS Speaking Part 1 practice. Ask me the first question about {topic}."
-        st.session_state.messages = [{"role": "user", "content": starter}]
-        st.rerun()
-    if st.button("📖 Reading", use_container_width=True):
-        st.session_state.mode = "Reading — Academic passage"
-        starter = f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
-        st.session_state.messages = [{"role": "user", "content": starter}]
-        st.rerun()
+    st.subheader("🚀 Quick Start")
 
-with col2:
-    if st.button("✍️ Writing", use_container_width=True):
-        st.session_state.mode = "Writing — Task 2 (Essay)"
-        starter = f"Give me a realistic IELTS Writing Task 2 question about {topic}."
-        st.session_state.messages = [{"role": "user", "content": starter}]
-        st.rerun()
-    if st.button("🎧 Listening", use_container_width=True):
-        st.session_state.mode = "Listening — Section 1 (Conversation)"
-        starter = f"Give me an IELTS Listening Section 1 practice about {topic}."
-        st.session_state.messages = [{"role": "user", "content": starter}]
-        st.rerun()
+    # Universal 4-skill buttons always visible
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🎤 Speaking", use_container_width=True):
+            start_session(
+                "Speaking — Part 1 (Personal questions)",
+                topic,
+                f"Please start my IELTS Speaking Part 1 practice. Ask me the first question about {topic}."
+            )
+        if st.button("📖 Reading", use_container_width=True):
+            start_session(
+                "Reading — Academic passage",
+                topic,
+                f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
+            )
+    with col2:
+        if st.button("✍️ Writing", use_container_width=True):
+            start_session(
+                "Writing — Task 2 (Essay)",
+                topic,
+                f"Give me a realistic IELTS Writing Task 2 question about {topic}."
+            )
+        if st.button("🎧 Listening", use_container_width=True):
+            start_session(
+                "Listening — Section 1 (Conversation)",
+                topic,
+                f"Give me an IELTS Listening Section 1 practice about {topic}. Generate the script and 10 questions."
+            )
 
-st.divider()
+    st.divider()
 
-# Mode specific buttons below
-if "Speaking" in mode:
-    if st.button("▶ Start Speaking Test", use_container_width=True):
+    # Mode-specific detailed buttons
+    if "Speaking" in mode:
         part = "Part 1" if "Part 1" in mode else "Part 2" if "Part 2" in mode else "Part 3"
-        starter = f"Please start my IELTS Speaking {part} practice. Ask me the first question about {topic}."
-        st.session_state.messages.append({"role": "user", "content": starter})
+        if st.button(f"▶ Start {part} Test", use_container_width=True):
+            starter = f"Please start my IELTS Speaking {part} practice. Ask me the first question about {topic}."
+            st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
 
-elif "Task 1" in mode:
-    if st.button("Give me a Task 1 question", use_container_width=True):
-        starter = f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
-        st.session_state.messages.append({"role": "user", "content": starter})
-    if st.button("I want to submit my Task 1", use_container_width=True):
-        starter = "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
-        st.session_state.messages.append({"role": "user", "content": starter})
+    elif "Task 1" in mode:
+        if st.button("📊 Give me a Task 1 question", use_container_width=True):
+            starter = f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
+            st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
+        if st.button("📝 Submit my Task 1 essay", use_container_width=True):
+            starter = "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
+            st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
 
-elif "Task 2" in mode:
-    if st.button("Give me a Task 2 question", use_container_width=True):
-        starter = f"Give me a realistic IELTS Writing Task 2 question about {topic}."
-        st.session_state.messages.append({"role": "user", "content": starter})
-    if st.button("I want to submit my essay", use_container_width=True):
-        starter = "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
-        st.session_state.messages.append({"role": "user", "content": starter})
+    elif "Task 2" in mode:
+        if st.button("❓ Give me a Task 2 question", use_container_width=True):
+            starter = f"Give me a realistic IELTS Writing Task 2 question about {topic}."
+            st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
+        if st.button("📝 Submit my essay", use_container_width=True):
+            starter = "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
+            st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
 
-elif "Listening" in mode:
-    if st.button("Start Listening Practice", use_container_width=True):
+    elif "Listening" in mode:
         section = mode.split("—")[1].strip() if "—" in mode else "Section 1"
-        starter = f"Give me an IELTS Listening {section} practice about {topic}. Generate the script and 10 questions."
-        st.session_state.messages.append({"role": "user", "content": starter})
+        if st.button(f"▶ Start {section} Practice", use_container_width=True):
+            starter = f"Give me an IELTS Listening {section} practice about {topic}. Generate the script and 10 questions."
+            st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
 
-elif "Reading" in mode:
-    if st.button("Start Reading Practice", use_container_width=True):
-        starter = f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
-        st.session_state.messages.append({"role": "user", "content": starter})
+    elif "Reading" in mode:
+        if st.button("▶ Start Reading Practice", use_container_width=True):
+            starter = f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
+            st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
 
-elif "Vocabulary" in mode:
-    if st.button("Teach me vocabulary", use_container_width=True):
-        starter = f"Teach me 5 advanced IELTS vocabulary words for {topic}. Then quiz me."
-        st.session_state.messages.append({"role": "user", "content": starter})
+    elif "Vocabulary" in mode:
+        if st.button("📚 Teach me vocabulary", use_container_width=True):
+            starter = f"Teach me 5 advanced IELTS vocabulary words for {topic}. Then quiz me."
+            st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
 
-else:
-    if st.button("Start Practice", use_container_width=True):
-        starter = "I want to improve my IELTS score. What should I practice first based on my weak areas?"
-        st.session_state.messages.append({"role": "user", "content": starter})
-```
     else:
-        if st.button("Start Practice", use_container_width=True):
+        if st.button("▶ Start Practice", use_container_width=True):
             starter = "I want to improve my IELTS score. What should I practice first based on my weak areas?"
             st.session_state.messages.append({"role": "user", "content": starter})
+            st.rerun()
 
+# ============================================================
+# MAIN LAYOUT
+# ============================================================
 
 main_col, info_col = st.columns([3, 1])
 
 with main_col:
-    st.title("IELTS AI Tutor")
+    st.title("🎓 IELTS AI Tutor")
     st.caption(f"Mode: **{mode}** | Topic: **{topic}** | Target: **Band {target_band}**")
 
     if not st.session_state.messages:
-        if "Speaking" in mode:
-            st.info("Speaking Practice Active\n\nType your answers naturally — write exactly how you would speak.\nClaude will ask questions one at a time and score each answer.\n\nClick Start Speaking Test in the sidebar to begin.")
-        elif "Task 1" in mode:
-            st.info("Writing Task 1 Active\n\n20 minutes. Minimum 150 words.\nAsk for a question or paste your own essay.\n\n4 criteria: Task Achievement | Coherence | Vocabulary | Grammar")
-        elif "Task 2" in mode:
-            st.info("Writing Task 2 Active\n\n40 minutes. Minimum 250 words.\nAsk for a question or paste your own essay.\n\n4 criteria: Task Response | Coherence | Vocabulary | Grammar")
-        elif "Listening" in mode:
-            st.info("Listening Practice Active\n\nClaude generates a realistic script. Read it once only. Then answer questions from memory.\n\nClick Start Listening Practice in the sidebar to begin.")
-        elif "Reading" in mode:
-            st.info("Reading Practice Active\n\nClaude generates an academic passage and 13 questions.\n20 minutes per passage. Read questions first.\n\nRemember: When in doubt — NOT GIVEN")
-        else:
-            st.info("Welcome! Select your practice mode in the sidebar and click a Quick Start button.")
+        welcome_messages = {
+            "Speaking": "**Speaking Practice Active**\n\nType your answers naturally — write exactly how you would speak.\nClaude asks questions one at a time and scores each answer.\n\nClick a Quick Start button in the sidebar to begin.",
+            "Task 1": "**Writing Task 1 Active**\n\n20 minutes. Minimum 150 words.\nAsk for a question or paste your own essay.\n\n4 criteria: Task Achievement | Coherence | Vocabulary | Grammar",
+            "Task 2": "**Writing Task 2 Active**\n\n40 minutes. Minimum 250 words.\nAsk for a question or paste your own essay.\n\n4 criteria: Task Response | Coherence | Vocabulary | Grammar",
+            "Listening": "**Listening Practice Active**\n\nClaude generates a realistic script.\nRead it once only. Then answer questions from memory.\n\nClick Start Listening Practice in the sidebar to begin.",
+            "Reading": "**Reading Practice Active**\n\nClaude generates an academic passage and 13 questions.\n20 minutes per passage. Read questions first.\n\nRemember: When in doubt — NOT GIVEN",
+            "Vocabulary": "**Vocabulary Builder Active**\n\n5 new words per session. Quiz after each set.\nTarget: 450 words retained by June exam.\n\nClick Teach me vocabulary to begin."
+        }
+        default_msg = "**Welcome to IELTS AI Tutor**\n\nSelect your practice mode in the sidebar.\nUse the Quick Start buttons to begin instantly.\n\nAll 4 skills: Speaking | Writing | Listening | Reading"
+
+        shown = False
+        for key, msg in welcome_messages.items():
+            if key in mode:
+                st.info(msg)
+                shown = True
+                break
+        if not shown:
+            st.info(default_msg)
 
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-with info_col:
-    st.subheader("Quick Reference")
+# ============================================================
+# INFO PANEL
+# ============================================================
 
-    if "Speaking" in mode:
-        st.markdown("**Speaking Tips:**\n- Extend every answer\n- Use linking words\n- Avoid maybe and actually\n- Speak for 2+ min in Part 2\n\n**Band 7 needs:**\n- Wide vocabulary\n- Complex sentences\n- Fluent delivery")
-    elif "Task 1" in mode:
-        st.markdown("**Task 1 Formula:**\n1. Paraphrase question\n2. Overview — start with Overall\n3. Key detail plus numbers\n4. Comparison\n\n**Must have:**\n- Specific numbers\n- No opinion\n- 150+ words")
-    elif "Task 2" in mode:
-        st.markdown("**Task 2 Formula:**\n1. Introduction plus position\n2. Body 1 — main argument\n3. Body 2 — second argument\n4. Counter plus refute\n5. Conclusion\n\n**Must have:**\n- Clear position\n- Real examples\n- 250+ words")
-    elif "Listening" in mode:
-        st.markdown("**Listening Strategy:**\n- Read questions first\n- Predict answer type\n- Listen for keywords\n- Check spelling\n\n**Common errors:**\n- Missing plurals\n- Wrong spelling\n- Extra words")
-    elif "Reading" in mode:
-        st.markdown("**TFNG Rules:**\n- TRUE = text confirms\n- FALSE = text contradicts\n- NOT GIVEN = not mentioned\n\n**Strategy:**\n1. Read questions first\n2. Scan for keywords\n3. 2 min max per question\n4. Never get stuck")
+with info_col:
+    st.subheader("📋 Quick Reference")
+
+    reference_content = {
+        "Speaking": "**Speaking Tips:**\n- Extend every answer\n- Use linking words\n- Avoid maybe and actually\n- Speak for 2+ min in Part 2\n\n**Band 7 needs:**\n- Wide vocabulary\n- Complex sentences\n- Fluent delivery",
+        "Task 1": "**Task 1 Formula:**\n1. Paraphrase question\n2. Overview — start with Overall\n3. Key detail plus numbers\n4. Comparison\n\n**Must have:**\n- Specific numbers\n- No opinion\n- 150+ words",
+        "Task 2": "**Task 2 Formula:**\n1. Introduction plus position\n2. Body 1 — main argument\n3. Body 2 — second argument\n4. Counter plus refute\n5. Conclusion\n\n**Must have:**\n- Clear position\n- Real examples\n- 250+ words",
+        "Listening": "**Listening Strategy:**\n- Read questions first\n- Predict answer type\n- Listen for keywords\n- Check spelling\n\n**Common errors:**\n- Missing plurals\n- Wrong spelling\n- Extra words",
+        "Reading": "**TFNG Rules:**\n- TRUE = text confirms\n- FALSE = text contradicts\n- NOT GIVEN = not mentioned\n\n**Strategy:**\n1. Read questions first\n2. Scan for keywords\n3. 2 min max per question\n4. Never get stuck",
+        "Vocabulary": "**Vocab System:**\n- 5 words per session\n- Say each in a sentence\n- Review previous 5 first\n- Target: 450 by June\n\n**B2 to C1 upgrade:**\n- Use rare words\n- Use collocations\n- Avoid repetition"
+    }
+
+    default_ref = "**IELTS Band Scale:**\n- Band 9: Expert\n- Band 8: Very Good\n- Band 7: Good\n- Band 6: Competent\n- Band 5: Modest\n\n**Your target: 7.0+**\nAll 4 skills matter equally."
+
+    shown = False
+    for key, content in reference_content.items():
+        if key in mode:
+            st.markdown(content)
+            shown = True
+            break
+    if not shown:
+        st.markdown(default_ref)
 
     st.divider()
-    st.subheader("Session Stats")
+
+    st.subheader("📊 Session Stats")
     user_msgs = len([m for m in st.session_state.messages if m["role"] == "user"])
     st.metric("Messages sent", user_msgs)
     st.metric("Target band", f"{target_band}")
     st.metric("Essays scored", st.session_state.essay_count)
 
+# ============================================================
+# CHAT INPUT AND CLAUDE RESPONSE
+# ============================================================
 
 needs_response = (
     st.session_state.messages and
@@ -493,28 +557,29 @@ if needs_response:
         st.error("Please enter your Claude API key in the sidebar.\n\nGet your free key at: console.anthropic.com")
         st.stop()
 
-    with st.chat_message("user"):
-        st.markdown(st.session_state.messages[-1]["content"])
+    with main_col:
+        with st.chat_message("user"):
+            st.markdown(st.session_state.messages[-1]["content"])
 
-    with st.chat_message("assistant"):
-        with st.spinner("Evaluating your English..."):
-            try:
-                response = chat_with_claude(
-                    messages=st.session_state.messages,
-                    mode=st.session_state.mode,
-                    task=st.session_state.task,
-                    target_band=st.session_state.target_band,
-                    api_key=api_key
-                )
-                st.markdown(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
+        with st.chat_message("assistant"):
+            with st.spinner("Evaluating your English..."):
+                try:
+                    response = chat_with_claude(
+                        messages=st.session_state.messages,
+                        mode=st.session_state.mode,
+                        task=st.session_state.task,
+                        target_band=st.session_state.target_band,
+                        api_key=api_key
+                    )
+                    st.markdown(response)
+                    st.session_state.messages.append({"role": "assistant", "content": response})
 
-                if "Task" in st.session_state.mode and len(st.session_state.messages[-2]["content"]) > 100:
-                    st.session_state.essay_count += 1
+                    if "Task" in st.session_state.mode and len(st.session_state.messages[-2]["content"]) > 100:
+                        st.session_state.essay_count += 1
 
-            except anthropic.AuthenticationError:
-                st.error("Invalid API key. Check your key at console.anthropic.com")
-            except anthropic.RateLimitError:
-                st.error("Rate limit hit. Wait 30 seconds and try again.")
-            except Exception as e:
-                st.error(f"Something went wrong: {str(e)}")
+                except anthropic.AuthenticationError:
+                    st.error("Invalid API key. Check your key at console.anthropic.com")
+                except anthropic.RateLimitError:
+                    st.error("Rate limit hit. Wait 30 seconds and try again.")
+                except Exception as e:
+                    st.error(f"Something went wrong: {str(e)}")
