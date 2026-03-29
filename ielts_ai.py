@@ -353,44 +353,77 @@ with st.sidebar:
 
     st.subheader("Quick Start")
 
-    if "Speaking" in mode:
-        if st.button("Start Speaking Test", use_container_width=True):
-            part = "Part 1" if "Part 1" in mode else "Part 2" if "Part 2" in mode else "Part 3"
-            starter = f"Please start my IELTS Speaking {part} practice. Ask me the first question about {topic}."
-            st.session_state.messages.append({"role": "user", "content": starter})
+# Universal shortcut buttons
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🎤 Speaking", use_container_width=True):
+        st.session_state.mode = "Speaking — Part 1 (Personal questions)"
+        starter = f"Please start my IELTS Speaking Part 1 practice. Ask me the first question about {topic}."
+        st.session_state.messages = [{"role": "user", "content": starter}]
+        st.rerun()
+    if st.button("📖 Reading", use_container_width=True):
+        st.session_state.mode = "Reading — Academic passage"
+        starter = f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
+        st.session_state.messages = [{"role": "user", "content": starter}]
+        st.rerun()
 
-    elif "Task 1" in mode:
-        if st.button("Give me a Task 1 question", use_container_width=True):
-            starter = f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
-            st.session_state.messages.append({"role": "user", "content": starter})
-        if st.button("I want to submit my Task 1", use_container_width=True):
-            starter = "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
-            st.session_state.messages.append({"role": "user", "content": starter})
+with col2:
+    if st.button("✍️ Writing", use_container_width=True):
+        st.session_state.mode = "Writing — Task 2 (Essay)"
+        starter = f"Give me a realistic IELTS Writing Task 2 question about {topic}."
+        st.session_state.messages = [{"role": "user", "content": starter}]
+        st.rerun()
+    if st.button("🎧 Listening", use_container_width=True):
+        st.session_state.mode = "Listening — Section 1 (Conversation)"
+        starter = f"Give me an IELTS Listening Section 1 practice about {topic}."
+        st.session_state.messages = [{"role": "user", "content": starter}]
+        st.rerun()
 
-    elif "Task 2" in mode:
-        if st.button("Give me a Task 2 question", use_container_width=True):
-            starter = f"Give me a realistic IELTS Writing Task 2 question about {topic}."
-            st.session_state.messages.append({"role": "user", "content": starter})
-        if st.button("I want to submit my essay", use_container_width=True):
-            starter = "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
-            st.session_state.messages.append({"role": "user", "content": starter})
+st.divider()
 
-    elif "Listening" in mode:
-        if st.button("Start Listening Practice", use_container_width=True):
-            section = mode.split("—")[1].strip() if "—" in mode else "Section 1"
-            starter = f"Give me an IELTS Listening {section} practice about {topic}. Generate the script and 10 questions."
-            st.session_state.messages.append({"role": "user", "content": starter})
+# Mode specific buttons below
+if "Speaking" in mode:
+    if st.button("▶ Start Speaking Test", use_container_width=True):
+        part = "Part 1" if "Part 1" in mode else "Part 2" if "Part 2" in mode else "Part 3"
+        starter = f"Please start my IELTS Speaking {part} practice. Ask me the first question about {topic}."
+        st.session_state.messages.append({"role": "user", "content": starter})
 
-    elif "Reading" in mode:
-        if st.button("Start Reading Practice", use_container_width=True):
-            starter = f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
-            st.session_state.messages.append({"role": "user", "content": starter})
+elif "Task 1" in mode:
+    if st.button("Give me a Task 1 question", use_container_width=True):
+        starter = f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
+        st.session_state.messages.append({"role": "user", "content": starter})
+    if st.button("I want to submit my Task 1", use_container_width=True):
+        starter = "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
+        st.session_state.messages.append({"role": "user", "content": starter})
 
-    elif "Vocabulary" in mode:
-        if st.button("Teach me vocabulary", use_container_width=True):
-            starter = f"Teach me 5 advanced IELTS vocabulary words for {topic}. Then quiz me."
-            st.session_state.messages.append({"role": "user", "content": starter})
+elif "Task 2" in mode:
+    if st.button("Give me a Task 2 question", use_container_width=True):
+        starter = f"Give me a realistic IELTS Writing Task 2 question about {topic}."
+        st.session_state.messages.append({"role": "user", "content": starter})
+    if st.button("I want to submit my essay", use_container_width=True):
+        starter = "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
+        st.session_state.messages.append({"role": "user", "content": starter})
 
+elif "Listening" in mode:
+    if st.button("Start Listening Practice", use_container_width=True):
+        section = mode.split("—")[1].strip() if "—" in mode else "Section 1"
+        starter = f"Give me an IELTS Listening {section} practice about {topic}. Generate the script and 10 questions."
+        st.session_state.messages.append({"role": "user", "content": starter})
+
+elif "Reading" in mode:
+    if st.button("Start Reading Practice", use_container_width=True):
+        starter = f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
+        st.session_state.messages.append({"role": "user", "content": starter})
+
+elif "Vocabulary" in mode:
+    if st.button("Teach me vocabulary", use_container_width=True):
+        starter = f"Teach me 5 advanced IELTS vocabulary words for {topic}. Then quiz me."
+        st.session_state.messages.append({"role": "user", "content": starter})
+
+else:
+    if st.button("Start Practice", use_container_width=True):
+        starter = "I want to improve my IELTS score. What should I practice first based on my weak areas?"
+        st.session_state.messages.append({"role": "user", "content": starter}
     else:
         if st.button("Start Practice", use_container_width=True):
             starter = "I want to improve my IELTS score. What should I practice first based on my weak areas?"
