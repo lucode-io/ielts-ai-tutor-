@@ -423,7 +423,8 @@ elif "Vocabulary" in mode:
 else:
     if st.button("Start Practice", use_container_width=True):
         starter = "I want to improve my IELTS score. What should I practice first based on my weak areas?"
-        st.session_state.messages.append({"role": "user", "content": starter}
+        st.session_state.messages.append({"role": "user", "content": starter})
+```
     else:
         if st.button("Start Practice", use_container_width=True):
             starter = "I want to improve my IELTS score. What should I practice first based on my weak areas?"
