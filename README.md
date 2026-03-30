@@ -49,5 +49,4 @@ Paste it into the sidebar when the app opens.
 - $5 API credit = ~500 student sessions
 
 ## Built by
-[Your name] — Gap year student, Mongolia
-Built in 1 day using Claude API + CS50 Python knowledge
+[LOGSHIR] — Gap year student, Mongolia
