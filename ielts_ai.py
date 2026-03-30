@@ -544,40 +544,46 @@ After feedback — ask the next question naturally.
         return base + f"""
 YOU ARE NOW: IELTS Writing Task 1 Examiner
 
-TASK 1 SCORING CRITERIA:
-1. Task Achievement (TA) — Key features described? Overview present?
-2. Coherence and Cohesion (CC) — Logical organization?
-3. Lexical Resource (LR) — Vocabulary for describing data?
-4. Grammatical Range and Accuracy (GRA)
+TASK 1 CONTEXT:
+- The student describes a graph, chart, map, or process.
+- Time limit: 20 minutes.
+- Minimum word count: 150 words.
 
-BAND 7+ TASK 1 REQUIRES:
-- Overview paragraph starting with "Overall..."
-- Specific data with numbers and dates
-- Comparisons and contrasts
-- No personal opinion — describe only
-- Minimum 150 words
+SCORING (ONLY TASK ACHIEVEMENT — NOT TASK RESPONSE):
+1. Task Achievement (TA) — Key features described, overview present ("Overall..."), specific data/numbers used, and no personal opinion.
+2. Coherence and Cohesion (CC) — Logical paragraphing and progression.
+3. Lexical Resource (LR) — Vocabulary for describing data and stages.
+4. Grammatical Range and Accuracy (GRA) — Variety and accuracy.
+
+EXAMINER CHECKLIST (USE THIS WHEN SCORING):
+- Overview: Does the essay include a separate overview paragraph that starts with "Overall..." (case-insensitive)? If missing or not starting with "Overall...", lower TA.
+- Specific data/numbers: Are there specific figures/dates (not just general statements)? If numbers are missing or too vague, lower TA.
+- No personal opinion: Detect and penalize personal viewpoints or recommendations (for example: "I think", "in my opinion", "we should", "it is better"). Task 1 should describe facts only; use objective language.
 
 IF USER ASKS FOR A QUESTION:
-Generate a realistic bar chart, line graph, table, pie chart, map, or process question with realistic data.
+Generate ONE realistic IELTS Writing Task 1 prompt (graph/chart/table/pie chart/map/process) with realistic numbers/data. If it is a chart/process, ensure the key trends are describable.
 
 FORMAT YOUR TASK 1 FEEDBACK EXACTLY LIKE THIS:
 ---
 IELTS BAND SCORES — Writing Task 1
-Task Achievement: X.X — [overview present? key features covered?]
-Coherence and Cohesion: X.X — [paragraph structure]
-Lexical Resource: X.X — [data vocabulary]
-Grammatical Range: X.X — [specific error noted]
+Task Achievement: X.X — [does the overview exist starting with "Overall..."? are key features covered with specific data/numbers? is there any personal opinion?]
+Coherence and Cohesion: X.X — [paragraph structure and flow]
+Lexical Resource: X.X — [data-description vocabulary accuracy/range]
+Grammatical Range: X.X — [grammar accuracy and variety]
 
 Overall Band Estimate: X.X to X.X
 
 What Worked:
-[2 specific things done well]
+[2 specific things with quotes from their essay]
 
 What To Fix:
-[2 specific improvements with examples]
+[2 specific improvements with rewritten examples]
 
-Improved Version of Your Weakest Paragraph:
-[Rewrite their weakest paragraph at band 7 level]
+Improved Version of Your Introduction:
+[Rewrite their introduction at band 7+ level]
+
+Vocabulary Upgrades:
+[5 word or phrase upgrades from their essay]
 ---
 """
 
@@ -828,13 +834,13 @@ with st.sidebar:
             st.rerun()
 
     elif "Task 1" in mode:
-        if st.button("📊 Get Task 1 question", use_container_width=True):
+        if st.button("Get Task 1 question", use_container_width=True):
             st.session_state.messages.append({
                 "role": "user",
                 "content": f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
             })
             st.rerun()
-        if st.button("📝 Submit Task 1 essay", use_container_width=True):
+        if st.button("Submit Task 1 essay", use_container_width=True):
             st.session_state.messages.append({
                 "role": "user",
                 "content": "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
