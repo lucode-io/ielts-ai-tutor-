@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ============================================================
 # IELTS AI Tutor — Production Version 3.0
 # Light Antigravity Design System
@@ -772,127 +773,96 @@ with st.sidebar:
 
     st.divider()
 
-    # Quick Start — always visible at top
-    st.subheader("Quick Start")
+    st.subheader("⚙️ User Custom Settings")
+    mode = st.selectbox("Practice mode:", MODES,
+        index=MODES.index(st.session_state.mode) if st.session_state.mode in MODES else 0)
+    st.session_state.mode = mode
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🎤 Speaking", use_container_width=True):
+    topic = st.selectbox("Topic:", TOPICS)
+
+    target_band = st.slider(
+        "Target band score:",
+        min_value=5.0, max_value=9.0, value=st.session_state.target_band, step=0.5
+    )
+    st.session_state.target_band = target_band
+    st.session_state.task = f"Topic: {topic} | Target: Band {target_band}"
+
+    if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.essay_count = 0
+        st.rerun()
+
+    st.divider()
+
+    st.subheader("🎯 Skills Tasks")
+
+    with st.expander("🎤 Speaking Tasks", expanded=True):
+        if st.button("Start Speaking Part 1", use_container_width=True):
             start_session(
                 "Speaking — Part 1 (Personal questions)",
-                f"Please start my IELTS Speaking Part 1 practice. Ask me the first question."
+                f"Please start my IELTS Speaking Part 1 practice. Ask me the first question about {topic}."
             )
-        if st.button("📖 Reading", use_container_width=True):
+        if st.button("Start Speaking Part 2", use_container_width=True):
             start_session(
-                "Reading — Academic passage",
-                "Give me an IELTS Academic Reading passage with 13 mixed questions."
+                "Speaking — Part 2 (Long turn / cue card)",
+                f"Please start my IELTS Speaking Part 2 practice. Ask me a cue card question about {topic}."
             )
-    with col2:
-        if st.button("✍️ Writing", use_container_width=True):
+        if st.button("Start Speaking Part 3", use_container_width=True):
+            start_session(
+                "Speaking — Part 3 (Discussion)",
+                f"Please start my IELTS Speaking Part 3 practice. Ask me a discussion question about {topic}."
+            )
+
+    with st.expander("✍️ Writing Tasks", expanded=True):
+        if st.button("Get Task 1 question", use_container_width=True):
+            start_session(
+                "Writing — Task 1 (Graph/Chart description)",
+                f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
+            )
+        if st.button("Submit Task 1 essay", use_container_width=True):
+            start_session(
+                "Writing — Task 1 (Graph/Chart description)",
+                "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
+            )
+        if st.button("Get Task 2 question", use_container_width=True):
             start_session(
                 "Writing — Task 2 (Essay)",
-                "Give me a realistic IELTS Writing Task 2 question."
+                f"Give me a realistic IELTS Writing Task 2 question about {topic}."
             )
-        if st.button("🎧 Listening", use_container_width=True):
+        if st.button("Submit Task 2 essay", use_container_width=True):
+            start_session(
+                "Writing — Task 2 (Essay)",
+                "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
+            )
+
+    with st.expander("🎧 Listening Tasks", expanded=True):
+        if st.button("Start Listening Section 1", use_container_width=True):
             start_session(
                 "Listening — Section 1 (Conversation)",
-                "Give me an IELTS Listening Section 1 practice. Generate the script and 10 questions."
+                f"Give me an IELTS Listening Section 1 practice about {topic}. Generate the script and 10 questions."
+            )
+        if st.button("Start Listening Section 2", use_container_width=True):
+            start_session(
+                "Listening — Section 2 (Monologue)",
+                f"Give me an IELTS Listening Section 2 practice about {topic}. Generate the script and 10 questions."
+            )
+        if st.button("Start Listening Section 3", use_container_width=True):
+            start_session(
+                "Listening — Section 3 (Academic discussion)",
+                f"Give me an IELTS Listening Section 3 practice about {topic}. Generate the script and 10 questions."
+            )
+        if st.button("Start Listening Section 4", use_container_width=True):
+            start_session(
+                "Listening — Section 4 (Academic lecture)",
+                f"Give me an IELTS Listening Section 4 practice about {topic}. Generate the script and 10 questions."
             )
 
-    st.divider()
-
-    # Settings in expander — clean and hidden by default
-    with st.expander("⚙️ Settings", expanded=False):
-        mode = st.selectbox("Practice mode:", MODES,
-            index=MODES.index(st.session_state.mode) if st.session_state.mode in MODES else 0)
-        st.session_state.mode = mode
-
-        topic = st.selectbox("Topic:", TOPICS)
-
-        target_band = st.slider(
-            "Target band score:",
-            min_value=5.0, max_value=9.0, value=st.session_state.target_band, step=0.5
-        )
-        st.session_state.target_band = target_band
-        st.session_state.task = f"Topic: {topic} | Target: Band {target_band}"
-
-        if st.button("🗑️ Clear Chat", use_container_width=True):
-            st.session_state.messages = []
-            st.session_state.essay_count = 0
-            st.rerun()
-
-    st.divider()
-
-    # Mode specific action buttons
-    if "Speaking" in mode:
-        part = "Part 1" if "Part 1" in mode else "Part 2" if "Part 2" in mode else "Part 3"
-        if st.button(f"▶ Start {part} Test", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": f"Please start my IELTS Speaking {part} practice. Ask me the first question about {topic}."
-            })
-            st.rerun()
-
-    elif "Task 1" in mode:
-        if st.button("Get Task 1 question", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
-            })
-            st.rerun()
-        if st.button("Submit Task 1 essay", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
-            })
-            st.rerun()
-
-    elif "Task 2" in mode:
-        if st.button("❓ Get Task 2 question", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": f"Give me a realistic IELTS Writing Task 2 question about {topic}."
-            })
-            st.rerun()
-        if st.button("📝 Submit essay for scoring", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
-            })
-            st.rerun()
-
-    elif "Listening" in mode:
-        section = mode.split("—")[1].strip() if "—" in mode else "Section 1"
-        if st.button(f"▶ Start {section}", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": f"Give me an IELTS Listening {section} practice about {topic}. Generate the script and 10 questions."
-            })
-            st.rerun()
-
-    elif "Reading" in mode:
-        if st.button("▶ Start Reading Practice", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
-            })
-            st.rerun()
-
-    elif "Vocabulary" in mode:
-        if st.button("📚 Teach me vocabulary", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": f"Teach me 5 advanced IELTS vocabulary words for {topic}. Then quiz me."
-            })
-            st.rerun()
-
-    else:
-        if st.button("▶ Start Practice", use_container_width=True):
-            st.session_state.messages.append({
-                "role": "user",
-                "content": "I want to improve my IELTS score. What should I practice first?"
-            })
-            st.rerun()
+    with st.expander("📖 Reading Tasks", expanded=True):
+        if st.button("Start Academic Reading", use_container_width=True):
+            start_session(
+                "Reading — Academic passage",
+                f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
+            )
 
     st.divider()
 
