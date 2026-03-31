@@ -438,6 +438,27 @@ hr {
 .ref-card-listening{ border-top-color: #F59E0B; }
 .ref-card-vocab    { border-top-color: #EC4899; }
 
+/* Practice mode color guide */
+.mode-guide-wrap {
+    margin-top: 8px;
+    margin-bottom: 10px;
+}
+.mode-guide-chip {
+    display: inline-block;
+    margin: 0 6px 6px 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #111827;
+}
+.mode-speaking  { background: #EDE9FE; border: 1px solid #C4B5FD; }
+.mode-writing   { background: #E0F2FE; border: 1px solid #93C5FD; }
+.mode-listening { background: #FEF3C7; border: 1px solid #FCD34D; }
+.mode-reading   { background: #DCFCE7; border: 1px solid #86EFAC; }
+.mode-vocab     { background: #FCE7F3; border: 1px solid #F9A8D4; }
+.mode-general   { background: #E5E7EB; border: 1px solid #CBD5E1; }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -777,6 +798,31 @@ with st.sidebar:
     mode = st.selectbox("Practice mode:", MODES,
         index=MODES.index(st.session_state.mode) if st.session_state.mode in MODES else 0)
     st.session_state.mode = mode
+    mode_color = (
+        "mode-speaking" if "Speaking" in mode else
+        "mode-writing" if "Writing" in mode else
+        "mode-listening" if "Listening" in mode else
+        "mode-reading" if "Reading" in mode else
+        "mode-vocab" if "Vocabulary" in mode else
+        "mode-general"
+    )
+    st.markdown(
+        """
+        <div class="mode-guide-wrap">
+            <span class="mode-guide-chip mode-speaking">Speaking</span>
+            <span class="mode-guide-chip mode-writing">Writing</span>
+            <span class="mode-guide-chip mode-listening">Listening</span>
+            <span class="mode-guide-chip mode-reading">Reading</span>
+            <span class="mode-guide-chip mode-vocab">Vocabulary Builder</span>
+            <span class="mode-guide-chip mode-general">General Practice</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        f'<span class="mode-guide-chip {mode_color}">Current: {mode}</span>',
+        unsafe_allow_html=True
+    )
 
     topic = st.selectbox("Topic:", TOPICS)
 
