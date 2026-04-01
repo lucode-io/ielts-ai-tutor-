@@ -1119,7 +1119,7 @@ user_input = None
 
 if "Speaking" in st.session_state.mode:
     st.markdown("### Record your response")
-    audio_bytes = st_audiorecorder()
+  audio_bytes = st.audio_input("🎤 Record your answer")
     if audio_bytes:
         st.session_state.messages.append({"role": "user", "content": "(Audio response)", "audio": audio_bytes})
         needs_response = True
