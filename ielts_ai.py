@@ -795,34 +795,28 @@ with st.sidebar:
     st.divider()
 
     st.subheader("⚙️ User Custom Settings")
-    mode = st.selectbox("Practice mode:", MODES,
-        index=MODES.index(st.session_state.mode) if st.session_state.mode in MODES else 0)
-    st.session_state.mode = mode
-    mode_color = (
-        "mode-speaking" if "Speaking" in mode else
-        "mode-writing" if "Writing" in mode else
-        "mode-listening" if "Listening" in mode else
-        "mode-reading" if "Reading" in mode else
-        "mode-vocab" if "Vocabulary" in mode else
-        "mode-general"
-    )
-    st.markdown(
-        """
-        <div class="mode-guide-wrap">
-            <span class="mode-guide-chip mode-speaking">Speaking</span>
-            <span class="mode-guide-chip mode-writing">Writing</span>
-            <span class="mode-guide-chip mode-listening">Listening</span>
-            <span class="mode-guide-chip mode-reading">Reading</span>
-            <span class="mode-guide-chip mode-vocab">Vocabulary Builder</span>
-            <span class="mode-guide-chip mode-general">General Practice</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<span class="mode-guide-chip {mode_color}">Current: {mode}</span>',
-        unsafe_allow_html=True
-    )
+    m1, m2 = st.columns(2)
+    with m1:
+        if st.button("🎤 Speaking", key="mode_sel_speaking", use_container_width=True):
+            st.session_state.mode = "Speaking — Part 1 (Personal questions)"
+            st.rerun()
+        if st.button("🎧 Listening", key="mode_sel_listening", use_container_width=True):
+            st.session_state.mode = "Listening — Section 1 (Conversation)"
+            st.rerun()
+        if st.button("📚 Vocabulary Builder", key="mode_sel_vocab", use_container_width=True):
+            st.session_state.mode = "Vocabulary Builder"
+            st.rerun()
+    with m2:
+        if st.button("✍️ Writing", key="mode_sel_writing", use_container_width=True):
+            st.session_state.mode = "Writing — Task 1 (Graph/Chart description)"
+            st.rerun()
+        if st.button("📖 Reading", key="mode_sel_reading", use_container_width=True):
+            st.session_state.mode = "Reading — Academic passage"
+            st.rerun()
+        if st.button("🎓 General Practice", key="mode_sel_general", use_container_width=True):
+            st.session_state.mode = "General Practice"
+            st.rerun()
+    mode = st.session_state.mode
 
     topic = st.selectbox("Topic:", TOPICS)
 
@@ -843,68 +837,68 @@ with st.sidebar:
     st.subheader("🎯 Skills Tasks")
 
     with st.expander("🎤 Speaking Tasks", expanded=True):
-        if st.button("Start Speaking Part 1", use_container_width=True):
+        if st.button("Start Speaking Part 1", key="task_spk_p1", use_container_width=True):
             start_session(
                 "Speaking — Part 1 (Personal questions)",
                 f"Please start my IELTS Speaking Part 1 practice. Ask me the first question about {topic}."
             )
-        if st.button("Start Speaking Part 2", use_container_width=True):
+        if st.button("Start Speaking Part 2", key="task_spk_p2", use_container_width=True):
             start_session(
                 "Speaking — Part 2 (Long turn / cue card)",
                 f"Please start my IELTS Speaking Part 2 practice. Ask me a cue card question about {topic}."
             )
-        if st.button("Start Speaking Part 3", use_container_width=True):
+        if st.button("Start Speaking Part 3", key="task_spk_p3", use_container_width=True):
             start_session(
                 "Speaking — Part 3 (Discussion)",
                 f"Please start my IELTS Speaking Part 3 practice. Ask me a discussion question about {topic}."
             )
 
     with st.expander("✍️ Writing Tasks", expanded=True):
-        if st.button("Get Task 1 question", use_container_width=True):
+        if st.button("Get Task 1 question", key="task_w_t1_q", use_container_width=True):
             start_session(
                 "Writing — Task 1 (Graph/Chart description)",
                 f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
             )
-        if st.button("Submit Task 1 essay", use_container_width=True):
+        if st.button("Submit Task 1 essay", key="task_w_t1_s", use_container_width=True):
             start_session(
                 "Writing — Task 1 (Graph/Chart description)",
                 "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
             )
-        if st.button("Get Task 2 question", use_container_width=True):
+        if st.button("Get Task 2 question", key="task_w_t2_q", use_container_width=True):
             start_session(
                 "Writing — Task 2 (Essay)",
                 f"Give me a realistic IELTS Writing Task 2 question about {topic}."
             )
-        if st.button("Submit Task 2 essay", use_container_width=True):
+        if st.button("Submit Task 2 essay", key="task_w_t2_s", use_container_width=True):
             start_session(
                 "Writing — Task 2 (Essay)",
                 "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
             )
 
     with st.expander("🎧 Listening Tasks", expanded=True):
-        if st.button("Start Listening Section 1", use_container_width=True):
+        if st.button("Start Listening Section 1", key="task_ls_s1", use_container_width=True):
             start_session(
                 "Listening — Section 1 (Conversation)",
                 f"Give me an IELTS Listening Section 1 practice about {topic}. Generate the script and 10 questions."
             )
-        if st.button("Start Listening Section 2", use_container_width=True):
+        if st.button("Start Listening Section 2", key="task_ls_s2", use_container_width=True):
             start_session(
                 "Listening — Section 2 (Monologue)",
                 f"Give me an IELTS Listening Section 2 practice about {topic}. Generate the script and 10 questions."
             )
-        if st.button("Start Listening Section 3", use_container_width=True):
+        if st.button("Start Listening Section 3", key="task_ls_s3", use_container_width=True):
             start_session(
                 "Listening — Section 3 (Academic discussion)",
                 f"Give me an IELTS Listening Section 3 practice about {topic}. Generate the script and 10 questions."
             )
-        if st.button("Start Listening Section 4", use_container_width=True):
+        if st.button("Start Listening Section 4", key="task_ls_s4", use_container_width=True):
             start_session(
                 "Listening — Section 4 (Academic lecture)",
                 f"Give me an IELTS Listening Section 4 practice about {topic}. Generate the script and 10 questions."
             )
 
     with st.expander("📖 Reading Tasks", expanded=True):
-        if st.button("Start Academic Reading", use_container_width=True):
+        if st.button("Start Academic Reading", key="task_rd_ac", use_container_width=True):
             start_session(
                 "Reading — Academic passage",
                 f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
