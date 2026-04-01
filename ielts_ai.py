@@ -8,6 +8,8 @@
 
 import streamlit as st
 import anthropic
+import base64
+
 # ============================================================
 # PAGE CONFIG
 # ============================================================
@@ -32,7 +34,6 @@ html, body, [data-testid="stAppViewContainer"] {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Subtle dot grid background */
 [data-testid="stAppViewContainer"]::before {
     content: '';
     position: fixed;
@@ -43,7 +44,6 @@ html, body, [data-testid="stAppViewContainer"] {
     z-index: 0;
 }
 
-/* Center glow */
 [data-testid="stAppViewContainer"]::after {
     content: '';
     position: fixed;
@@ -57,7 +57,6 @@ html, body, [data-testid="stAppViewContainer"] {
     z-index: 0;
 }
 
-/* ── SIDEBAR ── */
 [data-testid="stSidebar"] {
     background: #FAFAFA !important;
     border-right: 1px solid #F3F4F6 !important;
@@ -68,14 +67,12 @@ html, body, [data-testid="stAppViewContainer"] {
     padding-top: 1.5rem;
 }
 
-/* ── MAIN CONTENT ── */
 .main .block-container {
     background: transparent;
     padding-top: 1rem;
     max-width: 900px;
 }
 
-/* ── CARDS ── */
 .ag-card {
     background: #FFFFFF;
     border-radius: 16px;
@@ -97,7 +94,6 @@ html, body, [data-testid="stAppViewContainer"] {
     transform: translateY(-2px);
 }
 
-/* ── APP TITLE ── */
 .ag-title {
     font-size: 26px;
     font-weight: 700;
@@ -112,7 +108,6 @@ html, body, [data-testid="stAppViewContainer"] {
     margin-bottom: 20px;
 }
 
-/* ── PILLS ── */
 .ag-pill {
     display: inline-block;
     padding: 3px 10px;
@@ -137,7 +132,6 @@ html, body, [data-testid="stAppViewContainer"] {
     color: #FFFFFF;
 }
 
-/* ── SIDEBAR BUTTONS — QUICK START ── */
 .stButton > button {
     border-radius: 10px !important;
     font-weight: 600 !important;
@@ -148,55 +142,30 @@ html, body, [data-testid="stAppViewContainer"] {
     width: 100% !important;
 }
 
-/* Speaking button */
 div[data-testid="column"]:nth-of-type(1) .stButton:nth-of-type(1) > button {
     background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
     color: #FFFFFF !important;
     box-shadow: 0 2px 8px rgba(99,102,241,0.30), 0 4px 16px rgba(99,102,241,0.15) !important;
 }
 
-div[data-testid="column"]:nth-of-type(1) .stButton:nth-of-type(1) > button:hover {
-    box-shadow: 0 4px 16px rgba(99,102,241,0.50), 0 8px 32px rgba(99,102,241,0.25) !important;
-    transform: translateY(-2px) !important;
-}
-
-/* Reading button */
 div[data-testid="column"]:nth-of-type(1) .stButton:nth-of-type(2) > button {
     background: linear-gradient(135deg, #10B981, #06B6D4) !important;
     color: #FFFFFF !important;
     box-shadow: 0 2px 8px rgba(16,185,129,0.30), 0 4px 16px rgba(16,185,129,0.15) !important;
 }
 
-div[data-testid="column"]:nth-of-type(1) .stButton:nth-of-type(2) > button:hover {
-    box-shadow: 0 4px 16px rgba(16,185,129,0.50), 0 8px 32px rgba(16,185,129,0.25) !important;
-    transform: translateY(-2px) !important;
-}
-
-/* Writing button */
 div[data-testid="column"]:nth-of-type(2) .stButton:nth-of-type(1) > button {
     background: linear-gradient(135deg, #0EA5E9, #6366F1) !important;
     color: #FFFFFF !important;
     box-shadow: 0 2px 8px rgba(14,165,233,0.30), 0 4px 16px rgba(14,165,233,0.15) !important;
 }
 
-div[data-testid="column"]:nth-of-type(2) .stButton:nth-of-type(1) > button:hover {
-    box-shadow: 0 4px 16px rgba(14,165,233,0.50), 0 8px 32px rgba(14,165,233,0.25) !important;
-    transform: translateY(-2px) !important;
-}
-
-/* Listening button */
 div[data-testid="column"]:nth-of-type(2) .stButton:nth-of-type(2) > button {
     background: linear-gradient(135deg, #F59E0B, #EF4444) !important;
     color: #FFFFFF !important;
     box-shadow: 0 2px 8px rgba(245,158,11,0.30), 0 4px 16px rgba(245,158,11,0.15) !important;
 }
 
-div[data-testid="column"]:nth-of-type(2) .stButton:nth-of-type(2) > button:hover {
-    box-shadow: 0 4px 16px rgba(245,158,11,0.50), 0 8px 32px rgba(245,158,11,0.25) !important;
-    transform: translateY(-2px) !important;
-}
-
-/* Clear Chat button */
 button[kind="secondary"] {
     background: #FFFFFF !important;
     color: #EF4444 !important;
@@ -204,37 +173,12 @@ button[kind="secondary"] {
     box-shadow: 0 1px 4px rgba(239,68,68,0.10) !important;
 }
 
-button[kind="secondary"]:hover {
-    box-shadow: 0 2px 12px rgba(239,68,68,0.20) !important;
-    transform: translateY(-1px) !important;
-}
-
-/* Mode specific action buttons */
-.stButton > button[data-testid*="start"],
-.stButton > button[data-testid*="give"],
-.stButton > button[data-testid*="submit"] {
-    background: #FFFFFF !important;
-    color: #0F0F1A !important;
-    border: 1px solid #E5E7EB !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(99,102,241,0.06) !important;
-}
-
-.stButton > button[data-testid*="start"]:hover,
-.stButton > button[data-testid*="give"]:hover,
-.stButton > button[data-testid*="submit"]:hover {
-    box-shadow: 0 2px 12px rgba(99,102,241,0.15) !important;
-    transform: translateY(-1px) !important;
-    border-color: #C7D2FE !important;
-}
-
-/* ── CHAT MESSAGES ── */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border: none !important;
     padding: 4px 0 !important;
 }
 
-/* User messages */
 [data-testid="stChatMessage"][data-author="user"] > div:last-child {
     background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
     border-radius: 18px 18px 4px 18px !important;
@@ -245,7 +189,6 @@ button[kind="secondary"]:hover {
     max-width: 85% !important;
 }
 
-/* Assistant messages */
 [data-testid="stChatMessage"][data-author="assistant"] > div:last-child {
     background: #FFFFFF !important;
     border-radius: 18px 18px 18px 4px !important;
@@ -256,7 +199,6 @@ button[kind="secondary"]:hover {
     max-width: 95% !important;
 }
 
-/* ── CHAT INPUT ── */
 [data-testid="stChatInput"] {
     background: #FFFFFF !important;
     border: 1px solid #E5E7EB !important;
@@ -274,7 +216,6 @@ button[kind="secondary"]:hover {
         0 4px 16px rgba(99,102,241,0.15) !important;
 }
 
-/* ── SELECTBOX ── */
 [data-testid="stSelectbox"] > div > div {
     background: #FFFFFF !important;
     border: 1px solid #E5E7EB !important;
@@ -282,12 +223,10 @@ button[kind="secondary"]:hover {
     box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
 }
 
-/* ── SLIDER ── */
 [data-testid="stSlider"] > div > div > div {
     background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
 }
 
-/* ── INFO BOXES ── */
 [data-testid="stAlert"] {
     background: #FFFFFF !important;
     border: 1px solid #E0E7FF !important;
@@ -297,7 +236,6 @@ button[kind="secondary"]:hover {
     color: #1E1B4B !important;
 }
 
-/* ── METRICS ── */
 [data-testid="stMetric"] {
     background: #FFFFFF !important;
     border-radius: 10px !important;
@@ -316,13 +254,11 @@ button[kind="secondary"]:hover {
     color: #6B7280 !important;
 }
 
-/* ── DIVIDER ── */
 hr {
     border-color: #F3F4F6 !important;
     margin: 12px 0 !important;
 }
 
-/* ── EXPANDER ── */
 [data-testid="stExpander"] {
     background: #FFFFFF !important;
     border: 1px solid #F3F4F6 !important;
@@ -330,7 +266,6 @@ hr {
     box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
 }
 
-/* ── SIDEBAR TITLES ── */
 [data-testid="stSidebar"] h1 {
     font-size: 20px !important;
     font-weight: 700 !important;
@@ -347,7 +282,6 @@ hr {
     letter-spacing: 0.06em !important;
 }
 
-/* ── SCORE BADGES ── */
 .score-high {
     display: inline-block;
     background: linear-gradient(135deg, #10B981, #06B6D4);
@@ -381,12 +315,10 @@ hr {
     box-shadow: 0 2px 8px rgba(239,68,68,0.30);
 }
 
-/* ── SPINNER ── */
 [data-testid="stSpinner"] {
     color: #6366F1 !important;
 }
 
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #F4F4F8; }
 ::-webkit-scrollbar-thumb {
@@ -394,7 +326,6 @@ hr {
     border-radius: 3px;
 }
 
-/* ── WELCOME CARD ── */
 .welcome-card {
     background: #FFFFFF;
     border-radius: 20px;
@@ -420,7 +351,6 @@ hr {
     line-height: 1.6;
 }
 
-/* ── REFERENCE CARD ── */
 .ref-card {
     background: #FFFFFF;
     border-radius: 12px;
@@ -437,11 +367,7 @@ hr {
 .ref-card-listening{ border-top-color: #F59E0B; }
 .ref-card-vocab    { border-top-color: #EC4899; }
 
-/* Practice mode color guide */
-.mode-guide-wrap {
-    margin-top: 8px;
-    margin-bottom: 10px;
-}
+.mode-guide-wrap { margin-top: 8px; margin-bottom: 10px; }
 .mode-guide-chip {
     display: inline-block;
     margin: 0 6px 6px 0;
@@ -457,6 +383,16 @@ hr {
 .mode-reading   { background: #DCFCE7; border: 1px solid #86EFAC; }
 .mode-vocab     { background: #FCE7F3; border: 1px solid #F9A8D4; }
 .mode-general   { background: #E5E7EB; border: 1px solid #CBD5E1; }
+
+.voice-card {
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid #E0E7FF;
+    border-left: 4px solid #6366F1;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(99,102,241,0.08);
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -496,7 +432,8 @@ def init_session_state():
         "mode": MODES[0],
         "task": "General Practice",
         "essay_count": 0,
-        "target_band": 7.0
+        "target_band": 7.0,
+        "last_audio_id": None
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -536,19 +473,26 @@ HOW TO HANDLE SPEAKING PRACTICE:
 - Score their answer using 4 criteria
 - Ask the NEXT question naturally
 
+IMPORTANT: The student may submit text OR a voice recording.
+If voice recording is provided, first transcribe what they said,
+then score it exactly like a text answer.
+
 SPEAKING SCORING CRITERIA:
 1. Fluency and Coherence (FC)
 2. Lexical Resource (LR)
 3. Grammatical Range and Accuracy (GRA)
-4. Pronunciation (P) — evaluate from written text
+4. Pronunciation (P) — evaluate from spoken delivery or written text
 
 FORMAT YOUR SPEAKING FEEDBACK EXACTLY LIKE THIS:
 ---
+TRANSCRIPTION (if voice):
+[What the student said]
+
 IELTS SPEAKING BAND SCORES
 Fluency and Coherence: X.X — [specific comment]
 Lexical Resource: X.X — [specific vocabulary tip]
 Grammatical Range: X.X — [specific grammar note]
-Pronunciation: X.X — [note from written clues]
+Pronunciation: X.X — [note from delivery or written clues]
 
 Overall Speaking Band: X.X to X.X
 
@@ -570,41 +514,33 @@ TASK 1 CONTEXT:
 - Time limit: 20 minutes.
 - Minimum word count: 150 words.
 
-SCORING (ONLY TASK ACHIEVEMENT — NOT TASK RESPONSE):
-1. Task Achievement (TA) — Key features described, overview present ("Overall..."), specific data/numbers used, and no personal opinion.
-2. Coherence and Cohesion (CC) — Logical paragraphing and progression.
-3. Lexical Resource (LR) — Vocabulary for describing data and stages.
-4. Grammatical Range and Accuracy (GRA) — Variety and accuracy.
+SCORING:
+1. Task Achievement (TA) — Key features described, overview present ("Overall..."), specific data/numbers used, no personal opinion.
+2. Coherence and Cohesion (CC)
+3. Lexical Resource (LR)
+4. Grammatical Range and Accuracy (GRA)
 
-EXAMINER CHECKLIST (USE THIS WHEN SCORING):
-- Overview: Does the essay include a separate overview paragraph that starts with "Overall..." (case-insensitive)? If missing or not starting with "Overall...", lower TA.
-- Specific data/numbers: Are there specific figures/dates (not just general statements)? If numbers are missing or too vague, lower TA.
-- No personal opinion: Detect and penalize personal viewpoints or recommendations (for example: "I think", "in my opinion", "we should", "it is better"). Task 1 should describe facts only; use objective language.
+EXAMINER CHECKLIST:
+- Overview must start with "Overall..."
+- Specific figures/dates must be present
+- No personal opinion allowed
 
-IF USER ASKS FOR A QUESTION:
-Generate ONE realistic IELTS Writing Task 1 prompt (graph/chart/table/pie chart/map/process) with realistic numbers/data. If it is a chart/process, ensure the key trends are describable.
+IF USER ASKS FOR A QUESTION: Generate ONE realistic IELTS Task 1 prompt with data.
 
-FORMAT YOUR TASK 1 FEEDBACK EXACTLY LIKE THIS:
+FORMAT:
 ---
 IELTS BAND SCORES — Writing Task 1
-Task Achievement: X.X — [does the overview exist starting with "Overall..."? are key features covered with specific data/numbers? is there any personal opinion?]
-Coherence and Cohesion: X.X — [paragraph structure and flow]
-Lexical Resource: X.X — [data-description vocabulary accuracy/range]
-Grammatical Range: X.X — [grammar accuracy and variety]
+Task Achievement: X.X — [comment]
+Coherence and Cohesion: X.X — [comment]
+Lexical Resource: X.X — [comment]
+Grammatical Range: X.X — [comment]
 
 Overall Band Estimate: X.X to X.X
 
-What Worked:
-[2 specific things with quotes from their essay]
-
-What To Fix:
-[2 specific improvements with rewritten examples]
-
-Improved Version of Your Introduction:
-[Rewrite their introduction at band 7+ level]
-
-Vocabulary Upgrades:
-[5 word or phrase upgrades from their essay]
+What Worked: [2 specific things with quotes]
+What To Fix: [2 improvements with rewritten examples]
+Improved Version of Your Introduction: [band 7+ rewrite]
+Vocabulary Upgrades: [5 upgrades]
 ---
 """
 
@@ -612,43 +548,30 @@ Vocabulary Upgrades:
         return base + f"""
 YOU ARE NOW: IELTS Writing Task 2 Examiner
 
-TASK 2 SCORING CRITERIA:
-1. Task Response (TR) — All parts answered? Position clear?
-2. Coherence and Cohesion (CC) — Essay structure and flow?
-3. Lexical Resource (LR) — Vocabulary range and accuracy?
+SCORING:
+1. Task Response (TR)
+2. Coherence and Cohesion (CC)
+3. Lexical Resource (LR)
 4. Grammatical Range and Accuracy (GRA)
 
-BAND 7+ TASK 2 REQUIRES:
-- Clear position in introduction
-- 2 fully developed body paragraphs with examples
-- Counter-argument addressed and refuted properly
-- Consistent position throughout
-- Minimum 250 words
+BAND 7+ REQUIRES: Clear position, 2 developed body paragraphs, counter-argument, 250+ words.
 
-IF USER ASKS FOR A QUESTION:
-Generate a realistic Task 2 question — opinion, discussion, problem-solution, or two-part style.
+IF USER ASKS FOR A QUESTION: Generate a realistic Task 2 question.
 
-FORMAT YOUR TASK 2 FEEDBACK EXACTLY LIKE THIS:
+FORMAT:
 ---
 IELTS BAND SCORES — Writing Task 2
-Task Response: X.X — [all parts answered fully?]
-Coherence and Cohesion: X.X — [structure comment]
-Lexical Resource: X.X — [vocabulary range comment]
-Grammatical Range: X.X — [grammar accuracy comment]
+Task Response: X.X — [comment]
+Coherence and Cohesion: X.X — [comment]
+Lexical Resource: X.X — [comment]
+Grammatical Range: X.X — [comment]
 
 Overall Band Estimate: X.X to X.X
 
-What Worked:
-[2 specific things with quotes from their essay]
-
-What To Fix:
-[2 specific improvements with rewritten examples]
-
-Improved Version of Your Introduction:
-[Rewrite their introduction at band 7+ level]
-
-Vocabulary Upgrades:
-[5 word or phrase upgrades from their essay]
+What Worked: [2 specific things]
+What To Fix: [2 improvements]
+Improved Version of Your Introduction: [band 7+ rewrite]
+Vocabulary Upgrades: [5 upgrades]
 ---
 """
 
@@ -657,100 +580,54 @@ Vocabulary Upgrades:
         return base + f"""
 YOU ARE NOW: IELTS Listening Practice Generator — {section}
 
-HOW LISTENING PRACTICE WORKS:
-1. Generate a realistic listening script for {section}
-2. Student reads it carefully once (simulates listening once)
-3. Generate 10 questions based only on the script
+1. Generate realistic listening script
+2. Student reads once
+3. Generate 10 questions from script only
 4. Student answers from memory
 5. Score and explain every error
 
-QUESTION TYPES TO USE:
-- Form or note completion (write exact words — 1 to 3 words)
-- Multiple choice (A, B, or C)
-- Matching
-- Short answer (maximum 3 words)
-
-IMPORTANT RULES:
-- Answers must come ONLY from the script
-- Note completion answers should be 1 to 3 words only
-- Multiple choice must have 3 clear options
-
 FORMAT:
-1. Show script labeled LISTENING SCRIPT — Read once carefully
-2. Tell student to answer questions without looking back
-3. Show questions labeled QUESTIONS — Answer from memory
-4. After answers — show scores and explain each error
+LISTENING SCRIPT — Read once carefully
+[script]
+QUESTIONS — Answer from memory
+[10 questions]
+After answers: scores + explanations
 """
 
     elif "Reading" in mode:
         return base + f"""
 YOU ARE NOW: IELTS Reading Practice Generator
 
-HOW READING PRACTICE WORKS:
-1. Generate a realistic academic passage — 600 to 800 words
-2. Generate 13 questions of mixed types
-3. Student answers all questions
-4. Score every answer and explain each error
+1. Generate 600-800 word academic passage
+2. Generate 13 mixed-type questions
+3. Student answers
+4. Score every answer with paragraph reference
 
-QUESTION TYPES TO INCLUDE:
-- True False Not Given (most important)
-- Yes No Not Given
-- Matching headings to paragraphs
-- Multiple choice
-- Short answer (3 words maximum)
-- Sentence completion
+TFNG: TRUE = text confirms | FALSE = text contradicts | NOT GIVEN = not mentioned. If in doubt — NOT GIVEN.
 
-TFNG STRICT RULES:
-TRUE = passage clearly and directly confirms it
-FALSE = passage clearly and directly contradicts it
-NOT GIVEN = passage does not mention it at all
-If in doubt — NOT GIVEN. Never guess TRUE or FALSE.
-
-PASSAGE REQUIREMENTS:
-- Academic topic — science, history, society, technology
-- Realistic Cambridge IELTS style
-- Include specific facts, numbers, and names
-- Paragraphs labeled A, B, C, D
-
-FORMAT:
-1. Show passage with labeled paragraphs
-2. Show all 13 questions
-3. After student answers — score each one
-4. Explain every wrong answer with paragraph reference
-5. Identify which question type they struggle with most
+PASSAGE: Academic topic, paragraphs labeled A B C D.
 """
 
     elif "Vocabulary" in mode:
-        return base + f"""
+        return base + """
 YOU ARE NOW: IELTS Vocabulary Coach
 
-HOW VOCABULARY SESSIONS WORK:
-1. Teach 5 words per session connected to IELTS topics
-2. Test student on previous words first
-3. Give definition plus example plus collocations
-4. Quiz the student at the end
-
+Teach 5 words per session.
 FORMAT FOR EACH WORD:
 WORD: [word]
-Definition: [simple clear definition]
-IELTS example: [natural sentence using this word]
-Collocations: [2 to 3 common word combinations]
-Band level: [B2 or C1 or C2]
-Topic: [which IELTS topic this helps]
+Definition: [simple]
+IELTS example: [sentence]
+Collocations: [2-3]
+Band level: [B2/C1/C2]
+Topic: [IELTS topic]
 
-After teaching — quiz the student:
-Use [word] in your own sentence about [topic].
-Give specific feedback on their sentence.
+After teaching — quiz the student.
 """
 
     else:
         return base + """
 YOU ARE NOW: Personal IELTS Tutor
-
 Help the student with whatever they need.
-Answer questions about IELTS format, scoring, strategies.
-Give vocabulary tips. Explain grammar rules.
-Encourage them. Point them toward the right practice mode.
 """
 
 # ============================================================
@@ -762,29 +639,35 @@ def chat_with_claude(messages, mode, task, target_band, api_key):
 
     anthropic_messages = []
     for msg in messages:
+        if msg["role"] == "assistant":
+            anthropic_messages.append({"role": "assistant", "content": msg["content"]})
+            continue
+
         content_blocks = []
-        if "audio" in msg and msg["audio"] is not None:
-            audio_data_base64 = base64.b64encode(msg["audio"]).decode("utf-8")
+
+        if msg.get("audio") is not None:
+            audio_data = msg["audio"]
+            if hasattr(audio_data, "read"):
+                audio_bytes = audio_data.read()
+            else:
+                audio_bytes = bytes(audio_data)
+            audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
             content_blocks.append({
-                "type": "audio",
+                "type": "text",
+                "text": "The student has submitted a voice recording for IELTS Speaking practice. Please transcribe what they said, then score it using the 4 IELTS Speaking criteria. Then ask the next question naturally."
+            })
+            content_blocks.append({
+                "type": "document",
                 "source": {
                     "type": "base64",
                     "media_type": "audio/wav",
-                    "data": audio_data_base64
+                    "data": audio_b64
                 }
             })
-            # Also include a text part to prompt the model about the audio
-            content_blocks.append({"type": "text", "text": "The user has provided an audio response. Please transcribe it and then grade it based on IELTS Speaking criteria (Fluency and Coherence, Lexical Resource, Grammatical Range and Accuracy, Pronunciation). Then ask the next question naturally."})
-        
-        if "content" in msg and msg["content"] is not None and msg["content"] != "(Audio response)":
+        else:
             content_blocks.append({"type": "text", "text": msg["content"]})
 
-        # If content_blocks is empty, it means only audio was present and handled, or it was an empty message.
-        # For cases where only text was provided, or if it's the initial message without audio.
-        if not content_blocks and "content" in msg and msg["content"] is not None:
-            anthropic_messages.append({"role": msg["role"], "content": msg["content"]})
-        elif content_blocks:
-            anthropic_messages.append({"role": msg["role"], "content": content_blocks})
+        anthropic_messages.append({"role": "user", "content": content_blocks})
 
     response = client.messages.create(
         model="claude-sonnet-4-5",
@@ -824,6 +707,7 @@ with st.sidebar:
     mode = st.selectbox("Practice mode:", MODES,
         index=MODES.index(st.session_state.mode) if st.session_state.mode in MODES else 0)
     st.session_state.mode = mode
+
     mode_color = (
         "mode-speaking" if "Speaking" in mode else
         "mode-writing" if "Writing" in mode else
@@ -832,23 +716,17 @@ with st.sidebar:
         "mode-vocab" if "Vocabulary" in mode else
         "mode-general"
     )
-    st.markdown(
-        """
-        <div class="mode-guide-wrap">
-            <span class="mode-guide-chip mode-speaking">Speaking</span>
-            <span class="mode-guide-chip mode-writing">Writing</span>
-            <span class="mode-guide-chip mode-listening">Listening</span>
-            <span class="mode-guide-chip mode-reading">Reading</span>
-            <span class="mode-guide-chip mode-vocab">Vocabulary Builder</span>
-            <span class="mode-guide-chip mode-general">General Practice</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<span class="mode-guide-chip {mode_color}">Current: {mode}</span>',
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <div class="mode-guide-wrap">
+        <span class="mode-guide-chip mode-speaking">Speaking</span>
+        <span class="mode-guide-chip mode-writing">Writing</span>
+        <span class="mode-guide-chip mode-listening">Listening</span>
+        <span class="mode-guide-chip mode-reading">Reading</span>
+        <span class="mode-guide-chip mode-vocab">Vocabulary Builder</span>
+        <span class="mode-guide-chip mode-general">General Practice</span>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown(f'<span class="mode-guide-chip {mode_color}">Current: {mode}</span>', unsafe_allow_html=True)
 
     topic = st.selectbox("Topic:", TOPICS)
 
@@ -862,6 +740,7 @@ with st.sidebar:
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.essay_count = 0
+        st.session_state.last_audio_id = None
         st.rerun()
 
     st.divider()
@@ -869,68 +748,68 @@ with st.sidebar:
     st.subheader("🎯 Skills Tasks")
 
     with st.expander("🎤 Speaking Tasks", expanded=True):
-        if st.button("Start Speaking Part 1", use_container_width=True):
+        if st.button("Start Speaking Part 1", key="task_spk_p1", use_container_width=True):
             start_session(
                 "Speaking — Part 1 (Personal questions)",
                 f"Please start my IELTS Speaking Part 1 practice. Ask me the first question about {topic}."
             )
-        if st.button("Start Speaking Part 2", use_container_width=True):
+        if st.button("Start Speaking Part 2", key="task_spk_p2", use_container_width=True):
             start_session(
                 "Speaking — Part 2 (Long turn / cue card)",
                 f"Please start my IELTS Speaking Part 2 practice. Ask me a cue card question about {topic}."
             )
-        if st.button("Start Speaking Part 3", use_container_width=True):
+        if st.button("Start Speaking Part 3", key="task_spk_p3", use_container_width=True):
             start_session(
                 "Speaking — Part 3 (Discussion)",
                 f"Please start my IELTS Speaking Part 3 practice. Ask me a discussion question about {topic}."
             )
 
     with st.expander("✍️ Writing Tasks", expanded=True):
-        if st.button("Get Task 1 question", use_container_width=True):
+        if st.button("Get Task 1 question", key="task_w_t1_q", use_container_width=True):
             start_session(
                 "Writing — Task 1 (Graph/Chart description)",
                 f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
             )
-        if st.button("Submit Task 1 essay", use_container_width=True):
+        if st.button("Submit Task 1 essay", key="task_w_t1_s", use_container_width=True):
             start_session(
                 "Writing — Task 1 (Graph/Chart description)",
                 "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
             )
-        if st.button("Get Task 2 question", use_container_width=True):
+        if st.button("Get Task 2 question", key="task_w_t2_q", use_container_width=True):
             start_session(
                 "Writing — Task 2 (Essay)",
                 f"Give me a realistic IELTS Writing Task 2 question about {topic}."
             )
-        if st.button("Submit Task 2 essay", use_container_width=True):
+        if st.button("Submit Task 2 essay", key="task_w_t2_s", use_container_width=True):
             start_session(
                 "Writing — Task 2 (Essay)",
                 "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
             )
 
     with st.expander("🎧 Listening Tasks", expanded=True):
-        if st.button("Start Listening Section 1", use_container_width=True):
+        if st.button("Start Listening Section 1", key="task_ls_s1", use_container_width=True):
             start_session(
                 "Listening — Section 1 (Conversation)",
                 f"Give me an IELTS Listening Section 1 practice about {topic}. Generate the script and 10 questions."
             )
-        if st.button("Start Listening Section 2", use_container_width=True):
+        if st.button("Start Listening Section 2", key="task_ls_s2", use_container_width=True):
             start_session(
                 "Listening — Section 2 (Monologue)",
                 f"Give me an IELTS Listening Section 2 practice about {topic}. Generate the script and 10 questions."
             )
-        if st.button("Start Listening Section 3", use_container_width=True):
+        if st.button("Start Listening Section 3", key="task_ls_s3", use_container_width=True):
             start_session(
                 "Listening — Section 3 (Academic discussion)",
                 f"Give me an IELTS Listening Section 3 practice about {topic}. Generate the script and 10 questions."
             )
-        if st.button("Start Listening Section 4", use_container_width=True):
+        if st.button("Start Listening Section 4", key="task_ls_s4", use_container_width=True):
             start_session(
                 "Listening — Section 4 (Academic lecture)",
                 f"Give me an IELTS Listening Section 4 practice about {topic}. Generate the script and 10 questions."
             )
 
     with st.expander("📖 Reading Tasks", expanded=True):
-        if st.button("Start Academic Reading", use_container_width=True):
+        if st.button("Start Academic Reading", key="task_rd_ac", use_container_width=True):
             start_session(
                 "Reading — Academic passage",
                 f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
@@ -938,7 +817,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Session stats
     st.subheader("Session Stats")
     user_msgs = len([m for m in st.session_state.messages if m["role"] == "user"])
     c1, c2, c3 = st.columns(3)
@@ -957,7 +835,6 @@ main_col, ref_col = st.columns([3, 1])
 
 with main_col:
 
-    # Header
     st.markdown(f"""
     <div class="ag-title">🎓 IELTS AI Tutor</div>
     <div class="ag-caption">
@@ -967,10 +844,9 @@ with main_col:
     </div>
     """, unsafe_allow_html=True)
 
-    # Welcome screen
     if not st.session_state.messages:
         welcome_data = {
-            "Speaking": ("🎤", "Speaking Practice", "Type your answers as if speaking. Claude asks questions one at a time and scores each answer with detailed feedback."),
+            "Speaking": ("🎤", "Speaking Practice", "Record your voice or type your answers. Claude scores each answer with detailed band feedback."),
             "Task 1": ("📊", "Writing Task 1", "20 minutes. Minimum 150 words. Ask for a question or paste your own essay for scoring."),
             "Task 2": ("✍️", "Writing Task 2", "40 minutes. Minimum 250 words. Ask for a question or paste your own essay for scoring."),
             "Listening": ("🎧", "Listening Practice", "Claude generates a realistic script. Read it once only. Then answer questions from memory."),
@@ -992,12 +868,11 @@ with main_col:
         </div>
         """, unsafe_allow_html=True)
 
-    # Chat history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            if "audio" in message and message["audio"] is not None:
+            if message.get("audio") is not None:
                 st.audio(message["audio"], format="audio/wav")
-                st.markdown(message["content"])
+                st.caption("🎤 Voice response submitted for grading")
             else:
                 st.markdown(message["content"])
 
@@ -1087,7 +962,6 @@ with ref_col:
         </div>
         """, unsafe_allow_html=True)
 
-    # Minimal progress tracker
     st.markdown("""
     <div style="background:#FFFFFF;border-radius:10px;border:1px solid #F3F4F6;
                 border-top:3px solid #6366F1;padding:14px;
@@ -1114,20 +988,40 @@ needs_response = (
     st.session_state.messages[-1]["role"] == "user"
 )
 
-audio_bytes = None
-user_input = None
-
 if "Speaking" in st.session_state.mode:
-    st.markdown("### Record your response")
-  audio_bytes = st.audio_input("🎤 Record your answer")
-    if audio_bytes:
-        st.session_state.messages.append({"role": "user", "content": "(Audio response)", "audio": audio_bytes})
-        needs_response = True
-else:
-    user_input = st.chat_input("Type your answer, essay, or question here...")
-    if user_input:
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        needs_response = True
+    with main_col:
+        st.markdown("""
+        <div class="voice-card">
+            <div style="font-weight:700;font-size:14px;color:#0F0F1A;margin-bottom:4px">
+                🎤 Voice Recording
+            </div>
+            <div style="font-size:12px;color:#6B7280;margin-bottom:10px">
+                Click to record your speaking answer. Claude will transcribe and grade it.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        audio_input = st.audio_input("Record your answer", key="speaking_audio")
+
+        if audio_input is not None:
+            audio_id = id(audio_input)
+            if st.session_state.last_audio_id != audio_id:
+                st.session_state.last_audio_id = audio_id
+                st.session_state.messages.append({
+                    "role": "user",
+                    "content": "(Voice recording submitted for IELTS Speaking grading)",
+                    "audio": audio_input
+                })
+                needs_response = True
+                st.rerun()
+
+        st.markdown("<div style='margin-top:8px;font-size:12px;color:#9CA3AF;text-align:center'>Or type your answer below</div>", unsafe_allow_html=True)
+
+user_input = st.chat_input("Type your answer, essay, or question here...")
+
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    needs_response = True
 
 if needs_response:
     if not api_key:
@@ -1136,7 +1030,12 @@ if needs_response:
 
     with main_col:
         with st.chat_message("user"):
-            st.markdown(st.session_state.messages[-1]["content"])
+            last_msg = st.session_state.messages[-1]
+            if last_msg.get("audio") is not None:
+                st.audio(last_msg["audio"], format="audio/wav")
+                st.caption("🎤 Voice response submitted for grading")
+            else:
+                st.markdown(last_msg["content"])
 
         with st.chat_message("assistant"):
             with st.spinner("Evaluating your English..."):
