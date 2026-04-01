@@ -8,9 +8,6 @@
 
 import streamlit as st
 import anthropic
-import base64
-from audio_recorder_streamlit import audio recorder 
-
 # ============================================================
 # PAGE CONFIG
 # ============================================================
