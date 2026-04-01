@@ -1004,9 +1004,12 @@ if "Speaking" in st.session_state.mode:
         audio_input = st.audio_input("Record your answer", key="speaking_audio")
 
         if audio_input is not None:
-            audio_id = id(audio_input)
-            if st.session_state.last_audio_id != audio_id:
-                st.session_state.last_audio_id = audio_id
+            import hashlib
+            audio_bytes_raw = audio_input.read()
+            audio_hash = hashlib.md5(audio_bytes_raw).hexdigest()
+            audio_input.seek(0)
+            if st.session_state.last_audio_id != audio_hash:
+                st.session_state.last_audio_id = audio_hash
                 st.session_state.messages.append({
                     "role": "user",
                     "content": "(Voice recording submitted for IELTS Speaking grading)",
@@ -1061,3 +1064,4 @@ if needs_response:
                     st.error("Rate limit hit. Wait 30 seconds and try again.")
                 except Exception as e:
                     st.error(f"Something went wrong: {str(e)}")
+                    
