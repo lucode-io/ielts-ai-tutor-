@@ -8,7 +8,7 @@
 
 import streamlit as st
 import anthropic
-import base64
+from streamlit_mic_recorder import speech_to_text
 
 # ============================================================
 # PAGE CONFIG
@@ -432,8 +432,7 @@ def init_session_state():
         "mode": MODES[0],
         "task": "General Practice",
         "essay_count": 0,
-        "target_band": 7.0,
-        "last_audio_id": None
+        "target_band": 7.0
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -637,43 +636,18 @@ Help the student with whatever they need.
 def chat_with_claude(messages, mode, task, target_band, api_key):
     client = anthropic.Anthropic(api_key=api_key)
 
-    anthropic_messages = []
+    clean_messages = []
     for msg in messages:
-        if msg["role"] == "assistant":
-            anthropic_messages.append({"role": "assistant", "content": msg["content"]})
-            continue
-
-        content_blocks = []
-
-        if msg.get("audio") is not None:
-            audio_data = msg["audio"]
-            if hasattr(audio_data, "read"):
-                audio_bytes = audio_data.read()
-            else:
-                audio_bytes = bytes(audio_data)
-            audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
-            content_blocks.append({
-                "type": "text",
-                "text": "The student has submitted a voice recording for IELTS Speaking practice. Please transcribe what they said, then score it using the 4 IELTS Speaking criteria. Then ask the next question naturally."
-            })
-            content_blocks.append({
-                "type": "document",
-                "source": {
-                    "type": "base64",
-                    "media_type": "audio/wav",
-                    "data": audio_b64
-                }
-            })
-        else:
-            content_blocks.append({"type": "text", "text": msg["content"]})
-
-        anthropic_messages.append({"role": "user", "content": content_blocks})
+        clean_messages.append({
+            "role": msg["role"],
+            "content": msg["content"]
+        })
 
     response = client.messages.create(
         model="claude-sonnet-4-5",
         max_tokens=2048,
         system=get_system_prompt(mode, task, target_band),
-        messages=anthropic_messages
+        messages=clean_messages
     )
     return response.content[0].text
 
@@ -740,7 +714,6 @@ with st.sidebar:
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.essay_count = 0
-        st.session_state.last_audio_id = None
         st.rerun()
 
     st.divider()
@@ -870,11 +843,7 @@ with main_col:
 
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            if message.get("audio") is not None:
-                st.audio(message["audio"], format="audio/wav")
-                st.caption("🎤 Voice response submitted for grading")
-            else:
-                st.markdown(message["content"])
+            st.markdown(message["content"])
 
 # ============================================================
 # REFERENCE PANEL
@@ -995,30 +964,35 @@ if "Speaking" in st.session_state.mode:
             <div style="font-weight:700;font-size:14px;color:#0F0F1A;margin-bottom:4px">
                 🎤 Voice Recording
             </div>
-            <div style="font-size:12px;color:#6B7280;margin-bottom:10px">
-                Click to record your speaking answer. Claude will transcribe and grade it.
+            <div style="font-size:12px;color:#6B7280;margin-bottom:8px">
+                Click Start — speak your answer — click Stop.
+                Your speech is converted to text and graded instantly.
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        audio_input = st.audio_input("Record your answer", key="speaking_audio")
+        voice_text = speech_to_text(
+            language='en',
+            start_prompt="🎤 Start Speaking",
+            stop_prompt="⏹️ Stop Recording",
+            just_once=True,
+            use_container_width=True,
+            key='stt_speaking'
+        )
 
-        if audio_input is not None:
-            import hashlib
-            audio_bytes_raw = audio_input.read()
-            audio_hash = hashlib.md5(audio_bytes_raw).hexdigest()
-            audio_input.seek(0)
-            if st.session_state.last_audio_id != audio_hash:
-                st.session_state.last_audio_id = audio_hash
-                st.session_state.messages.append({
-                    "role": "user",
-                    "content": "(Voice recording submitted for IELTS Speaking grading)",
-                    "audio": audio_input
-                })
-                needs_response = True
-                st.rerun()
+        if voice_text:
+            st.session_state.messages.append({
+                "role": "user",
+                "content": f"[Voice answer]: {voice_text}"
+            })
+            needs_response = True
+            st.rerun()
 
-        st.markdown("<div style='margin-top:8px;font-size:12px;color:#9CA3AF;text-align:center'>Or type your answer below</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="text-align:center;font-size:12px;color:#9CA3AF;margin:8px 0">
+            — or type your answer below —
+        </div>
+        """, unsafe_allow_html=True)
 
 user_input = st.chat_input("Type your answer, essay, or question here...")
 
@@ -1033,12 +1007,7 @@ if needs_response:
 
     with main_col:
         with st.chat_message("user"):
-            last_msg = st.session_state.messages[-1]
-            if last_msg.get("audio") is not None:
-                st.audio(last_msg["audio"], format="audio/wav")
-                st.caption("🎤 Voice response submitted for grading")
-            else:
-                st.markdown(last_msg["content"])
+            st.markdown(st.session_state.messages[-1]["content"])
 
         with st.chat_message("assistant"):
             with st.spinner("Evaluating your English..."):
@@ -1064,4 +1033,3 @@ if needs_response:
                     st.error("Rate limit hit. Wait 30 seconds and try again.")
                 except Exception as e:
                     st.error(f"Something went wrong: {str(e)}")
-                    
