@@ -30,369 +30,275 @@ st.markdown("""
 
 /* ── BASE ── */
 html, body, [data-testid="stAppViewContainer"] {
-    background: #F4F4F8 !important;
+    background: #0B1628 !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-[data-testid="stAppViewContainer"]::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: radial-gradient(rgba(99,102,241,0.07) 1px, transparent 1px);
-    background-size: 24px 24px;
-    pointer-events: none;
-    z-index: 0;
-}
-
-[data-testid="stAppViewContainer"]::after {
-    content: '';
-    position: fixed;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px;
-    height: 400px;
-    background: radial-gradient(ellipse, rgba(99,102,241,0.04) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-}
-
+/* ── SIDEBAR ── */
 [data-testid="stSidebar"] {
-    background: #FAFAFA !important;
-    border-right: 1px solid #F3F4F6 !important;
-    box-shadow: 2px 0 20px rgba(99,102,241,0.06) !important;
+    background: #0D1B30 !important;
+    border-right: 1px solid rgba(240,192,64,0.12) !important;
 }
+[data-testid="stSidebar"] > div { padding-top: 1.5rem; }
 
-[data-testid="stSidebar"] > div {
-    padding-top: 1.5rem;
-}
-
+/* ── MAIN ── */
 .main .block-container {
     background: transparent;
     padding-top: 1rem;
     max-width: 900px;
 }
 
-.ag-card {
-    background: #FFFFFF;
-    border-radius: 16px;
-    border: 1px solid #F3F4F6;
-    padding: 20px 24px;
-    margin-bottom: 16px;
-    box-shadow:
-        0 1px 3px rgba(0,0,0,0.06),
-        0 4px 16px rgba(99,102,241,0.08),
-        0 12px 40px rgba(99,102,241,0.05);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.ag-card:hover {
-    box-shadow:
-        0 2px 8px rgba(0,0,0,0.08),
-        0 8px 32px rgba(99,102,241,0.15),
-        0 20px 60px rgba(99,102,241,0.08);
-    transform: translateY(-2px);
-}
-
+/* ── APP TITLE ── */
 .ag-title {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 700;
-    color: #0F0F1A;
-    letter-spacing: -0.5px;
+    color: #F0C040;
+    letter-spacing: 0.02em;
     margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+.ag-caption { font-size: 13px; color: #4A5A7A; margin-bottom: 20px; }
 
-.ag-caption {
-    font-size: 13px;
-    color: #9CA3AF;
-    margin-bottom: 20px;
-}
-
+/* ── PILLS ── */
 .ag-pill {
     display: inline-block;
     padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 12px;
+    border-radius: 4px;
+    font-size: 11px;
     font-weight: 600;
     margin-right: 6px;
+    letter-spacing: 0.04em;
 }
+.ag-pill-mode { background: rgba(240,192,64,0.15); color: #F0C040; border: 1px solid rgba(240,192,64,0.3); }
+.ag-pill-topic { background: rgba(203,213,232,0.08); color: #6B7A9A; border: 1px solid rgba(203,213,232,0.15); }
+.ag-pill-band { background: rgba(46,204,113,0.12); color: #2ECC71; border: 1px solid rgba(46,204,113,0.25); }
 
-.ag-pill-mode {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6);
-    color: #FFFFFF;
-}
-
-.ag-pill-topic {
-    background: #F3F4F6;
-    color: #374151;
-}
-
-.ag-pill-band {
-    background: linear-gradient(135deg, #10B981, #06B6D4);
-    color: #FFFFFF;
-}
-
+/* ── BUTTONS ── */
 .stButton > button {
-    border-radius: 10px !important;
+    border-radius: 6px !important;
     font-weight: 600 !important;
-    font-size: 14px !important;
-    padding: 10px 16px !important;
-    transition: all 0.2s ease !important;
-    border: none !important;
+    font-size: 13px !important;
+    padding: 9px 14px !important;
+    transition: all 0.15s ease !important;
     width: 100% !important;
+    background: #132040 !important;
+    color: #CBD5E8 !important;
+    border: 1px solid rgba(240,192,64,0.2) !important;
+}
+.stButton > button:hover {
+    background: #1A2E50 !important;
+    color: #F0C040 !important;
+    border-color: rgba(240,192,64,0.5) !important;
 }
 
-div[data-testid="column"]:nth-of-type(1) .stButton:nth-of-type(1) > button {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 2px 8px rgba(99,102,241,0.30), 0 4px 16px rgba(99,102,241,0.15) !important;
-}
-
-div[data-testid="column"]:nth-of-type(1) .stButton:nth-of-type(2) > button {
-    background: linear-gradient(135deg, #10B981, #06B6D4) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 2px 8px rgba(16,185,129,0.30), 0 4px 16px rgba(16,185,129,0.15) !important;
-}
-
-div[data-testid="column"]:nth-of-type(2) .stButton:nth-of-type(1) > button {
-    background: linear-gradient(135deg, #0EA5E9, #6366F1) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 2px 8px rgba(14,165,233,0.30), 0 4px 16px rgba(14,165,233,0.15) !important;
-}
-
-div[data-testid="column"]:nth-of-type(2) .stButton:nth-of-type(2) > button {
-    background: linear-gradient(135deg, #F59E0B, #EF4444) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 2px 8px rgba(245,158,11,0.30), 0 4px 16px rgba(245,158,11,0.15) !important;
-}
-
+/* Clear chat */
 button[kind="secondary"] {
-    background: #FFFFFF !important;
-    color: #EF4444 !important;
-    border: 1px solid #FCA5A5 !important;
-    box-shadow: 0 1px 4px rgba(239,68,68,0.10) !important;
+    background: transparent !important;
+    color: #E74C3C !important;
+    border: 1px solid rgba(231,76,60,0.3) !important;
+}
+button[kind="secondary"]:hover {
+    background: rgba(231,76,60,0.08) !important;
+    border-color: rgba(231,76,60,0.6) !important;
 }
 
+/* ── CHAT MESSAGES ── */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border: none !important;
     padding: 4px 0 !important;
 }
 
+/* User messages — right aligned sharp */
 [data-testid="stChatMessage"][data-author="user"] > div:last-child {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
-    border-radius: 18px 18px 4px 18px !important;
+    background: #1A2E50 !important;
+    border-radius: 0 8px 8px 8px !important;
+    border: 1px solid rgba(240,192,64,0.2) !important;
+    border-right: 3px solid #F0C040 !important;
     padding: 12px 16px !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 4px 16px rgba(99,102,241,0.25) !important;
+    color: #E8EEF8 !important;
     margin-left: auto !important;
     max-width: 85% !important;
 }
 
+/* Assistant messages — left aligned sharp */
 [data-testid="stChatMessage"][data-author="assistant"] > div:last-child {
-    background: #FFFFFF !important;
-    border-radius: 18px 18px 18px 4px !important;
+    background: #132040 !important;
+    border-radius: 8px 0 8px 8px !important;
+    border: 1px solid rgba(240,192,64,0.1) !important;
+    border-left: 3px solid #F0C040 !important;
     padding: 14px 18px !important;
-    border: 1px solid #F3F4F6 !important;
-    border-left: 3px solid #6366F1 !important;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
+    color: #CBD5E8 !important;
     max-width: 95% !important;
 }
 
+/* ── CHAT INPUT ── */
 [data-testid="stChatInput"] {
-    background: #FFFFFF !important;
-    border: 1px solid #E5E7EB !important;
-    border-radius: 14px !important;
-    box-shadow:
-        0 2px 8px rgba(0,0,0,0.06),
-        0 4px 16px rgba(99,102,241,0.08) !important;
-    padding: 4px 8px !important;
+    background: #132040 !important;
+    border: 1px solid rgba(240,192,64,0.2) !important;
+    border-radius: 6px !important;
+    color: #CBD5E8 !important;
 }
-
 [data-testid="stChatInput"]:focus-within {
-    border-color: #6366F1 !important;
-    box-shadow:
-        0 0 0 3px rgba(99,102,241,0.12),
-        0 4px 16px rgba(99,102,241,0.15) !important;
+    border-color: #F0C040 !important;
+    box-shadow: 0 0 0 2px rgba(240,192,64,0.12) !important;
 }
 
+/* ── SELECTBOX ── */
 [data-testid="stSelectbox"] > div > div {
-    background: #FFFFFF !important;
-    border: 1px solid #E5E7EB !important;
-    border-radius: 8px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+    background: #132040 !important;
+    border: 1px solid rgba(240,192,64,0.2) !important;
+    border-radius: 6px !important;
+    color: #CBD5E8 !important;
 }
 
+/* ── SLIDER ── */
 [data-testid="stSlider"] > div > div > div {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
+    background: #F0C040 !important;
 }
 
+/* ── ALERTS ── */
 [data-testid="stAlert"] {
-    background: #FFFFFF !important;
-    border: 1px solid #E0E7FF !important;
-    border-left: 4px solid #6366F1 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.08) !important;
-    color: #1E1B4B !important;
+    background: #132040 !important;
+    border: 1px solid rgba(240,192,64,0.2) !important;
+    border-left: 4px solid #F0C040 !important;
+    border-radius: 6px !important;
+    color: #CBD5E8 !important;
 }
 
+/* ── METRICS ── */
 [data-testid="stMetric"] {
-    background: #FFFFFF !important;
-    border-radius: 10px !important;
+    background: #132040 !important;
+    border-radius: 6px !important;
     padding: 12px 16px !important;
-    border: 1px solid #F3F4F6 !important;
-    border-top: 3px solid #6366F1 !important;
-    box-shadow: 0 2px 8px rgba(99,102,241,0.08) !important;
+    border: 1px solid rgba(240,192,64,0.15) !important;
+    border-top: 2px solid #F0C040 !important;
 }
+[data-testid="stMetricValue"] { color: #F0C040 !important; font-weight: 700 !important; }
+[data-testid="stMetricLabel"] { color: #4A5A7A !important; }
 
-[data-testid="stMetricValue"] {
-    color: #0F0F1A !important;
-    font-weight: 700 !important;
-}
+/* ── DIVIDER ── */
+hr { border-color: rgba(240,192,64,0.1) !important; margin: 12px 0 !important; }
 
-[data-testid="stMetricLabel"] {
-    color: #6B7280 !important;
-}
-
-hr {
-    border-color: #F3F4F6 !important;
-    margin: 12px 0 !important;
-}
-
+/* ── EXPANDER ── */
 [data-testid="stExpander"] {
-    background: #FFFFFF !important;
-    border: 1px solid #F3F4F6 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+    background: #132040 !important;
+    border: 1px solid rgba(240,192,64,0.12) !important;
+    border-radius: 6px !important;
 }
 
+/* ── SIDEBAR TITLES ── */
 [data-testid="stSidebar"] h1 {
-    font-size: 20px !important;
+    font-size: 18px !important;
     font-weight: 700 !important;
-    color: #0F0F1A !important;
-    letter-spacing: -0.3px !important;
+    color: #F0C040 !important;
+    letter-spacing: 0.02em !important;
 }
-
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 {
-    font-size: 13px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
-    color: #6B7280 !important;
+    color: #4A5A7A !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.06em !important;
+    letter-spacing: 0.08em !important;
 }
 
+/* ── SCORE BADGES ── */
 .score-high {
     display: inline-block;
-    background: linear-gradient(135deg, #10B981, #06B6D4);
-    color: #FFFFFF;
+    background: rgba(46,204,113,0.15);
+    color: #2ECC71;
+    border: 1px solid rgba(46,204,113,0.3);
     padding: 2px 10px;
-    border-radius: 20px;
+    border-radius: 4px;
     font-weight: 700;
     font-size: 13px;
-    box-shadow: 0 2px 8px rgba(16,185,129,0.30);
 }
-
 .score-mid {
     display: inline-block;
-    background: linear-gradient(135deg, #F59E0B, #EF4444);
-    color: #FFFFFF;
+    background: rgba(240,192,64,0.15);
+    color: #F0C040;
+    border: 1px solid rgba(240,192,64,0.3);
     padding: 2px 10px;
-    border-radius: 20px;
+    border-radius: 4px;
     font-weight: 700;
     font-size: 13px;
-    box-shadow: 0 2px 8px rgba(245,158,11,0.30);
 }
-
 .score-low {
     display: inline-block;
-    background: linear-gradient(135deg, #EF4444, #DC2626);
-    color: #FFFFFF;
+    background: rgba(231,76,60,0.15);
+    color: #E74C3C;
+    border: 1px solid rgba(231,76,60,0.3);
     padding: 2px 10px;
-    border-radius: 20px;
+    border-radius: 4px;
     font-weight: 700;
     font-size: 13px;
-    box-shadow: 0 2px 8px rgba(239,68,68,0.30);
 }
 
-[data-testid="stSpinner"] {
-    color: #6366F1 !important;
-}
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #0B1628; }
+::-webkit-scrollbar-thumb { background: #F0C040; border-radius: 2px; }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #F4F4F8; }
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(#6366F1, #8B5CF6);
-    border-radius: 3px;
-}
-
+/* ── WELCOME CARD ── */
 .welcome-card {
-    background: #FFFFFF;
-    border-radius: 20px;
-    border: 1px solid #F3F4F6;
-    padding: 32px;
+    background: #132040;
+    border-radius: 8px;
+    border: 1px solid rgba(240,192,64,0.15);
+    border-top: 3px solid #F0C040;
+    padding: 36px 32px;
     text-align: center;
-    box-shadow:
-        0 1px 3px rgba(0,0,0,0.06),
-        0 8px 32px rgba(99,102,241,0.10),
-        0 20px 60px rgba(99,102,241,0.06);
 }
+.welcome-card h2 { font-size: 20px; font-weight: 700; color: #F0C040; margin-bottom: 8px; }
+.welcome-card p { font-size: 14px; color: #6B7A9A; line-height: 1.7; }
 
-.welcome-card h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #0F0F1A;
-    margin-bottom: 8px;
-}
-
-.welcome-card p {
-    font-size: 15px;
-    color: #6B7280;
-    line-height: 1.6;
-}
-
+/* ── REF CARD ── */
 .ref-card {
-    background: #FFFFFF;
-    border-radius: 12px;
-    border: 1px solid #F3F4F6;
-    border-top: 3px solid;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.08);
+    background: #132040;
+    border-radius: 6px;
+    border: 1px solid rgba(240,192,64,0.12);
+    border-top: 2px solid #F0C040;
+    padding: 14px;
+    margin-bottom: 10px;
 }
+.ref-card-speaking { border-top-color: #A78BFA; }
+.ref-card-writing  { border-top-color: #38BDF8; }
+.ref-card-reading  { border-top-color: #34D399; }
+.ref-card-listening{ border-top-color: #FCD34D; }
+.ref-card-vocab    { border-top-color: #F472B6; }
 
-.ref-card-speaking { border-top-color: #8B5CF6; }
-.ref-card-writing  { border-top-color: #0EA5E9; }
-.ref-card-reading  { border-top-color: #10B981; }
-.ref-card-listening{ border-top-color: #F59E0B; }
-.ref-card-vocab    { border-top-color: #EC4899; }
-
+/* ── MODE CHIPS ── */
 .mode-guide-wrap { margin-top: 8px; margin-bottom: 10px; }
 .mode-guide-chip {
     display: inline-block;
-    margin: 0 6px 6px 0;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #111827;
+    margin: 0 5px 5px 0;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
 }
-.mode-speaking  { background: #EDE9FE; border: 1px solid #C4B5FD; }
-.mode-writing   { background: #E0F2FE; border: 1px solid #93C5FD; }
-.mode-listening { background: #FEF3C7; border: 1px solid #FCD34D; }
-.mode-reading   { background: #DCFCE7; border: 1px solid #86EFAC; }
-.mode-vocab     { background: #FCE7F3; border: 1px solid #F9A8D4; }
-.mode-general   { background: #E5E7EB; border: 1px solid #CBD5E1; }
+.mode-speaking  { background: rgba(167,139,250,0.15); color: #A78BFA; border: 1px solid rgba(167,139,250,0.3); }
+.mode-writing   { background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.3); }
+.mode-listening { background: rgba(252,211,77,0.12); color: #FCD34D; border: 1px solid rgba(252,211,77,0.3); }
+.mode-reading   { background: rgba(52,211,153,0.12); color: #34D399; border: 1px solid rgba(52,211,153,0.3); }
+.mode-vocab     { background: rgba(244,114,182,0.12); color: #F472B6; border: 1px solid rgba(244,114,182,0.3); }
+.mode-general   { background: rgba(203,213,232,0.08); color: #6B7A9A; border: 1px solid rgba(203,213,232,0.15); }
 
+/* ── VOICE CARD ── */
 .voice-card {
-    background: #FFFFFF;
-    border-radius: 14px;
-    border: 1px solid #E0E7FF;
-    border-left: 4px solid #6366F1;
-    padding: 16px 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.08);
+    background: #132040;
+    border-radius: 6px;
+    border: 1px solid rgba(240,192,64,0.2);
+    border-left: 3px solid #F0C040;
+    padding: 14px 18px;
+    margin-bottom: 14px;
 }
+
+/* ── SPINNER ── */
+[data-testid="stSpinner"] { color: #F0C040 !important; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -665,8 +571,24 @@ def start_session(mode, starter_message):
 # ============================================================
 
 with st.sidebar:
-    st.title("🎓 IELTS AI Tutor")
-    st.caption("Powered by Claude AI")
+    st.markdown("""
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 0 12px;border-bottom:1px solid rgba(240,192,64,0.12)">
+        <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
+            <rect width="56" height="56" rx="14" fill="#132040"/>
+            <polygon points="28,14 46,24 28,34 10,24" fill="#1A2E50" stroke="#F0C040" stroke-width="2" stroke-linejoin="round"/>
+            <line x1="40" y1="27" x2="40" y2="38" stroke="#F0C040" stroke-width="2" stroke-linecap="round"/>
+            <path d="M34,38 Q40,42 46,38" fill="none" stroke="#F0C040" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="43" cy="13" r="1.5" fill="#F0C040"/>
+            <line x1="43" y1="13" x2="47" y2="9" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="43" y1="13" x2="48" y2="14" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="43" y1="13" x2="42" y2="8" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <div>
+            <div style="font-size:15px;font-weight:700;color:#F0C040;letter-spacing:0.03em">IELTS AI Tutor</div>
+            <div style="font-size:10px;color:#4A5A7A;letter-spacing:0.08em;text-transform:uppercase">Powered by Claude</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     api_key = st.secrets.get("ANTHROPIC_API_KEY", "") or st.text_input(
         "Claude API Key",
@@ -809,7 +731,19 @@ main_col, ref_col = st.columns([3, 1])
 with main_col:
 
     st.markdown(f"""
-    <div class="ag-title">🎓 IELTS AI Tutor</div>
+    <div class="ag-title">
+        <svg width="28" height="28" viewBox="0 0 56 56" fill="none">
+            <rect width="56" height="56" rx="14" fill="#132040"/>
+            <polygon points="28,14 46,24 28,34 10,24" fill="#1A2E50" stroke="#F0C040" stroke-width="2" stroke-linejoin="round"/>
+            <line x1="40" y1="27" x2="40" y2="38" stroke="#F0C040" stroke-width="2" stroke-linecap="round"/>
+            <path d="M34,38 Q40,42 46,38" fill="none" stroke="#F0C040" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="43" cy="13" r="1.5" fill="#F0C040"/>
+            <line x1="43" y1="13" x2="47" y2="9" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="43" y1="13" x2="48" y2="14" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="43" y1="13" x2="42" y2="8" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        IELTS AI Tutor
+    </div>
     <div class="ag-caption">
         <span class="ag-pill ag-pill-mode">{mode.split("—")[0].strip()}</span>
         <span class="ag-pill ag-pill-topic">{topic}</span>
@@ -908,42 +842,41 @@ with ref_col:
 
     if matched:
         card_class, title, tips, footer = matched
-        tips_html = "".join([f"<li style='margin-bottom:6px;color:#374151;font-size:13px'>{t}</li>" for t in tips])
+        tips_html = "".join([f"<li style='margin-bottom:6px;color:#CBD5E8;font-size:13px'>{t}</li>" for t in tips])
         st.markdown(f"""
         <div class="ref-card ref-card-{card_class}">
-            <div style="font-weight:700;font-size:14px;color:#0F0F1A;margin-bottom:10px">{title}</div>
+            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:10px">{title}</div>
             <ul style="margin:0;padding-left:16px">{tips_html}</ul>
-            <div style="margin-top:10px;font-size:12px;color:#6B7280;border-top:1px solid #F3F4F6;padding-top:8px">{footer}</div>
+            <div style="margin-top:10px;font-size:11px;color:#4A5A7A;border-top:1px solid rgba(240,192,64,0.1);padding-top:8px">{footer}</div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div class="ref-card" style="border-top-color:#6366F1">
-            <div style="font-weight:700;font-size:14px;color:#0F0F1A;margin-bottom:10px">📋 IELTS Band Scale</div>
+        <div class="ref-card" style="border-top-color:#F0C040">
+            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:10px">IELTS Band Scale</div>
             <ul style="margin:0;padding-left:16px">
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 9: Expert user</li>
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 8: Very good user</li>
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 7: Good user</li>
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 6: Competent user</li>
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 5: Modest user</li>
+                <li style="margin-bottom:6px;color:#CBD5E8;font-size:13px">Band 9 — Expert user</li>
+                <li style="margin-bottom:6px;color:#CBD5E8;font-size:13px">Band 8 — Very good user</li>
+                <li style="margin-bottom:6px;color:#CBD5E8;font-size:13px">Band 7 — Good user</li>
+                <li style="margin-bottom:6px;color:#CBD5E8;font-size:13px">Band 6 — Competent user</li>
+                <li style="margin-bottom:6px;color:#CBD5E8;font-size:13px">Band 5 — Modest user</li>
             </ul>
-            <div style="margin-top:10px;font-size:12px;color:#6B7280;border-top:1px solid #F3F4F6;padding-top:8px">Your target: 7.0+ — all 4 skills matter equally</div>
+            <div style="margin-top:10px;font-size:11px;color:#4A5A7A;border-top:1px solid rgba(240,192,64,0.1);padding-top:8px">Target: 7.0+ — all 4 skills matter equally</div>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style="background:#FFFFFF;border-radius:10px;border:1px solid #F3F4F6;
-                border-top:3px solid #6366F1;padding:14px;
-                box-shadow:0 2px 8px rgba(99,102,241,0.08);margin-top:12px">
-        <div style="font-weight:700;font-size:13px;color:#0F0F1A;margin-bottom:8px">
-            📈 Band Progression
+    <div style="background:#132040;border-radius:6px;border:1px solid rgba(240,192,64,0.15);
+                border-top:2px solid #F0C040;padding:14px;margin-top:10px">
+        <div style="font-weight:700;font-size:12px;color:#F0C040;margin-bottom:8px;letter-spacing:0.04em;text-transform:uppercase">
+            Band Progression
         </div>
-        <div style="font-size:12px;color:#6B7280;line-height:1.8">
-            Baseline: <strong style="color:#EF4444">A2</strong><br>
-            March target: <strong style="color:#F59E0B">5.5+</strong><br>
-            May target: <strong style="color:#F59E0B">6.5+</strong><br>
-            June exam: <strong style="color:#10B981">6.0-6.5</strong><br>
-            August target: <strong style="color:#10B981">7.0+</strong>
+        <div style="font-size:12px;color:#6B7A9A;line-height:1.9">
+            Baseline: <strong style="color:#E74C3C">A2</strong><br>
+            March target: <strong style="color:#F0C040">5.5+</strong><br>
+            May target: <strong style="color:#F0C040">6.5+</strong><br>
+            June exam: <strong style="color:#2ECC71">6.0-6.5</strong><br>
+            August target: <strong style="color:#2ECC71">7.0+</strong>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -961,12 +894,12 @@ if "Speaking" in st.session_state.mode:
     with main_col:
         st.markdown("""
         <div class="voice-card">
-            <div style="font-weight:700;font-size:14px;color:#0F0F1A;margin-bottom:4px">
-                🎤 Voice Recording
+            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:4px">
+                Voice Recording
             </div>
-            <div style="font-size:12px;color:#6B7280;margin-bottom:8px">
+            <div style="font-size:12px;color:#4A5A7A;margin-bottom:8px">
                 Click Start — speak your answer — click Stop.
-                Your speech is converted to text and graded instantly.
+                Speech is converted to text and graded instantly.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -989,7 +922,7 @@ if "Speaking" in st.session_state.mode:
             st.rerun()
 
         st.markdown("""
-        <div style="text-align:center;font-size:12px;color:#9CA3AF;margin:8px 0">
+        <div style="text-align:center;font-size:11px;color:#4A5A7A;margin:8px 0;letter-spacing:0.04em">
             — or type your answer below —
         </div>
         """, unsafe_allow_html=True)
