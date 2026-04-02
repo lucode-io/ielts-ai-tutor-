@@ -450,8 +450,7 @@ def init_session_state():
         "mode": MODES[0],
         "task": "General Practice",
         "essay_count": 0,
-        "target_band": 7.0,
-        "nav_section": "chat"
+        "target_band": 7.0
     }
     for key, value in defaults.items():
         if key not in st.session_state:
