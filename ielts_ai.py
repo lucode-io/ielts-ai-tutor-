@@ -543,7 +543,7 @@ RULES FOR ALL MODES:
 - Never inflate scores. Honest feedback only.
 - Never say "great job" without a specific reason.
 - Always give ONE concrete thing to improve today.
-- Use simple English — student may not be advanced.
+- Use simple English - student may not be advanced.
 - Never switch topics unless student asks.
 """
 
