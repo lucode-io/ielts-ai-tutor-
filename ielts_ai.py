@@ -498,6 +498,10 @@ def init_session_state():
         "task": "General Practice",
         "essay_count": 0,
         "target_band": 7.0
+        "show_settings": False,
+"tutor_name": "Alex",
+"response_language": "English",
+"accent_color": "#F0C040",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
