@@ -479,6 +479,17 @@ TOPICS = [
     "Food", "Family", "Crime and Law", "Economy", "Free choice"
 ]
 
+LANGUAGES = [
+    "English",
+    "Mongolian (Монгол)",
+    "Kazakh (Қазақша)",
+    "Uzbek (O'zbek)",
+    "Kyrgyz (Кыргызча)",
+    "Tajik (Тоҷикӣ)",
+    "Turkmen (Turkmen)",
+    "Russian (Русский)",
+]
+
 # ============================================================
 # SESSION STATE
 # ============================================================
@@ -517,14 +528,23 @@ You are honest, specific, and encouraging.
 Target band: {target_band}
 Current task: {task}
 Response language: {response_language}
-If response language is Mongolian or Mixed, explain feedback and tips in that language.
-If English, respond fully in English.
+
+LANGUAGE INSTRUCTIONS - Follow strictly:
+- If response language is "English": respond fully in English.
+- For ALL other languages (Mongolian, Kazakh, Uzbek, Kyrgyz, Tajik, Turkmen, Russian):
+  Use MIXED MODE:
+  * Write ALL explanations, feedback, tips, and comments in {response_language}.
+  * Keep ALL IELTS technical terms in English: Band scores, Task Achievement,
+    Coherence and Cohesion, Lexical Resource, Grammatical Range, TRUE/FALSE/NOT GIVEN,
+    Fluency, Pronunciation, Overview, Body Paragraph, Introduction, Conclusion.
+  * Keep ALL example sentences and upgraded phrases in English.
+  * Keep ALL score numbers and band estimates in English (e.g. "6.5", "Band 7").
+  * The format and structure stays the same - only explanation language changes.
 
 RULES FOR ALL MODES:
 - Never inflate scores. Honest feedback only.
 - Never say "great job" without a specific reason.
 - Always give ONE concrete thing to improve today.
-- Use simple English - student may not be advanced.
 - Never switch topics unless student asks.
 """
 
@@ -776,25 +796,14 @@ if st.session_state.show_settings:
 
     with set_c2:
         st.markdown("<div style='font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px'>Language</div>", unsafe_allow_html=True)
-    LANGUAGES = [
-    "English",
-    "Mongolian (Монгол)",
-    "Kazakh (Қазақша)",
-    "Uzbek (O'zbek)",
-    "Kyrgyz (Кыргызча)",
-    "Tajik (Тоҷикӣ)",
-    "Turkmen (Türkmen)",
-    "Russian (Русский)",
-]
-response_language = st.selectbox(
-    "Response language",
-    LANGUAGES,
-    index=LANGUAGES.index(st.session_state.response_language)
-          if st.session_state.response_language in LANGUAGES else 0,
-    label_visibility="collapsed",
-    key="lang_select"
-)
-
+        response_language = st.selectbox(
+            "Response language",
+            LANGUAGES,
+            index=LANGUAGES.index(st.session_state.response_language)
+                  if st.session_state.response_language in LANGUAGES else 0,
+            label_visibility="collapsed",
+            key="lang_select"
+        )
         st.session_state.response_language = response_language
 
     with set_c3:
