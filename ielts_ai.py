@@ -550,7 +550,7 @@ RULES FOR ALL MODES:
     if "Speaking" in mode:
         part = "Part 1" if "Part 1" in mode else "Part 2" if "Part 2" in mode else "Part 3"
         return base + f"""
-YOU ARE NOW: IELTS Speaking Examiner — {part}
+YOU ARE NOW: IELTS Speaking Examiner - {part}
 
 HOW TO HANDLE SPEAKING PRACTICE:
 - Ask ONE question at a time
