@@ -190,12 +190,59 @@ button[kind="secondary"]:hover {
     background: rgba(255, 255, 255, 0.05) !important;
     border-radius: 20px 20px 20px 4px !important;
     border: 1px solid rgba(255,255,255,0.08) !important;
-    padding: 16px 20px !important;
-    color: #e0e0e0 !important;
+    padding: 20px 24px !important;
     max-width: 95% !important;
     backdrop-filter: blur(12px) !important;
 }
 
+/* ── ASSISTANT RESPONSE TYPOGRAPHY ── */
+[data-testid="stChatMessage"][data-author="assistant"] p,
+[data-testid="stChatMessage"][data-author="assistant"] li,
+[data-testid="stChatMessage"][data-author="assistant"] span {
+    font-size: 15px !important;
+    line-height: 1.85 !important;
+    color: #dde6f0 !important;
+    letter-spacing: 0.012em !important;
+}
+[data-testid="stChatMessage"][data-author="assistant"] strong {
+    color: #F0C040 !important;
+    font-weight: 600 !important;
+}
+[data-testid="stChatMessage"][data-author="assistant"] h1,
+[data-testid="stChatMessage"][data-author="assistant"] h2,
+[data-testid="stChatMessage"][data-author="assistant"] h3 {
+    color: #F0C040 !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    margin: 1.2rem 0 0.4rem !important;
+    letter-spacing: 0.02em !important;
+}
+[data-testid="stChatMessage"][data-author="assistant"] ul,
+[data-testid="stChatMessage"][data-author="assistant"] ol {
+    padding-left: 1.4rem !important;
+    margin: 0.5rem 0 0.8rem !important;
+}
+[data-testid="stChatMessage"][data-author="assistant"] li {
+    margin-bottom: 8px !important;
+}
+[data-testid="stChatMessage"][data-author="assistant"] hr {
+    border-color: rgba(240,192,64,0.2) !important;
+    margin: 14px 0 !important;
+}
+[data-testid="stChatMessage"][data-author="assistant"] code {
+    background: rgba(240,192,64,0.1) !important;
+    color: #F0C040 !important;
+    padding: 2px 7px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+}
+[data-testid="stChatMessage"][data-author="assistant"] blockquote {
+    border-left: 3px solid rgba(240,192,64,0.4) !important;
+    padding-left: 14px !important;
+    color: rgba(255,255,255,0.55) !important;
+    margin: 10px 0 !important;
+    font-style: italic !important;
+}
 /* ── CHAT INPUT ── */
 [data-testid="stChatInput"] {
     background: rgba(255, 255, 255, 0.04) !important;
