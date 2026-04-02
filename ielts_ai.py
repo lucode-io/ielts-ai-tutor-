@@ -459,6 +459,16 @@ hr { border-color: rgba(255,255,255,0.06) !important; margin: 12px 0 !important;
     }
 }
 
+/* ── SETTINGS PANEL ── */
+.settings-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    margin-top: 14px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
