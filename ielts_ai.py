@@ -85,12 +85,12 @@ html, body, [data-testid="stAppViewContainer"] {
     width: 100% !important;
     background: #132040 !important;
     color: #CBD5E8 !important;
-    border: 1px solid rgba(240,192,64,0.2) !important;
+    border: 1px solid rgba(0,123,255,0.25) !important;
 }
 .stButton > button:hover {
     background: #1A2E50 !important;
-    color: #F0C040 !important;
-    border-color: rgba(240,192,64,0.5) !important;
+    color: #007BFF !important;
+    border-color: rgba(0,123,255,0.6) !important;
 }
 
 /* Clear chat */
@@ -111,39 +111,41 @@ button[kind="secondary"]:hover {
     padding: 4px 0 !important;
 }
 
-/* User messages — right aligned sharp */
+/* User messages — right aligned, sky blue bubble */
 [data-testid="stChatMessage"][data-author="user"] > div:last-child {
-    background: #1A2E50 !important;
-    border-radius: 0 8px 8px 8px !important;
-    border: 1px solid rgba(240,192,64,0.2) !important;
-    border-right: 3px solid #F0C040 !important;
+    background: #E1F5FE !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(0,123,255,0.15) !important;
+    border-right: 3px solid #007BFF !important;
     padding: 12px 16px !important;
-    color: #E8EEF8 !important;
+    color: #1A2E50 !important;
     margin-left: auto !important;
     max-width: 85% !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
 }
 
-/* Assistant messages — left aligned sharp */
+/* Assistant messages — left aligned, light grey-blue bubble */
 [data-testid="stChatMessage"][data-author="assistant"] > div:last-child {
-    background: #132040 !important;
-    border-radius: 8px 0 8px 8px !important;
-    border: 1px solid rgba(240,192,64,0.1) !important;
-    border-left: 3px solid #F0C040 !important;
+    background: #F0F2F6 !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(0,123,255,0.08) !important;
+    border-left: 3px solid #007BFF !important;
     padding: 14px 18px !important;
-    color: #CBD5E8 !important;
+    color: #1A2E50 !important;
     max-width: 95% !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
 }
 
 /* ── CHAT INPUT ── */
 [data-testid="stChatInput"] {
     background: #132040 !important;
-    border: 1px solid rgba(240,192,64,0.2) !important;
+    border: 1px solid rgba(0,123,255,0.2) !important;
     border-radius: 6px !important;
     color: #CBD5E8 !important;
 }
 [data-testid="stChatInput"]:focus-within {
-    border-color: #F0C040 !important;
-    box-shadow: 0 0 0 2px rgba(240,192,64,0.12) !important;
+    border-color: #007BFF !important;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.15) !important;
 }
 
 /* ── SELECTBOX ── */
@@ -299,6 +301,108 @@ hr { border-color: rgba(240,192,64,0.1) !important; margin: 12px 0 !important; }
 
 /* ── SPINNER ── */
 [data-testid="stSpinner"] { color: #F0C040 !important; }
+
+/* ── MOBILE RESPONSIVE ── */
+@media screen and (max-width: 768px) {
+    .main .block-container {
+        max-width: 100% !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        padding-top: 0.5rem !important;
+    }
+
+    /* Stack columns vertically on mobile */
+    [data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+    }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* Sidebar adjustments */
+    [data-testid="stSidebar"] {
+        min-width: 260px !important;
+        max-width: 280px !important;
+    }
+    [data-testid="stSidebar"] > div {
+        padding-top: 0.75rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    /* Chat messages full width + 16px font for mobile-friendly test */
+    [data-testid="stChatMessage"][data-author="user"] > div:last-child {
+        max-width: 95% !important;
+        font-size: 16px !important;
+    }
+    [data-testid="stChatMessage"][data-author="assistant"] > div:last-child {
+        max-width: 100% !important;
+        padding: 10px 12px !important;
+        font-size: 16px !important;
+    }
+
+    /* Welcome card smaller padding */
+    .welcome-card {
+        padding: 20px 16px !important;
+    }
+    .welcome-card h2 { font-size: 17px !important; }
+    .welcome-card p { font-size: 13px !important; }
+
+    /* Title sizing */
+    .ag-title { font-size: 18px !important; }
+    .ag-caption { font-size: 12px !important; }
+
+    /* Reference cards full width */
+    .ref-card {
+        margin-top: 10px !important;
+    }
+
+    /* Chat input */
+    [data-testid="stChatInput"] {
+        font-size: 14px !important;
+    }
+
+    /* Metrics compact */
+    [data-testid="stMetric"] {
+        padding: 8px 10px !important;
+    }
+
+    /* Voice card */
+    .voice-card {
+        padding: 10px 12px !important;
+    }
+
+    /* Pills smaller on mobile */
+    .ag-pill {
+        font-size: 10px !important;
+        padding: 2px 7px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .main .block-container {
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+    }
+
+    .ag-title { font-size: 16px !important; gap: 6px !important; }
+    .ag-title svg { width: 22px !important; height: 22px !important; }
+
+    .welcome-card {
+        padding: 16px 12px !important;
+    }
+    .welcome-card div[style*="font-size:48px"] {
+        font-size: 36px !important;
+    }
+
+    /* Mode chips wrap better */
+    .mode-guide-chip {
+        font-size: 9px !important;
+        padding: 2px 6px !important;
+    }
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -914,6 +1018,7 @@ if "Speaking" in st.session_state.mode:
         )
 
         if voice_text:
+            st.toast("Recording started...", icon="🎙️")
             st.session_state.messages.append({
                 "role": "user",
                 "content": f"[Voice answer]: {voice_text}"
@@ -957,6 +1062,7 @@ if needs_response:
                         "role": "assistant",
                         "content": response
                     })
+                    st.toast("Analysis complete!", icon="✅")
                     if "Task" in st.session_state.mode and len(st.session_state.messages[-2]["content"]) > 100:
                         st.session_state.essay_count += 1
 
