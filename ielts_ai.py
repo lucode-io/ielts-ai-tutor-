@@ -196,51 +196,51 @@ button[kind="secondary"]:hover {
 }
 
 /* ── ASSISTANT RESPONSE TYPOGRAPHY ── */
-[data-testid="stChatMessage"][data-author="assistant"] p,
-[data-testid="stChatMessage"][data-author="assistant"] li,
-[data-testid="stChatMessage"][data-author="assistant"] span {
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span {
     font-size: 15px !important;
     line-height: 1.85 !important;
     color: #dde6f0 !important;
     letter-spacing: 0.012em !important;
 }
-[data-testid="stChatMessage"][data-author="assistant"] strong {
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong {
     color: #F0C040 !important;
     font-weight: 600 !important;
 }
-[data-testid="stChatMessage"][data-author="assistant"] h1,
-[data-testid="stChatMessage"][data-author="assistant"] h2,
-[data-testid="stChatMessage"][data-author="assistant"] h3 {
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h1,
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h2,
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h3 {
     color: #F0C040 !important;
     font-weight: 700 !important;
-    font-size: 16px !important;
+    font-size: 17px !important;
     margin: 1.2rem 0 0.4rem !important;
     letter-spacing: 0.02em !important;
 }
-[data-testid="stChatMessage"][data-author="assistant"] ul,
-[data-testid="stChatMessage"][data-author="assistant"] ol {
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] ul,
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] ol {
     padding-left: 1.4rem !important;
     margin: 0.5rem 0 0.8rem !important;
 }
-[data-testid="stChatMessage"][data-author="assistant"] li {
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li {
     margin-bottom: 8px !important;
+    color: #dde6f0 !important;
 }
-[data-testid="stChatMessage"][data-author="assistant"] hr {
-    border-color: rgba(240,192,64,0.2) !important;
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] hr {
+    border-color: rgba(240,192,64,0.25) !important;
     margin: 14px 0 !important;
 }
-[data-testid="stChatMessage"][data-author="assistant"] code {
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] code {
     background: rgba(240,192,64,0.1) !important;
     color: #F0C040 !important;
     padding: 2px 7px !important;
     border-radius: 6px !important;
     font-size: 13px !important;
 }
-[data-testid="stChatMessage"][data-author="assistant"] blockquote {
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] blockquote p {
     border-left: 3px solid rgba(240,192,64,0.4) !important;
     padding-left: 14px !important;
-    color: rgba(255,255,255,0.55) !important;
-    margin: 10px 0 !important;
+    color: rgba(255,255,255,0.6) !important;
     font-style: italic !important;
 }
 /* ── CHAT INPUT ── */
