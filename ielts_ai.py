@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # ============================================================
-# IELTS AI Tutor - Production Version 3.0
-# Light Antigravity Design System
+# IELTS AI Tutor - Production Version 4.0
+# Premium Bento-Grid + Glassmorphism Design System
 # Built with Claude API + Streamlit
 # Author: Logshir (lucode-io)
 # ============================================================
@@ -18,101 +18,154 @@ st.set_page_config(
     page_title="IELTS AI Tutor",
     page_icon="🎓",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # ============================================================
-# CSS
+# PREMIUM BENTO-GRID + GLASSMORPHISM CSS
 # ============================================================
 
 st.markdown("""
 <style>
 
-/* ── BASE ── */
-html, body, [data-testid="stAppViewContainer"] {
-    background: #F4F4F8 !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+/* ── GLOBAL BACKGROUND: Dark Gradient ── */
+html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+    background: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 25%, #1b1b3a 50%, #0d1b2a 75%, #0a0a1a 100%) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+}
+[data-testid="stHeader"] {
+    background: transparent !important;
 }
 
-/* ── SIDEBAR ── */
-[data-testid="stSidebar"] {
-    background: #FAFAFA !important;
-    border-right: 1px solid #F3F4F6 !important;
-    box-shadow: 2px 0 20px rgba(99,102,241,0.06) !important;
+/* ── HIDE DEFAULT SIDEBAR ── */
+[data-testid="stSidebar"],
+[data-testid="stSidebarCollapsedControl"],
+button[kind="headerNoPadding"],
+[data-testid="stSidebarNav"] {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    overflow: hidden !important;
 }
 
-[data-testid="stSidebar"] > div {
-    padding-top: 1.5rem;
-}
-
-/* ── MAIN CONTENT ── */
+/* ── MAIN CONTAINER ── */
 .main .block-container {
-    background: transparent;
-    padding-top: 1rem;
-    max-width: 900px;
+    background: transparent !important;
+    padding-top: 0.5rem;
+    max-width: 1280px;
 }
 
-/* ── APP TITLE ── */
-.ag-title {
-    font-size: 26px;
-    font-weight: 700;
-    color: #0F0F1A;
-    letter-spacing: -0.5px;
-    margin-bottom: 2px;
+/* ── GLASSMORPHISM CONTAINER (Bento Card) ── */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    margin-bottom: 16px;
 }
 
-.ag-caption {
-    font-size: 13px;
-    color: #9CA3AF;
+/* ── TOP NAVIGATION BAR ── */
+.top-nav {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 24px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 20px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+.top-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.top-nav-brand-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #F0C040;
+    letter-spacing: 0.03em;
+}
+.top-nav-brand-sub {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 }
 
-/* ── PILLS ── */
+/* ── PILLS / BADGES ── */
 .ag-pill {
     display: inline-block;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     margin-right: 6px;
+    letter-spacing: 0.04em;
+    backdrop-filter: blur(8px);
 }
+.ag-pill-mode { background: rgba(240,192,64,0.15); color: #F0C040; border: 1px solid rgba(240,192,64,0.3); }
+.ag-pill-topic { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+.ag-pill-band { background: rgba(46,204,113,0.12); color: #2ECC71; border: 1px solid rgba(46,204,113,0.25); }
 
-.ag-pill-mode {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6);
-    color: #FFFFFF;
-}
-
-.ag-pill-topic {
-    background: #F3F4F6;
-    color: #374151;
-}
-
-.ag-pill-band {
-    background: linear-gradient(135deg, #10B981, #06B6D4);
-    color: #FFFFFF;
-}
-
-/* ── BUTTONS ── */
+/* ── GENERIC BUTTONS ── */
 .stButton > button {
-    border-radius: 10px !important;
+    border-radius: 14px !important;
     font-weight: 600 !important;
-    font-size: 14px !important;
-    padding: 10px 16px !important;
-    transition: all 0.2s ease !important;
-    border: none !important;
+    font-size: 13px !important;
+    padding: 10px 18px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     width: 100% !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #CBD5E8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: blur(8px) !important;
+}
+.stButton > button:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* ── GLOWING ACTION BUTTON ── */
+.glow-btn-wrap .stButton > button {
+    background: linear-gradient(135deg, #F0C040 0%, #E8A020 100%) !important;
+    color: #0a0a1a !important;
+    border: none !important;
+    border-radius: 20px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    padding: 16px 28px !important;
+    box-shadow: 0 0 20px rgba(240,192,64,0.4), 0 0 60px rgba(240,192,64,0.15) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.glow-btn-wrap .stButton > button:hover {
+    background: linear-gradient(135deg, #FFD060 0%, #F0C040 100%) !important;
+    box-shadow: 0 0 30px rgba(240,192,64,0.6), 0 0 80px rgba(240,192,64,0.25) !important;
+    transform: translateY(-2px) scale(1.02);
+}
+
+/* Clear chat */
 button[kind="secondary"] {
-    background: #FFFFFF !important;
-    color: #EF4444 !important;
-    border: 1px solid #FCA5A5 !important;
-    box-shadow: 0 1px 4px rgba(239,68,68,0.10) !important;
+    background: transparent !important;
+    color: #E74C3C !important;
+    border: 1px solid rgba(231,76,60,0.3) !important;
+    border-radius: 14px !important;
 }
-
 button[kind="secondary"]:hover {
-    box-shadow: 0 2px 12px rgba(239,68,68,0.20) !important;
-    transform: translateY(-1px) !important;
+    background: rgba(231,76,60,0.08) !important;
+    border-color: rgba(231,76,60,0.6) !important;
 }
 
 /* ── CHAT MESSAGES ── */
@@ -121,25 +174,23 @@ button[kind="secondary"]:hover {
     border: none !important;
     padding: 4px 0 !important;
 }
-
 [data-testid="stChatMessage"][data-author="user"] > div:last-child {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
-    border-radius: 18px 18px 4px 18px !important;
-    padding: 12px 16px !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 4px 16px rgba(99,102,241,0.25) !important;
+    background: rgba(0, 123, 255, 0.08) !important;
+    border-radius: 20px 20px 4px 20px !important;
+    border: 1px solid rgba(0,123,255,0.15) !important;
+    padding: 14px 18px !important;
+    color: #e0e8f8 !important;
     margin-left: auto !important;
     max-width: 85% !important;
+    backdrop-filter: blur(12px) !important;
 }
-
 [data-testid="stChatMessage"][data-author="assistant"] > div:last-child {
-    background: #FFFFFF !important;
-    border-radius: 18px 18px 18px 4px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 20px 20px 20px 4px !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
     padding: 20px 24px !important;
-    border: 1px solid #F3F4F6 !important;
-    border-left: 3px solid #6366F1 !important;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
     max-width: 95% !important;
+    backdrop-filter: blur(12px) !important;
 }
 
 /* ── ASSISTANT RESPONSE TYPOGRAPHY ── */
@@ -148,20 +199,21 @@ button[kind="secondary"]:hover {
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span {
     font-size: 15px !important;
     line-height: 1.85 !important;
-    color: #1a1a2e !important;
+    color: #dde6f0 !important;
     letter-spacing: 0.012em !important;
 }
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong {
-    color: #6366F1 !important;
+    color: #F0C040 !important;
     font-weight: 600 !important;
 }
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h1,
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h2,
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h3 {
-    color: #0F0F1A !important;
+    color: #F0C040 !important;
     font-weight: 700 !important;
     font-size: 17px !important;
     margin: 1.2rem 0 0.4rem !important;
+    letter-spacing: 0.02em !important;
 }
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] ul,
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] ol {
@@ -170,219 +222,233 @@ button[kind="secondary"]:hover {
 }
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li {
     margin-bottom: 8px !important;
-    color: #1a1a2e !important;
+    color: #dde6f0 !important;
 }
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] hr {
-    border-color: #E5E7EB !important;
+    border-color: rgba(240,192,64,0.25) !important;
     margin: 14px 0 !important;
 }
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] code {
-    background: #EEF2FF !important;
-    color: #6366F1 !important;
+    background: rgba(240,192,64,0.1) !important;
+    color: #F0C040 !important;
     padding: 2px 7px !important;
     border-radius: 6px !important;
     font-size: 13px !important;
 }
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] blockquote p {
+    border-left: 3px solid rgba(240,192,64,0.4) !important;
+    padding-left: 14px !important;
+    color: rgba(255,255,255,0.6) !important;
+    font-style: italic !important;
+}
 
 /* ── CHAT INPUT ── */
 [data-testid="stChatInput"] {
-    background: #FFFFFF !important;
-    border: 1px solid #E5E7EB !important;
-    border-radius: 14px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    color: #e0e0e0 !important;
 }
-
 [data-testid="stChatInput"]:focus-within {
-    border-color: #6366F1 !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
+    border-color: rgba(240, 192, 64, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(240, 192, 64, 0.1) !important;
 }
 
 /* ── SELECTBOX ── */
 [data-testid="stSelectbox"] > div > div {
-    background: #FFFFFF !important;
-    border: 1px solid #E5E7EB !important;
-    border-radius: 8px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    color: #e0e0e0 !important;
 }
 
 /* ── SLIDER ── */
 [data-testid="stSlider"] > div > div > div {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
+    background: #F0C040 !important;
 }
 
 /* ── ALERTS ── */
 [data-testid="stAlert"] {
-    background: #FFFFFF !important;
-    border: 1px solid #E0E7FF !important;
-    border-left: 4px solid #6366F1 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.08) !important;
-    color: #1E1B4B !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-left: 4px solid #F0C040 !important;
+    border-radius: 14px !important;
+    color: #e0e0e0 !important;
+    backdrop-filter: blur(8px) !important;
 }
 
 /* ── METRICS ── */
 [data-testid="stMetric"] {
-    background: #FFFFFF !important;
-    border-radius: 10px !important;
-    padding: 12px 16px !important;
-    border: 1px solid #F3F4F6 !important;
-    border-top: 3px solid #6366F1 !important;
-    box-shadow: 0 2px 8px rgba(99,102,241,0.08) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-radius: 16px !important;
+    padding: 14px 18px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(8px) !important;
 }
-
-[data-testid="stMetricValue"] {
-    color: #0F0F1A !important;
-    font-weight: 700 !important;
-}
-
-[data-testid="stMetricLabel"] {
-    color: #6B7280 !important;
-}
+[data-testid="stMetricValue"] { color: #F0C040 !important; font-weight: 700 !important; }
+[data-testid="stMetricLabel"] { color: rgba(255,255,255,0.4) !important; }
 
 /* ── DIVIDER ── */
-hr {
-    border-color: #F3F4F6 !important;
-    margin: 12px 0 !important;
-}
+hr { border-color: rgba(255,255,255,0.06) !important; margin: 12px 0 !important; }
 
 /* ── EXPANDER ── */
 [data-testid="stExpander"] {
-    background: #FFFFFF !important;
-    border: 1px solid #F3F4F6 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(8px) !important;
 }
 
-/* ── SIDEBAR TITLES ── */
-[data-testid="stSidebar"] h1 {
-    font-size: 20px !important;
-    font-weight: 700 !important;
-    color: #0F0F1A !important;
-    letter-spacing: -0.3px !important;
-}
-
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3 {
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: #6B7280 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.06em !important;
+/* ── STATUS WIDGET ── */
+[data-testid="stStatus"],
+[data-testid="stStatusWidget"] {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(240, 192, 64, 0.2) !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(12px) !important;
+    color: #e0e0e0 !important;
 }
 
 /* ── SCORE BADGES ── */
 .score-high {
     display: inline-block;
-    background: linear-gradient(135deg, #10B981, #06B6D4);
-    color: #FFFFFF;
-    padding: 2px 10px;
+    background: rgba(46,204,113,0.12);
+    color: #2ECC71;
+    border: 1px solid rgba(46,204,113,0.25);
+    padding: 3px 12px;
     border-radius: 20px;
     font-weight: 700;
     font-size: 13px;
 }
-
 .score-mid {
     display: inline-block;
-    background: linear-gradient(135deg, #F59E0B, #EF4444);
-    color: #FFFFFF;
-    padding: 2px 10px;
+    background: rgba(240,192,64,0.12);
+    color: #F0C040;
+    border: 1px solid rgba(240,192,64,0.25);
+    padding: 3px 12px;
     border-radius: 20px;
     font-weight: 700;
     font-size: 13px;
 }
-
 .score-low {
     display: inline-block;
-    background: linear-gradient(135deg, #EF4444, #DC2626);
-    color: #FFFFFF;
-    padding: 2px 10px;
+    background: rgba(231,76,60,0.12);
+    color: #E74C3C;
+    border: 1px solid rgba(231,76,60,0.25);
+    padding: 3px 12px;
     border-radius: 20px;
     font-weight: 700;
     font-size: 13px;
-}
-
-/* ── SPINNER ── */
-[data-testid="stSpinner"] {
-    color: #6366F1 !important;
 }
 
 /* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #F4F4F8; }
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(#6366F1, #8B5CF6);
-    border-radius: 3px;
-}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(240,192,64,0.3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(240,192,64,0.5); }
 
 /* ── WELCOME CARD ── */
 .welcome-card {
-    background: #FFFFFF;
-    border-radius: 20px;
-    border: 1px solid #F3F4F6;
-    padding: 32px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 40px 36px;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(99,102,241,0.10);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
+.welcome-card h2 { font-size: 22px; font-weight: 700; color: #F0C040; margin-bottom: 8px; }
+.welcome-card p { font-size: 14px; color: rgba(255,255,255,0.45); line-height: 1.7; }
 
-.welcome-card h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #0F0F1A;
-    margin-bottom: 8px;
-}
-
-.welcome-card p {
-    font-size: 15px;
-    color: #6B7280;
-    line-height: 1.6;
-}
-
-/* ── REFERENCE CARD ── */
+/* ── REF CARD ── */
 .ref-card {
-    background: #FFFFFF;
-    border-radius: 12px;
-    border: 1px solid #F3F4F6;
-    border-top: 3px solid;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 16px;
     margin-bottom: 12px;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
-
-.ref-card-speaking { border-top-color: #8B5CF6; }
-.ref-card-writing  { border-top-color: #0EA5E9; }
-.ref-card-reading  { border-top-color: #10B981; }
-.ref-card-listening{ border-top-color: #F59E0B; }
-.ref-card-vocab    { border-top-color: #EC4899; }
+.ref-card-speaking { border-top: 2px solid #A78BFA; }
+.ref-card-writing  { border-top: 2px solid #38BDF8; }
+.ref-card-reading  { border-top: 2px solid #34D399; }
+.ref-card-listening{ border-top: 2px solid #FCD34D; }
+.ref-card-vocab    { border-top: 2px solid #F472B6; }
 
 /* ── MODE CHIPS ── */
-.mode-guide-wrap {
-    margin-top: 8px;
-    margin-bottom: 10px;
-}
+.mode-guide-wrap { margin-top: 8px; margin-bottom: 10px; }
 .mode-guide-chip {
     display: inline-block;
-    margin: 0 6px 6px 0;
+    margin: 0 5px 5px 0;
     padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #111827;
-}
-.mode-speaking  { background: #EDE9FE; border: 1px solid #C4B5FD; }
-.mode-writing   { background: #E0F2FE; border: 1px solid #93C5FD; }
-.mode-listening { background: #FEF3C7; border: 1px solid #FCD34D; }
-.mode-reading   { background: #DCFCE7; border: 1px solid #86EFAC; }
-.mode-vocab     { background: #FCE7F3; border: 1px solid #F9A8D4; }
-.mode-general   { background: #E5E7EB; border: 1px solid #CBD5E1; }
-
-/* ── SETTINGS LABEL ── */
-.settings-label {
-    font-size: 12px;
-    color: #6B7280;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
     letter-spacing: 0.04em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-    margin-top: 14px;
+}
+.mode-speaking  { background: rgba(167,139,250,0.12); color: #A78BFA; border: 1px solid rgba(167,139,250,0.25); }
+.mode-writing   { background: rgba(56,189,248,0.10);  color: #38BDF8; border: 1px solid rgba(56,189,248,0.25); }
+.mode-listening { background: rgba(252,211,77,0.10);  color: #FCD34D; border: 1px solid rgba(252,211,77,0.25); }
+.mode-reading   { background: rgba(52,211,153,0.10);  color: #34D399; border: 1px solid rgba(52,211,153,0.25); }
+.mode-vocab     { background: rgba(244,114,182,0.10); color: #F472B6; border: 1px solid rgba(244,114,182,0.25); }
+.mode-general   { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1); }
+
+/* ── VOICE CARD ── */
+.voice-card {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 20px;
+    border: 1px solid rgba(240, 192, 64, 0.15);
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    backdrop-filter: blur(12px);
+}
+
+/* ── SPINNER ── */
+[data-testid="stSpinner"] { color: #F0C040 !important; }
+
+/* ── SETTINGS PANEL ── */
+.settings-panel {
+    background: rgba(13, 27, 42, 0.97);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(24px);
+    margin-bottom: 16px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media screen and (max-width: 768px) {
+    .main .block-container {
+        max-width: 100% !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        padding-top: 0.5rem !important;
+    }
+    [data-testid="stHorizontalBlock"] { flex-direction: column !important; }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+    .glass-card { border-radius: 16px; padding: 14px; }
+    .top-nav { padding: 10px 16px; border-radius: 14px; }
+    [data-testid="stChatMessage"][data-author="assistant"] > div:last-child {
+        max-width: 100% !important;
+        padding: 12px 14px !important;
+        font-size: 15px !important;
+    }
+    .welcome-card { padding: 24px 18px !important; }
+}
+
+@media screen and (max-width: 480px) {
+    .main .block-container {
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+    }
+    .glass-card { border-radius: 12px; padding: 10px; }
+    .top-nav { border-radius: 10px; }
 }
 
 </style>
@@ -427,7 +493,7 @@ def init_session_state():
         "show_settings": False,
         "tutor_name": "Alex",
         "response_language": "English",
-        "accent_color": "#6366F1",
+        "accent_color": "#F0C040",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -473,11 +539,15 @@ HOW TO HANDLE SPEAKING PRACTICE:
 - Score their answer using 4 criteria
 - Ask the NEXT question naturally
 
+IMPORTANT: The student may submit text OR a voice recording.
+If voice recording is provided, first transcribe what they said,
+then score it exactly like a text answer.
+
 SPEAKING SCORING CRITERIA:
 1. Fluency and Coherence (FC)
 2. Lexical Resource (LR)
 3. Grammatical Range and Accuracy (GRA)
-4. Pronunciation (P) - evaluate from written text
+4. Pronunciation (P) - evaluate from spoken delivery or written text
 
 FORMAT YOUR SPEAKING FEEDBACK EXACTLY LIKE THIS:
 ---
@@ -485,7 +555,7 @@ IELTS SPEAKING BAND SCORES
 Fluency and Coherence: X.X - [specific comment]
 Lexical Resource: X.X - [specific vocabulary tip]
 Grammatical Range: X.X - [specific grammar note]
-Pronunciation: X.X - [note from written clues]
+Pronunciation: X.X - [note from delivery or written clues]
 
 Overall Speaking Band: X.X to X.X
 
@@ -508,12 +578,14 @@ TASK 1 CONTEXT:
 - Minimum word count: 150 words.
 
 SCORING:
-1. Task Achievement (TA)
+1. Task Achievement (TA) - Key features described, overview present, specific data used, no personal opinion.
 2. Coherence and Cohesion (CC)
 3. Lexical Resource (LR)
 4. Grammatical Range and Accuracy (GRA)
 
-FORMAT YOUR TASK 1 FEEDBACK EXACTLY LIKE THIS:
+IF USER ASKS FOR A QUESTION: Generate ONE realistic IELTS Task 1 prompt with data.
+
+FORMAT:
 ---
 IELTS BAND SCORES - Writing Task 1
 Task Achievement: X.X - [comment]
@@ -523,17 +595,10 @@ Grammatical Range: X.X - [comment]
 
 Overall Band Estimate: X.X to X.X
 
-What Worked:
-[2 specific things with quotes]
-
-What To Fix:
-[2 specific improvements with rewritten examples]
-
-Improved Version of Your Introduction:
-[Rewrite at band 7+ level]
-
-Vocabulary Upgrades:
-[5 word or phrase upgrades]
+What Worked: [2 specific things with quotes]
+What To Fix: [2 improvements with rewritten examples]
+Improved Version of Your Introduction: [band 7+ rewrite]
+Vocabulary Upgrades: [5 upgrades]
 ---
 """
 
@@ -549,7 +614,9 @@ SCORING:
 
 BAND 7+ REQUIRES: Clear position, 2 developed body paragraphs, counter-argument, 250+ words.
 
-FORMAT YOUR TASK 2 FEEDBACK EXACTLY LIKE THIS:
+IF USER ASKS FOR A QUESTION: Generate a realistic Task 2 question.
+
+FORMAT:
 ---
 IELTS BAND SCORES - Writing Task 2
 Task Response: X.X - [comment]
@@ -559,17 +626,10 @@ Grammatical Range: X.X - [comment]
 
 Overall Band Estimate: X.X to X.X
 
-What Worked:
-[2 specific things]
-
-What To Fix:
-[2 specific improvements]
-
-Improved Version of Your Introduction:
-[band 7+ rewrite]
-
-Vocabulary Upgrades:
-[5 upgrades]
+What Worked: [2 specific things]
+What To Fix: [2 improvements]
+Improved Version of Your Introduction: [band 7+ rewrite]
+Vocabulary Upgrades: [5 upgrades]
 ---
 """
 
@@ -578,39 +638,32 @@ Vocabulary Upgrades:
         return base + f"""
 YOU ARE NOW: IELTS Listening Practice Generator - {section}
 
-HOW LISTENING PRACTICE WORKS:
-1. Generate a realistic listening script for {section}
-2. Student reads it carefully once
-3. Generate 10 questions based only on the script
+1. Generate realistic listening script
+2. Student reads once
+3. Generate 10 questions from script only
 4. Student answers from memory
 5. Score and explain every error
 
 FORMAT:
-1. Show script labeled LISTENING SCRIPT - Read once carefully
-2. Tell student to answer questions without looking back
-3. Show questions labeled QUESTIONS - Answer from memory
-4. After answers - show scores and explain each error
+LISTENING SCRIPT - Read once carefully
+[script]
+QUESTIONS - Answer from memory
+[10 questions]
+After answers: scores + explanations
 """
 
     elif "Reading" in mode:
         return base + """
 YOU ARE NOW: IELTS Reading Practice Generator
 
-HOW READING PRACTICE WORKS:
-1. Generate a realistic academic passage - 600 to 800 words
-2. Generate 13 questions of mixed types
-3. Student answers all questions
-4. Score every answer and explain each error
+1. Generate 600-800 word academic passage
+2. Generate 13 mixed-type questions
+3. Student answers
+4. Score every answer with paragraph reference
 
-TFNG STRICT RULES:
-TRUE = passage clearly and directly confirms it
-FALSE = passage clearly and directly contradicts it
-NOT GIVEN = passage does not mention it at all
-If in doubt - NOT GIVEN.
+TFNG: TRUE = text confirms | FALSE = text contradicts | NOT GIVEN = not mentioned. If in doubt - NOT GIVEN.
 
-PASSAGE REQUIREMENTS:
-- Academic topic
-- Paragraphs labeled A, B, C, D
+PASSAGE: Academic topic, paragraphs labeled A B C D.
 """
 
     elif "Vocabulary" in mode:
@@ -667,236 +720,177 @@ def start_session(mode, starter_message):
     st.rerun()
 
 # ============================================================
-# SIDEBAR
+# TOP NAVIGATION BAR
 # ============================================================
 
-with st.sidebar:
-    st.title("🎓 IELTS AI Tutor")
-    st.caption("Powered by Claude AI")
+nav_left, nav_right = st.columns([8, 1])
 
-    api_key = st.secrets.get("ANTHROPIC_API_KEY", "") or st.text_input(
-        "Claude API Key",
-        type="password",
-        placeholder="sk-ant-...",
-        help="Get your key at console.anthropic.com"
-    )
+with nav_left:
+    st.markdown("""
+    <div class="top-nav">
+        <div class="top-nav-brand">
+            <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
+                <rect width="56" height="56" rx="14" fill="rgba(255,255,255,0.06)"/>
+                <polygon points="28,14 46,24 28,34 10,24" fill="rgba(255,255,255,0.08)" stroke="#F0C040" stroke-width="2" stroke-linejoin="round"/>
+                <line x1="40" y1="27" x2="40" y2="38" stroke="#F0C040" stroke-width="2" stroke-linecap="round"/>
+                <path d="M34,38 Q40,42 46,38" fill="none" stroke="#F0C040" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="43" cy="13" r="1.5" fill="#F0C040"/>
+                <line x1="43" y1="13" x2="47" y2="9" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="43" y1="13" x2="48" y2="14" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="43" y1="13" x2="42" y2="8" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            <div>
+                <div class="top-nav-brand-text">IELTS AI Tutor</div>
+                <div class="top-nav-brand-sub">Powered by Claude</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.divider()
-
-    # ── SETTINGS PANEL ──
-    st.subheader("⚙️ User Custom Settings")
-
-    if st.button("⚙️ Customize Tutor", use_container_width=True):
+with nav_right:
+    if st.button("⚙️", help="Customize settings", use_container_width=True):
         st.session_state.show_settings = not st.session_state.show_settings
 
-    if st.session_state.show_settings:
-        st.markdown("**Tutor Name**")
+# ── SETTINGS PANEL ──
+if st.session_state.show_settings:
+    st.markdown('<div class="settings-panel">', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="font-size:13px;font-weight:700;color:#F0C040;
+                letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px;">
+        Customize Your Tutor
+    </div>
+    """, unsafe_allow_html=True)
+
+    set_c1, set_c2, set_c3 = st.columns(3)
+
+    with set_c1:
+        st.markdown("<div style='font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px'>Tutor Name</div>", unsafe_allow_html=True)
         tutor_name = st.text_input(
             "Tutor name",
             value=st.session_state.tutor_name,
             placeholder="e.g. Alex, Sara...",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="tutor_name_input"
         )
         st.session_state.tutor_name = tutor_name
 
-        st.markdown("**Response Language**")
+    with set_c2:
+        st.markdown("<div style='font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px'>Language</div>", unsafe_allow_html=True)
         response_language = st.selectbox(
             "Response language",
             ["English", "Mongolian", "Russian", "Mixed (EN + MN)"],
             index=["English", "Mongolian", "Russian", "Mixed (EN + MN)"].index(
                 st.session_state.response_language
             ),
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="lang_select"
         )
         st.session_state.response_language = response_language
 
-        st.markdown("**Accent Color**")
+    with set_c3:
+        st.markdown("<div style='font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px'>Accent Color</div>", unsafe_allow_html=True)
         accent_options = {
-            "Indigo": "#6366F1",
-            "Blue": "#0EA5E9",
-            "Green": "#10B981",
-            "Purple": "#8B5CF6",
-            "Pink": "#EC4899",
+            "Gold": "#F0C040",
+            "Blue": "#38BDF8",
+            "Green": "#34D399",
+            "Purple": "#A78BFA",
+            "Coral": "#F87171",
         }
         accent_label = st.selectbox(
             "Accent color",
             list(accent_options.keys()),
             index=list(accent_options.values()).index(st.session_state.accent_color)
                   if st.session_state.accent_color in accent_options.values() else 0,
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="accent_select"
         )
         st.session_state.accent_color = accent_options[accent_label]
 
-        accent = st.session_state.accent_color
-        st.markdown(f"""
-        <style>
-        [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong {{
-            color: {accent} !important;
-        }}
-        [data-testid="stChatMessage"][data-author="assistant"] > div:last-child {{
-            border-left: 3px solid {accent} !important;
-        }}
-        [data-testid="stSlider"] > div > div > div {{ background: {accent} !important; }}
-        [data-testid="stChatInput"]:focus-within {{ border-color: {accent} !important; }}
-        </style>
-        """, unsafe_allow_html=True)
+    accent = st.session_state.accent_color
+    st.markdown(f"""
+    <style>
+    .top-nav-brand-text,
+    [data-testid="stMetricValue"],
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong,
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h1,
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h2,
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h3 {{
+        color: {accent} !important;
+    }}
+    [data-testid="stSlider"] > div > div > div {{ background: {accent} !important; }}
+    ::-webkit-scrollbar-thumb {{ background: {accent}55 !important; }}
+    [data-testid="stChatInput"]:focus-within {{ border-color: {accent}88 !important; }}
+    </style>
+    """, unsafe_allow_html=True)
 
-        if st.button("Save & Close", use_container_width=True):
-            st.session_state.show_settings = False
-            st.rerun()
+    if st.button("Save & Close", use_container_width=True, key="save_settings"):
+        st.session_state.show_settings = False
+        st.rerun()
 
-    st.divider()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.subheader("⚙️ Practice Settings")
-    mode = st.selectbox("Practice mode:", MODES,
-        index=MODES.index(st.session_state.mode) if st.session_state.mode in MODES else 0)
+# ── NAV CONTROLS ROW ──
+nav_c1, nav_c2, nav_c3, nav_c4 = st.columns([3, 2, 1, 1])
+
+with nav_c1:
+    api_key = st.secrets.get("ANTHROPIC_API_KEY", "") or st.text_input(
+        "Claude API Key",
+        type="password",
+        placeholder="sk-ant-...",
+        help="Get your key at console.anthropic.com",
+        label_visibility="collapsed"
+    )
+
+with nav_c2:
+    mode = st.selectbox("Mode", MODES,
+        index=MODES.index(st.session_state.mode) if st.session_state.mode in MODES else 0,
+        label_visibility="collapsed")
     st.session_state.mode = mode
 
-    mode_color = (
-        "mode-speaking" if "Speaking" in mode else
-        "mode-writing" if "Writing" in mode else
-        "mode-listening" if "Listening" in mode else
-        "mode-reading" if "Reading" in mode else
-        "mode-vocab" if "Vocabulary" in mode else
-        "mode-general"
-    )
+with nav_c3:
+    topic = st.selectbox("Topic", TOPICS, label_visibility="collapsed")
 
-    st.markdown(
-        """
-        <div class="mode-guide-wrap">
-            <span class="mode-guide-chip mode-speaking">Speaking</span>
-            <span class="mode-guide-chip mode-writing">Writing</span>
-            <span class="mode-guide-chip mode-listening">Listening</span>
-            <span class="mode-guide-chip mode-reading">Reading</span>
-            <span class="mode-guide-chip mode-vocab">Vocabulary Builder</span>
-            <span class="mode-guide-chip mode-general">General Practice</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<span class="mode-guide-chip {mode_color}">Current: {mode}</span>',
-        unsafe_allow_html=True
-    )
-
-    topic = st.selectbox("Topic:", TOPICS)
-
-    target_band = st.slider(
-        "Target band score:",
-        min_value=5.0, max_value=9.0, value=st.session_state.target_band, step=0.5
+with nav_c4:
+    target_band = st.selectbox(
+        "Band",
+        options=[5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0],
+        index=[5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0].index(st.session_state.target_band),
+        label_visibility="collapsed"
     )
     st.session_state.target_band = target_band
     st.session_state.task = f"Topic: {topic} | Target: Band {target_band}"
 
-    if st.button("🗑️ Clear Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.session_state.essay_count = 0
-        st.rerun()
-
-    st.divider()
-
-    st.subheader("🎯 Skills Tasks")
-
-    with st.expander("🎤 Speaking Tasks", expanded=True):
-        if st.button("Start Speaking Part 1", use_container_width=True):
-            start_session(
-                "Speaking - Part 1 (Personal questions)",
-                f"Please start my IELTS Speaking Part 1 practice. Ask me the first question about {topic}."
-            )
-        if st.button("Start Speaking Part 2", use_container_width=True):
-            start_session(
-                "Speaking - Part 2 (Long turn / cue card)",
-                f"Please start my IELTS Speaking Part 2 practice. Ask me a cue card question about {topic}."
-            )
-        if st.button("Start Speaking Part 3", use_container_width=True):
-            start_session(
-                "Speaking - Part 3 (Discussion)",
-                f"Please start my IELTS Speaking Part 3 practice. Ask me a discussion question about {topic}."
-            )
-
-    with st.expander("✍️ Writing Tasks", expanded=True):
-        if st.button("Get Task 1 question", use_container_width=True):
-            start_session(
-                "Writing - Task 1 (Graph/Chart description)",
-                f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
-            )
-        if st.button("Submit Task 1 essay", use_container_width=True):
-            start_session(
-                "Writing - Task 1 (Graph/Chart description)",
-                "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
-            )
-        if st.button("Get Task 2 question", use_container_width=True):
-            start_session(
-                "Writing - Task 2 (Essay)",
-                f"Give me a realistic IELTS Writing Task 2 question about {topic}."
-            )
-        if st.button("Submit Task 2 essay", use_container_width=True):
-            start_session(
-                "Writing - Task 2 (Essay)",
-                "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
-            )
-
-    with st.expander("🎧 Listening Tasks", expanded=True):
-        if st.button("Start Listening Section 1", use_container_width=True):
-            start_session(
-                "Listening - Section 1 (Conversation)",
-                f"Give me an IELTS Listening Section 1 practice about {topic}. Generate the script and 10 questions."
-            )
-        if st.button("Start Listening Section 2", use_container_width=True):
-            start_session(
-                "Listening - Section 2 (Monologue)",
-                f"Give me an IELTS Listening Section 2 practice about {topic}. Generate the script and 10 questions."
-            )
-        if st.button("Start Listening Section 3", use_container_width=True):
-            start_session(
-                "Listening - Section 3 (Academic discussion)",
-                f"Give me an IELTS Listening Section 3 practice about {topic}. Generate the script and 10 questions."
-            )
-        if st.button("Start Listening Section 4", use_container_width=True):
-            start_session(
-                "Listening - Section 4 (Academic lecture)",
-                f"Give me an IELTS Listening Section 4 practice about {topic}. Generate the script and 10 questions."
-            )
-
-    with st.expander("📖 Reading Tasks", expanded=True):
-        if st.button("Start Academic Reading", use_container_width=True):
-            start_session(
-                "Reading - Academic passage",
-                f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
-            )
-
-    st.divider()
-
-    st.subheader("Session Stats")
-    user_msgs = len([m for m in st.session_state.messages if m["role"] == "user"])
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.metric("Messages", user_msgs)
-    with c2:
-        st.metric("Target", f"{target_band}")
-    with c3:
-        st.metric("Essays", st.session_state.essay_count)
+mode_color = (
+    "mode-speaking" if "Speaking" in mode else
+    "mode-writing" if "Writing" in mode else
+    "mode-listening" if "Listening" in mode else
+    "mode-reading" if "Reading" in mode else
+    "mode-vocab" if "Vocabulary" in mode else
+    "mode-general"
+)
 
 # ============================================================
-# MAIN LAYOUT
+# BENTO GRID: MAIN LAYOUT
 # ============================================================
 
-main_col, ref_col = st.columns([3, 1])
+main_col, side_col = st.columns([3, 1])
 
+# ── CHAT CONTAINER ──
 with main_col:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
     st.markdown(f"""
-    <div class="ag-title">🎓 IELTS AI Tutor</div>
-    <div class="ag-caption">
+    <div style="margin-bottom:14px">
         <span class="ag-pill ag-pill-mode">{mode.split("-")[0].strip()}</span>
         <span class="ag-pill ag-pill-topic">{topic}</span>
         <span class="ag-pill ag-pill-band">Band {target_band}</span>
+        <span class="mode-guide-chip {mode_color}" style="float:right">{mode}</span>
     </div>
     """, unsafe_allow_html=True)
 
     if not st.session_state.messages:
         welcome_data = {
-            "Speaking": ("🎤", "Speaking Practice", "Type your answers as if speaking. Claude asks questions one at a time and scores each answer with detailed feedback."),
+            "Speaking": ("🎤", "Speaking Practice", "Record your voice or type your answers. Claude scores each answer with detailed band feedback."),
             "Task 1": ("📊", "Writing Task 1", "20 minutes. Minimum 150 words. Ask for a question or paste your own essay for scoring."),
             "Task 2": ("✍️", "Writing Task 2", "40 minutes. Minimum 250 words. Ask for a question or paste your own essay for scoring."),
             "Listening": ("🎧", "Listening Practice", "Claude generates a realistic script. Read it once only. Then answer questions from memory."),
@@ -912,8 +906,8 @@ with main_col:
             <div style="font-size:48px;margin-bottom:12px">{icon}</div>
             <h2>{title} Active</h2>
             <p>{desc}</p>
-            <p style="margin-top:16px;font-size:13px;color:#9CA3AF">
-                Click a Quick Start button in the sidebar to begin instantly.
+            <p style="margin-top:16px;font-size:13px;color:rgba(255,255,255,0.25)">
+                Use the Quick Start panel on the right to begin instantly.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -922,11 +916,101 @@ with main_col:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# ============================================================
-# REFERENCE PANEL
-# ============================================================
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with ref_col:
+# ── SIDE PANEL ──
+with side_col:
+
+    # Session Stats
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase">
+        Session Stats
+    </div>
+    """, unsafe_allow_html=True)
+    user_msgs = len([m for m in st.session_state.messages if m["role"] == "user"])
+    s1, s2, s3 = st.columns(3)
+    with s1:
+        st.metric("Msgs", user_msgs)
+    with s2:
+        st.metric("Target", f"{target_band}")
+    with s3:
+        st.metric("Essays", st.session_state.essay_count)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Quick Start
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase">
+        Quick Start
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.expander("🎤 Speaking", expanded=False):
+        if st.button("Part 1 - Personal", key="task_spk_p1", use_container_width=True):
+            start_session(
+                "Speaking - Part 1 (Personal questions)",
+                f"Please start my IELTS Speaking Part 1 practice. Ask me the first question about {topic}."
+            )
+        if st.button("Part 2 - Cue Card", key="task_spk_p2", use_container_width=True):
+            start_session(
+                "Speaking - Part 2 (Long turn / cue card)",
+                f"Please start my IELTS Speaking Part 2 practice. Ask me a cue card question about {topic}."
+            )
+        if st.button("Part 3 - Discussion", key="task_spk_p3", use_container_width=True):
+            start_session(
+                "Speaking - Part 3 (Discussion)",
+                f"Please start my IELTS Speaking Part 3 practice. Ask me a discussion question about {topic}."
+            )
+
+    with st.expander("✍️ Writing", expanded=False):
+        if st.button("Task 1 Question", key="task_w_t1_q", use_container_width=True):
+            start_session(
+                "Writing - Task 1 (Graph/Chart description)",
+                f"Give me an IELTS Writing Task 1 question about {topic}. Make it realistic like Cambridge books."
+            )
+        if st.button("Submit Task 1", key="task_w_t1_s", use_container_width=True):
+            start_session(
+                "Writing - Task 1 (Graph/Chart description)",
+                "I want to submit my IELTS Writing Task 1 essay for scoring. Please wait for me to paste it."
+            )
+        if st.button("Task 2 Question", key="task_w_t2_q", use_container_width=True):
+            start_session(
+                "Writing - Task 2 (Essay)",
+                f"Give me a realistic IELTS Writing Task 2 question about {topic}."
+            )
+        if st.button("Submit Task 2", key="task_w_t2_s", use_container_width=True):
+            start_session(
+                "Writing - Task 2 (Essay)",
+                "I want to submit my IELTS Writing Task 2 essay for scoring. Please wait for me to paste it."
+            )
+
+    with st.expander("🎧 Listening", expanded=False):
+        for i, (sec, sec_mode) in enumerate([
+            ("Section 1", "Listening - Section 1 (Conversation)"),
+            ("Section 2", "Listening - Section 2 (Monologue)"),
+            ("Section 3", "Listening - Section 3 (Academic discussion)"),
+            ("Section 4", "Listening - Section 4 (Academic lecture)")
+        ]):
+            if st.button(f"Start {sec}", key=f"task_ls_s{i+1}", use_container_width=True):
+                start_session(sec_mode, f"Give me an IELTS {sec} practice about {topic}. Generate the script and 10 questions.")
+
+    with st.expander("📖 Reading", expanded=False):
+        if st.button("Academic Reading", key="task_rd_ac", use_container_width=True):
+            start_session(
+                "Reading - Academic passage",
+                f"Give me an IELTS Academic Reading passage about {topic} with 13 mixed questions."
+            )
+
+    if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.essay_count = 0
+        st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Reference Tips
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
     ref_data = {
         "Speaking": ("speaking", "🎤 Speaking Tips", [
@@ -985,45 +1069,47 @@ with ref_col:
 
     if matched:
         card_class, title, tips, footer = matched
-        tips_html = "".join([f"<li style='margin-bottom:6px;color:#374151;font-size:13px'>{t}</li>" for t in tips])
+        tips_html = "".join([f"<li style='margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px'>{t}</li>" for t in tips])
         st.markdown(f"""
         <div class="ref-card ref-card-{card_class}">
-            <div style="font-weight:700;font-size:14px;color:#0F0F1A;margin-bottom:10px">{title}</div>
+            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:10px">{title}</div>
             <ul style="margin:0;padding-left:16px">{tips_html}</ul>
-            <div style="margin-top:10px;font-size:12px;color:#6B7280;border-top:1px solid #F3F4F6;padding-top:8px">{footer}</div>
+            <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.3);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">{footer}</div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div class="ref-card" style="border-top-color:#6366F1">
-            <div style="font-weight:700;font-size:14px;color:#0F0F1A;margin-bottom:10px">📋 IELTS Band Scale</div>
+        <div class="ref-card" style="border-top:2px solid #F0C040">
+            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:10px">IELTS Band Scale</div>
             <ul style="margin:0;padding-left:16px">
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 9: Expert user</li>
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 8: Very good user</li>
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 7: Good user</li>
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 6: Competent user</li>
-                <li style="margin-bottom:6px;color:#374151;font-size:13px">Band 5: Modest user</li>
+                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 9 - Expert user</li>
+                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 8 - Very good user</li>
+                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 7 - Good user</li>
+                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 6 - Competent user</li>
+                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 5 - Modest user</li>
             </ul>
-            <div style="margin-top:10px;font-size:12px;color:#6B7280;border-top:1px solid #F3F4F6;padding-top:8px">Your target: 7.0+ - all 4 skills matter equally</div>
+            <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.3);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">Target: 7.0+ - all 4 skills matter equally</div>
         </div>
         """, unsafe_allow_html=True)
 
+    # Band Progression
     st.markdown("""
-    <div style="background:#FFFFFF;border-radius:10px;border:1px solid #F3F4F6;
-                border-top:3px solid #6366F1;padding:14px;
-                box-shadow:0 2px 8px rgba(99,102,241,0.08);margin-top:12px">
-        <div style="font-weight:700;font-size:13px;color:#0F0F1A;margin-bottom:8px">
-            📈 Band Progression
+    <div style="background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.06);
+                padding:14px;margin-top:10px;backdrop-filter:blur(8px)">
+        <div style="font-weight:700;font-size:12px;color:#F0C040;margin-bottom:8px;letter-spacing:0.04em;text-transform:uppercase">
+            Band Progression
         </div>
-        <div style="font-size:12px;color:#6B7280;line-height:1.8">
-            Baseline: <strong style="color:#EF4444">A2</strong><br>
-            March target: <strong style="color:#F59E0B">5.5+</strong><br>
-            May target: <strong style="color:#F59E0B">6.5+</strong><br>
-            June exam: <strong style="color:#10B981">6.0-6.5</strong><br>
-            August target: <strong style="color:#10B981">7.0+</strong>
+        <div style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.9">
+            Baseline: <strong style="color:#E74C3C">A2</strong><br>
+            March target: <strong style="color:#F0C040">5.5+</strong><br>
+            May target: <strong style="color:#F0C040">6.5+</strong><br>
+            June exam: <strong style="color:#2ECC71">6.0-6.5</strong><br>
+            August target: <strong style="color:#2ECC71">7.0+</strong>
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================================
 # VOICE INPUT + CHAT INPUT
@@ -1036,7 +1122,19 @@ needs_response = (
 
 if "Speaking" in st.session_state.mode:
     with main_col:
-        st.markdown("**🎤 Voice Recording** — Click Start, speak your answer, click Stop.")
+        st.markdown("""
+        <div class="voice-card">
+            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:4px">
+                Voice Recording
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:8px">
+                Click Start - speak your answer - click Stop.
+                Speech is converted to text and graded instantly.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<div class="glow-btn-wrap">', unsafe_allow_html=True)
         voice_text = speech_to_text(
             language='en',
             start_prompt="🎤 Start Speaking",
@@ -1045,14 +1143,22 @@ if "Speaking" in st.session_state.mode:
             use_container_width=True,
             key='stt_speaking'
         )
+        st.markdown('</div>', unsafe_allow_html=True)
+
         if voice_text:
+            st.toast("Voice captured!", icon="🎙️")
             st.session_state.messages.append({
                 "role": "user",
                 "content": f"[Voice answer]: {voice_text}"
             })
             needs_response = True
             st.rerun()
-        st.markdown("<div style='text-align:center;font-size:12px;color:#9CA3AF;margin:8px 0'>or type your answer below</div>", unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.25);margin:8px 0;letter-spacing:0.04em">
+            - or type your answer below -
+        </div>
+        """, unsafe_allow_html=True)
 
 user_input = st.chat_input("Type your answer, essay, or question here...")
 
@@ -1062,7 +1168,7 @@ if user_input:
 
 if needs_response:
     if not api_key:
-        st.error("Please enter your Claude API key in the sidebar.\n\nGet your free key at: console.anthropic.com")
+        st.error("Please enter your Claude API key in the top navigation bar.\n\nGet your free key at: console.anthropic.com")
         st.stop()
 
     with main_col:
