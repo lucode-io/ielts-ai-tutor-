@@ -300,6 +300,106 @@ hr { border-color: rgba(240,192,64,0.1) !important; margin: 12px 0 !important; }
 /* ── SPINNER ── */
 [data-testid="stSpinner"] { color: #F0C040 !important; }
 
+/* ── MOBILE RESPONSIVE ── */
+@media screen and (max-width: 768px) {
+    .main .block-container {
+        max-width: 100% !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        padding-top: 0.5rem !important;
+    }
+
+    /* Stack columns vertically on mobile */
+    [data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+    }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* Sidebar adjustments */
+    [data-testid="stSidebar"] {
+        min-width: 260px !important;
+        max-width: 280px !important;
+    }
+    [data-testid="stSidebar"] > div {
+        padding-top: 0.75rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    /* Chat messages full width */
+    [data-testid="stChatMessage"][data-author="user"] > div:last-child {
+        max-width: 95% !important;
+    }
+    [data-testid="stChatMessage"][data-author="assistant"] > div:last-child {
+        max-width: 100% !important;
+        padding: 10px 12px !important;
+    }
+
+    /* Welcome card smaller padding */
+    .welcome-card {
+        padding: 20px 16px !important;
+    }
+    .welcome-card h2 { font-size: 17px !important; }
+    .welcome-card p { font-size: 13px !important; }
+
+    /* Title sizing */
+    .ag-title { font-size: 18px !important; }
+    .ag-caption { font-size: 12px !important; }
+
+    /* Reference cards full width */
+    .ref-card {
+        margin-top: 10px !important;
+    }
+
+    /* Chat input */
+    [data-testid="stChatInput"] {
+        font-size: 14px !important;
+    }
+
+    /* Metrics compact */
+    [data-testid="stMetric"] {
+        padding: 8px 10px !important;
+    }
+
+    /* Voice card */
+    .voice-card {
+        padding: 10px 12px !important;
+    }
+
+    /* Pills smaller on mobile */
+    .ag-pill {
+        font-size: 10px !important;
+        padding: 2px 7px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .main .block-container {
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+    }
+
+    .ag-title { font-size: 16px !important; gap: 6px !important; }
+    .ag-title svg { width: 22px !important; height: 22px !important; }
+
+    .welcome-card {
+        padding: 16px 12px !important;
+    }
+    .welcome-card div[style*="font-size:48px"] {
+        font-size: 36px !important;
+    }
+
+    /* Mode chips wrap better */
+    .mode-guide-chip {
+        font-size: 9px !important;
+        padding: 2px 6px !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
