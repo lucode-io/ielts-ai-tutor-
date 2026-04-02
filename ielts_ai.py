@@ -16,10 +16,10 @@ from st_audiorecorder import st_audiorecorder
 # ============================================================
 
 st.set_page_config(
- - - - page_title="IELTS AI Tutor",
- - - - page_icon="🎓",
- - - - layout="wide",
- - - - initial_sidebar_state="expanded"
+    page_title="IELTS AI Tutor",
+    page_icon="🎓",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 # ============================================================
