@@ -12,7 +12,6 @@ import json
 
 @st.cache_resource
 def get_supabase_client() -> Client:
-    """Initialize and cache Supabase client."""
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_ANON_KEY"]
     return create_client(url, key)
@@ -21,7 +20,6 @@ def get_supabase_client() -> Client:
 # ── AUTH ──
 
 def sign_up(email: str, password: str, full_name: str) -> Dict:
-    """Register a new user."""
     supabase = get_supabase_client()
     try:
         res = supabase.auth.sign_up({
@@ -30,19 +28,20 @@ def sign_up(email: str, password: str, full_name: str) -> Dict:
             "options": {"data": {"full_name": full_name}}
         })
         if res.user:
-            # Create user profile row
-            supabase.table("users").insert({
-                "id": res.user.id,
-                "email": email,
-                "full_name": full_name
-            }).execute()
+            try:
+                supabase.table("users").insert({
+                    "id": res.user.id,
+                    "email": email,
+                    "full_name": full_name
+                }).execute()
+            except Exception:
+                pass  # Row may already exist
         return {"success": True, "user": res.user}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
 
 def sign_in(email: str, password: str) -> Dict:
-    """Sign in existing user."""
     supabase = get_supabase_client()
     try:
         res = supabase.auth.sign_in_with_password({
@@ -55,7 +54,6 @@ def sign_in(email: str, password: str) -> Dict:
 
 
 def sign_out():
-    """Sign out current user."""
     supabase = get_supabase_client()
     try:
         supabase.auth.sign_out()
@@ -64,7 +62,6 @@ def sign_out():
 
 
 def get_current_user():
-    """Get current authenticated user."""
     supabase = get_supabase_client()
     try:
         return supabase.auth.get_user()
@@ -75,7 +72,6 @@ def get_current_user():
 # ── USER PROFILE ──
 
 def get_user_profile(user_id: str) -> Optional[Dict]:
-    """Fetch full user profile from DB."""
     supabase = get_supabase_client()
     try:
         res = supabase.table("users").select("*").eq("id", user_id).single().execute()
@@ -85,7 +81,6 @@ def get_user_profile(user_id: str) -> Optional[Dict]:
 
 
 def update_user_profile(user_id: str, updates: Dict) -> bool:
-    """Update user profile fields."""
     supabase = get_supabase_client()
     try:
         updates["last_seen"] = datetime.utcnow().isoformat()
@@ -98,7 +93,6 @@ def update_user_profile(user_id: str, updates: Dict) -> bool:
 # ── SESSIONS ──
 
 def create_session(user_id: str, mode: str, topic: str, target_band: float) -> Optional[str]:
-    """Create a new practice session, return session_id."""
     supabase = get_supabase_client()
     try:
         res = supabase.table("sessions").insert({
@@ -113,7 +107,6 @@ def create_session(user_id: str, mode: str, topic: str, target_band: float) -> O
 
 
 def update_session(session_id: str, updates: Dict) -> bool:
-    """Update session with score and duration."""
     supabase = get_supabase_client()
     try:
         supabase.table("sessions").update(updates).eq("id", session_id).execute()
@@ -123,7 +116,6 @@ def update_session(session_id: str, updates: Dict) -> bool:
 
 
 def get_user_sessions(user_id: str, limit: int = 20) -> List[Dict]:
-    """Get recent sessions for a user."""
     supabase = get_supabase_client()
     try:
         res = supabase.table("sessions")\
@@ -141,7 +133,6 @@ def get_user_sessions(user_id: str, limit: int = 20) -> List[Dict]:
 
 def save_band_score(user_id: str, session_id: str, skill: str,
                     band_score: float, sub_scores: Dict = None) -> bool:
-    """Save a band score record."""
     supabase = get_supabase_client()
     try:
         data = {
@@ -159,7 +150,6 @@ def save_band_score(user_id: str, session_id: str, skill: str,
 
 
 def get_score_history(user_id: str, skill: str = None, days: int = 30) -> List[Dict]:
-    """Get score history for charts."""
     supabase = get_supabase_client()
     try:
         since = (datetime.utcnow() - timedelta(days=days)).isoformat()
@@ -180,7 +170,6 @@ def get_score_history(user_id: str, skill: str = None, days: int = 30) -> List[D
 
 def save_message(session_id: str, user_id: str, role: str,
                  content: str, audio_url: str = None) -> bool:
-    """Save a chat message to the session."""
     supabase = get_supabase_client()
     try:
         supabase.table("practice_messages").insert({
@@ -196,7 +185,6 @@ def save_message(session_id: str, user_id: str, role: str,
 
 
 def get_session_messages(session_id: str) -> List[Dict]:
-    """Get all messages for a session."""
     supabase = get_supabase_client()
     try:
         res = supabase.table("practice_messages")\
@@ -213,22 +201,17 @@ def get_session_messages(session_id: str) -> List[Dict]:
 
 def upsert_recurring_error(user_id: str, error_type: str,
                             category: str, description: str, example: str = None) -> bool:
-    """Add or increment a recurring error."""
     supabase = get_supabase_client()
     try:
-        # Check if this error type already exists
         existing = supabase.table("recurring_errors")\
             .select("id, frequency")\
             .eq("user_id", user_id)\
             .eq("error_type", error_type)\
             .execute()
-
         if existing.data:
-            # Increment frequency
             supabase.table("recurring_errors").update({
                 "frequency": existing.data[0]["frequency"] + 1,
                 "last_seen": datetime.utcnow().isoformat(),
-                "example": example or existing.data[0].get("example")
             }).eq("id", existing.data[0]["id"]).execute()
         else:
             supabase.table("recurring_errors").insert({
@@ -244,7 +227,6 @@ def upsert_recurring_error(user_id: str, error_type: str,
 
 
 def get_recurring_errors(user_id: str) -> List[Dict]:
-    """Get top recurring errors for a user."""
     supabase = get_supabase_client()
     try:
         res = supabase.table("recurring_errors")\
@@ -261,7 +243,6 @@ def get_recurring_errors(user_id: str) -> List[Dict]:
 # ── CHALLENGE ──
 
 def get_challenge_days(user_id: str) -> List[Dict]:
-    """Get completed challenge days."""
     supabase = get_supabase_client()
     try:
         res = supabase.table("challenge_days")\
@@ -276,7 +257,6 @@ def get_challenge_days(user_id: str) -> List[Dict]:
 
 def complete_challenge_day(user_id: str, day_number: int,
                             task_type: str, band_score: float = None) -> bool:
-    """Mark a challenge day as complete."""
     supabase = get_supabase_client()
     try:
         supabase.table("challenge_days").upsert({
@@ -286,25 +266,21 @@ def complete_challenge_day(user_id: str, day_number: int,
             "band_score": band_score,
             "completed_at": datetime.utcnow().isoformat()
         }).execute()
-
-        # Update streak on user profile
         profile = get_user_profile(user_id)
         if profile:
             today = date.today()
             last_date = profile.get("streak_last_date")
             current_streak = profile.get("streak_count", 0)
-
             if last_date:
                 last = date.fromisoformat(str(last_date))
                 if (today - last).days == 1:
                     new_streak = current_streak + 1
                 elif today == last:
-                    new_streak = current_streak  # same day, no change
+                    new_streak = current_streak
                 else:
-                    new_streak = 1  # streak broken
+                    new_streak = 1
             else:
                 new_streak = 1
-
             update_user_profile(user_id, {
                 "streak_count": new_streak,
                 "streak_last_date": today.isoformat(),
@@ -319,7 +295,6 @@ def complete_challenge_day(user_id: str, day_number: int,
 # ── DIAGNOSTIC ──
 
 def save_diagnostic(user_id: str, scores: Dict) -> bool:
-    """Save diagnostic test results."""
     supabase = get_supabase_client()
     try:
         overall = round(
@@ -335,7 +310,6 @@ def save_diagnostic(user_id: str, scores: Dict) -> bool:
             "overall_band": overall,
             "raw_results": json.dumps(scores)
         }).execute()
-        # Update baseline on user profile
         update_user_profile(user_id, {"baseline_band": overall})
         return True
     except Exception:
@@ -343,7 +317,6 @@ def save_diagnostic(user_id: str, scores: Dict) -> bool:
 
 
 def get_latest_diagnostic(user_id: str) -> Optional[Dict]:
-    """Get the most recent diagnostic test."""
     supabase = get_supabase_client()
     try:
         res = supabase.table("diagnostic_tests")\
