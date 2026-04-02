@@ -32,7 +32,8 @@ st.markdown("""
 html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     background: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 25%, #1b1b3a 50%, #0d1b2a 75%, #0a0a1a 100%) !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: #e0e0e0;
+    color: #F8F9FA;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 [data-testid="stHeader"] {
     background: transparent !important;
@@ -60,9 +61,10 @@ button[kind="headerNoPadding"],
 
 /* ── GLASSMORPHISM CONTAINER (Bento Card) ── */
 .glass-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     padding: 20px;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -72,9 +74,10 @@ button[kind="headerNoPadding"],
 
 /* ── TOP NAVIGATION BAR ── */
 .top-nav {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.08);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15));
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 12px 24px;
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -92,12 +95,12 @@ button[kind="headerNoPadding"],
 .top-nav-brand-text {
     font-size: 18px;
     font-weight: 700;
-    color: #F0C040;
+    color: #FFD54F;
     letter-spacing: 0.03em;
 }
 .top-nav-brand-sub {
     font-size: 10px;
-    color: rgba(255,255,255,0.35);
+    color: rgba(255,255,255,0.55);
     letter-spacing: 0.1em;
     text-transform: uppercase;
 }
@@ -113,9 +116,9 @@ button[kind="headerNoPadding"],
     letter-spacing: 0.04em;
     backdrop-filter: blur(8px);
 }
-.ag-pill-mode { background: rgba(240,192,64,0.15); color: #F0C040; border: 1px solid rgba(240,192,64,0.3); }
-.ag-pill-topic { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
-.ag-pill-band { background: rgba(46,204,113,0.12); color: #2ECC71; border: 1px solid rgba(46,204,113,0.25); }
+.ag-pill-mode { background: rgba(255,213,79,0.15); color: #FFD54F; border: 1px solid rgba(255,213,79,0.3); }
+.ag-pill-topic { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); }
+.ag-pill-band { background: rgba(46,204,113,0.12); color: #66E09A; border: 1px solid rgba(46,204,113,0.25); }
 
 /* ── GENERIC BUTTONS ── */
 .stButton > button {
@@ -125,13 +128,13 @@ button[kind="headerNoPadding"],
     padding: 10px 18px !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     width: 100% !important;
-    background: rgba(255, 255, 255, 0.06) !important;
-    color: #CBD5E8 !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #F8F9FA !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
     backdrop-filter: blur(8px) !important;
 }
 .stButton > button:hover {
-    background: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.14) !important;
     color: #ffffff !important;
     border-color: rgba(255, 255, 255, 0.25) !important;
     transform: translateY(-1px);
@@ -140,21 +143,22 @@ button[kind="headerNoPadding"],
 
 /* ── GLOWING ACTION BUTTON (Start Speaking) ── */
 .glow-btn-wrap .stButton > button {
-    background: linear-gradient(135deg, #F0C040 0%, #E8A020 100%) !important;
+    background: linear-gradient(135deg, #FFD54F 0%, #FFCA28 100%) !important;
     color: #0a0a1a !important;
     border: none !important;
     border-radius: 20px !important;
     font-size: 16px !important;
     font-weight: 700 !important;
     padding: 16px 28px !important;
-    box-shadow: 0 0 20px rgba(240,192,64,0.4), 0 0 60px rgba(240,192,64,0.15) !important;
+    box-shadow: 0 0 20px rgba(255,213,79,0.4), 0 0 60px rgba(255,213,79,0.15) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     letter-spacing: 0.02em;
+    text-shadow: none;
 }
 .glow-btn-wrap .stButton > button:hover {
-    background: linear-gradient(135deg, #FFD060 0%, #F0C040 100%) !important;
+    background: linear-gradient(135deg, #FFE082 0%, #FFD54F 100%) !important;
     color: #0a0a1a !important;
-    box-shadow: 0 0 30px rgba(240,192,64,0.6), 0 0 80px rgba(240,192,64,0.25) !important;
+    box-shadow: 0 0 30px rgba(255,213,79,0.6), 0 0 80px rgba(255,213,79,0.25) !important;
     transform: translateY(-2px) scale(1.02);
 }
 
@@ -177,11 +181,11 @@ button[kind="secondary"]:hover {
     padding: 4px 0 !important;
 }
 [data-testid="stChatMessage"][data-author="user"] > div:last-child {
-    background: rgba(0, 123, 255, 0.08) !important;
+    background: rgba(130, 177, 255, 0.1) !important;
     border-radius: 20px 20px 4px 20px !important;
-    border: 1px solid rgba(0,123,255,0.15) !important;
+    border: 1px solid rgba(130,177,255,0.2) !important;
     padding: 14px 18px !important;
-    color: #e0e8f8 !important;
+    color: #F8F9FA !important;
     margin-left: auto !important;
     max-width: 85% !important;
     backdrop-filter: blur(12px) !important;
@@ -191,7 +195,7 @@ button[kind="secondary"]:hover {
     border-radius: 20px 20px 20px 4px !important;
     border: 1px solid rgba(255,255,255,0.08) !important;
     padding: 16px 20px !important;
-    color: #e0e0e0 !important;
+    color: #F8F9FA !important;
     max-width: 95% !important;
     backdrop-filter: blur(12px) !important;
 }
@@ -201,11 +205,11 @@ button[kind="secondary"]:hover {
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 16px !important;
-    color: #e0e0e0 !important;
+    color: #F8F9FA !important;
 }
 [data-testid="stChatInput"]:focus-within {
-    border-color: rgba(240, 192, 64, 0.5) !important;
-    box-shadow: 0 0 0 3px rgba(240, 192, 64, 0.1) !important;
+    border-color: rgba(255, 213, 79, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(255, 213, 79, 0.1) !important;
 }
 
 /* ── SELECTBOX (glass style) ── */
@@ -213,21 +217,21 @@ button[kind="secondary"]:hover {
     background: rgba(255, 255, 255, 0.06) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 12px !important;
-    color: #e0e0e0 !important;
+    color: #F8F9FA !important;
 }
 
 /* ── SLIDER ── */
 [data-testid="stSlider"] > div > div > div {
-    background: #F0C040 !important;
+    background: #FFD54F !important;
 }
 
 /* ── ALERTS ── */
 [data-testid="stAlert"] {
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-left: 4px solid #F0C040 !important;
+    border-left: 4px solid #FFD54F !important;
     border-radius: 14px !important;
-    color: #e0e0e0 !important;
+    color: #F8F9FA !important;
     backdrop-filter: blur(8px) !important;
 }
 
@@ -239,8 +243,8 @@ button[kind="secondary"]:hover {
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     backdrop-filter: blur(8px) !important;
 }
-[data-testid="stMetricValue"] { color: #F0C040 !important; font-weight: 700 !important; }
-[data-testid="stMetricLabel"] { color: rgba(255,255,255,0.4) !important; }
+[data-testid="stMetricValue"] { color: #FFD54F !important; font-weight: 700 !important; }
+[data-testid="stMetricLabel"] { color: rgba(255,255,255,0.65) !important; }
 
 /* ── DIVIDER ── */
 hr { border-color: rgba(255,255,255,0.06) !important; margin: 12px 0 !important; }
@@ -257,17 +261,17 @@ hr { border-color: rgba(255,255,255,0.06) !important; margin: 12px 0 !important;
 [data-testid="stStatus"],
 [data-testid="stStatusWidget"] {
     background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(240, 192, 64, 0.2) !important;
+    border: 1px solid rgba(255, 213, 79, 0.2) !important;
     border-radius: 16px !important;
     backdrop-filter: blur(12px) !important;
-    color: #e0e0e0 !important;
+    color: #F8F9FA !important;
 }
 
 /* ── SCORE BADGES ── */
 .score-high {
     display: inline-block;
     background: rgba(46,204,113,0.12);
-    color: #2ECC71;
+    color: #66E09A;
     border: 1px solid rgba(46,204,113,0.25);
     padding: 3px 12px;
     border-radius: 20px;
@@ -277,8 +281,8 @@ hr { border-color: rgba(255,255,255,0.06) !important; margin: 12px 0 !important;
 .score-mid {
     display: inline-block;
     background: rgba(240,192,64,0.12);
-    color: #F0C040;
-    border: 1px solid rgba(240,192,64,0.25);
+    color: #FFD54F;
+    border: 1px solid rgba(255,213,79,0.25);
     padding: 3px 12px;
     border-radius: 20px;
     font-weight: 700;
@@ -298,8 +302,8 @@ hr { border-color: rgba(255,255,255,0.06) !important; margin: 12px 0 !important;
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(240,192,64,0.3); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(240,192,64,0.5); }
+::-webkit-scrollbar-thumb { background: rgba(255,213,79,0.3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,213,79,0.5); }
 
 /* ── WELCOME CARD ── */
 .welcome-card {
@@ -311,8 +315,8 @@ hr { border-color: rgba(255,255,255,0.06) !important; margin: 12px 0 !important;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
 }
-.welcome-card h2 { font-size: 22px; font-weight: 700; color: #F0C040; margin-bottom: 8px; }
-.welcome-card p { font-size: 14px; color: rgba(255,255,255,0.45); line-height: 1.7; }
+.welcome-card h2 { font-size: 22px; font-weight: 700; color: #FFD54F; margin-bottom: 8px; }
+.welcome-card p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.7; }
 
 /* ── REF CARD (glass) ── */
 .ref-card {
@@ -346,20 +350,20 @@ hr { border-color: rgba(255,255,255,0.06) !important; margin: 12px 0 !important;
 .mode-listening { background: rgba(252,211,77,0.10); color: #FCD34D; border: 1px solid rgba(252,211,77,0.25); }
 .mode-reading   { background: rgba(52,211,153,0.10); color: #34D399; border: 1px solid rgba(52,211,153,0.25); }
 .mode-vocab     { background: rgba(244,114,182,0.10); color: #F472B6; border: 1px solid rgba(244,114,182,0.25); }
-.mode-general   { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1); }
+.mode-general   { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.15); }
 
 /* ── VOICE CARD ── */
 .voice-card {
     background: rgba(255, 255, 255, 0.04);
     border-radius: 20px;
-    border: 1px solid rgba(240, 192, 64, 0.15);
+    border: 1px solid rgba(255, 213, 79, 0.15);
     padding: 16px 20px;
     margin-bottom: 14px;
     backdrop-filter: blur(12px);
 }
 
 /* ── SPINNER ── */
-[data-testid="stSpinner"] { color: #F0C040 !important; }
+[data-testid="stSpinner"] { color: #FFD54F !important; }
 
 /* ── MOBILE RESPONSIVE ── */
 @media screen and (max-width: 768px) {
@@ -687,13 +691,13 @@ st.markdown("""
     <div class="top-nav-brand">
         <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
             <rect width="56" height="56" rx="14" fill="rgba(255,255,255,0.06)"/>
-            <polygon points="28,14 46,24 28,34 10,24" fill="rgba(255,255,255,0.08)" stroke="#F0C040" stroke-width="2" stroke-linejoin="round"/>
-            <line x1="40" y1="27" x2="40" y2="38" stroke="#F0C040" stroke-width="2" stroke-linecap="round"/>
-            <path d="M34,38 Q40,42 46,38" fill="none" stroke="#F0C040" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="43" cy="13" r="1.5" fill="#F0C040"/>
-            <line x1="43" y1="13" x2="47" y2="9" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
-            <line x1="43" y1="13" x2="48" y2="14" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
-            <line x1="43" y1="13" x2="42" y2="8" stroke="#F0C040" stroke-width="1.2" stroke-linecap="round"/>
+            <polygon points="28,14 46,24 28,34 10,24" fill="rgba(255,255,255,0.08)" stroke="#FFD54F" stroke-width="2" stroke-linejoin="round"/>
+            <line x1="40" y1="27" x2="40" y2="38" stroke="#FFD54F" stroke-width="2" stroke-linecap="round"/>
+            <path d="M34,38 Q40,42 46,38" fill="none" stroke="#FFD54F" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="43" cy="13" r="1.5" fill="#FFD54F"/>
+            <line x1="43" y1="13" x2="47" y2="9" stroke="#FFD54F" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="43" y1="13" x2="48" y2="14" stroke="#FFD54F" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="43" y1="13" x2="42" y2="8" stroke="#FFD54F" stroke-width="1.2" stroke-linecap="round"/>
         </svg>
         <div>
             <div class="top-nav-brand-text">IELTS AI Tutor</div>
@@ -782,7 +786,7 @@ with main_col:
             <div style="font-size:48px;margin-bottom:12px">{icon}</div>
             <h2>{title} Active</h2>
             <p>{desc}</p>
-            <p style="margin-top:16px;font-size:13px;color:rgba(255,255,255,0.25)">
+            <p style="margin-top:16px;font-size:13px;color:rgba(255,255,255,0.55)">
                 Use the Quick Start panel on the right to begin instantly.
             </p>
         </div>
@@ -801,7 +805,7 @@ with side_col:
     # Session Stats Bento Card
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("""
-    <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase">
+    <div style="font-weight:700;font-size:13px;color:#FFD54F;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase">
         Session Stats
     </div>
     """, unsafe_allow_html=True)
@@ -818,7 +822,7 @@ with side_col:
     # Quick Start Bento Card
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("""
-    <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase">
+    <div style="font-weight:700;font-size:13px;color:#FFD54F;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase">
         Quick Start
     </div>
     """, unsafe_allow_html=True)
@@ -946,26 +950,26 @@ with side_col:
 
     if matched:
         card_class, title, tips, footer = matched
-        tips_html = "".join([f"<li style='margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px'>{t}</li>" for t in tips])
+        tips_html = "".join([f"<li style='margin-bottom:6px;color:#D1D5DB;font-size:13px'>{t}</li>" for t in tips])
         st.markdown(f"""
         <div class="ref-card ref-card-{card_class}">
-            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:10px">{title}</div>
+            <div style="font-weight:700;font-size:13px;color:#FFD54F;margin-bottom:10px">{title}</div>
             <ul style="margin:0;padding-left:16px">{tips_html}</ul>
-            <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.3);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">{footer}</div>
+            <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.55);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">{footer}</div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div class="ref-card" style="border-top:2px solid #F0C040">
-            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:10px">IELTS Band Scale</div>
+        <div class="ref-card" style="border-top:2px solid #FFD54F">
+            <div style="font-weight:700;font-size:13px;color:#FFD54F;margin-bottom:10px">IELTS Band Scale</div>
             <ul style="margin:0;padding-left:16px">
-                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 9 — Expert user</li>
-                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 8 — Very good user</li>
-                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 7 — Good user</li>
-                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 6 — Competent user</li>
-                <li style="margin-bottom:6px;color:rgba(255,255,255,0.65);font-size:13px">Band 5 — Modest user</li>
+                <li style="margin-bottom:6px;color:#D1D5DB;font-size:13px">Band 9 — Expert user</li>
+                <li style="margin-bottom:6px;color:#D1D5DB;font-size:13px">Band 8 — Very good user</li>
+                <li style="margin-bottom:6px;color:#D1D5DB;font-size:13px">Band 7 — Good user</li>
+                <li style="margin-bottom:6px;color:#D1D5DB;font-size:13px">Band 6 — Competent user</li>
+                <li style="margin-bottom:6px;color:#D1D5DB;font-size:13px">Band 5 — Modest user</li>
             </ul>
-            <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.3);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">Target: 7.0+ — all 4 skills matter equally</div>
+            <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.55);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">Target: 7.0+ — all 4 skills matter equally</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -973,13 +977,13 @@ with side_col:
     st.markdown("""
     <div style="background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.06);
                 padding:14px;margin-top:10px;backdrop-filter:blur(8px)">
-        <div style="font-weight:700;font-size:12px;color:#F0C040;margin-bottom:8px;letter-spacing:0.04em;text-transform:uppercase">
+        <div style="font-weight:700;font-size:12px;color:#FFD54F;margin-bottom:8px;letter-spacing:0.04em;text-transform:uppercase">
             Band Progression
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.9">
+        <div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.9">
             Baseline: <strong style="color:#E74C3C">A2</strong><br>
-            March target: <strong style="color:#F0C040">5.5+</strong><br>
-            May target: <strong style="color:#F0C040">6.5+</strong><br>
+            March target: <strong style="color:#FFD54F">5.5+</strong><br>
+            May target: <strong style="color:#FFD54F">6.5+</strong><br>
             June exam: <strong style="color:#2ECC71">6.0-6.5</strong><br>
             August target: <strong style="color:#2ECC71">7.0+</strong>
         </div>
@@ -1001,10 +1005,10 @@ if "Speaking" in st.session_state.mode:
     with main_col:
         st.markdown("""
         <div class="voice-card">
-            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:4px">
+            <div style="font-weight:700;font-size:13px;color:#FFD54F;margin-bottom:4px">
                 Voice Recording
             </div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:8px">
+            <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:8px">
                 Click Start — speak your answer — click Stop.
                 Speech is converted to text and graded instantly.
             </div>
@@ -1033,7 +1037,7 @@ if "Speaking" in st.session_state.mode:
             st.rerun()
 
         st.markdown("""
-        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.25);margin:8px 0;letter-spacing:0.04em">
+        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.55);margin:8px 0;letter-spacing:0.04em">
             — or type your answer below —
         </div>
         """, unsafe_allow_html=True)
