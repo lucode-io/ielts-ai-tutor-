@@ -196,3 +196,7 @@ else:
     st.error(f"Unknown view: {view}")
     st.session_state.current_view = "dashboard"
     st.rerun()
+    
+elif view == "mock_test":
+    from modules.mock_test import render_mock_test
+    render_mock_test()
