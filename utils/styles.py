@@ -192,30 +192,34 @@ def inject_global_css(accent: str = "#F0C040"):
     }}
 
     /* ── INPUTS ── */
-    [data-testid="stChatInput"] {{
-        background: rgba(255,255,255,0.04) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 16px !important;
-        color: #e0e0e0 !important;
-    }}
-    [data-testid="stChatInput"]:focus-within {{
-        border-color: {accent}88 !important;
-        box-shadow: 0 0 0 3px {accent}18 !important;
-    }}
-    [data-testid="stTextInput"] input,
-    [data-testid="stTextInput"] textarea {{
-        background: rgba(255,255,255,0.06) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 12px !important;
-        color: #e0e0e0 !important;
-    }}
-    [data-testid="stSelectbox"] > div > div {{
-        background: rgba(255,255,255,0.06) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 12px !important;
-        color: #e0e0e0 !important;
-    }}
-    [data-testid="stSlider"] > div > div > div {{ background: {accent} !important; }}
+[data-testid="stChatInput"] {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 16px !important;
+    color: #e0e0e0 !important;
+}
+[data-testid="stChatInput"]:focus-within {
+    border-color: {accent}88 !important;
+    box-shadow: 0 0 0 3px {accent}18 !important;
+}
+[data-testid="stTextInput"] input,
+[data-testid="stTextInput"] textarea,
+[data-baseweb="input"] input,
+[data-baseweb="textarea"] textarea,
+.stTextInput input,
+input[type="text"],
+input[type="email"],
+input[type="password"] {{
+    color: #1a1a2e !important;
+    background: #ffffff !important;
+    caret-color: #1a1a2e !important;
+}}
+[data-testid="stSelectbox"] > div > div {{
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 12px !important;
+    color: #e0e0e0 !important;
+}}
 
     /* ── METRICS ── */
     [data-testid="stMetric"] {{
