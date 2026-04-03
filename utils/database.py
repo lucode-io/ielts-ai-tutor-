@@ -328,3 +328,67 @@ def get_latest_diagnostic(user_id: str) -> Optional[Dict]:
         return res.data[0] if res.data else None
     except Exception:
         return None
+# ============================================================
+# ADD THESE FUNCTIONS TO utils/database.py
+# Paste at the bottom of your existing database.py
+# ============================================================
+
+# ── CERTIFICATES ──
+
+def save_certificate(user_id: str, cert_hash: str, full_name: str,
+                     target_band: float, achieved_band: float,
+                     cert_type: str, scores: dict) -> bool:
+    """Save a certificate record to Supabase."""
+    supabase = get_supabase_client()
+    try:
+        supabase.table("certificates").insert({
+            "hash": cert_hash,
+            "user_id": user_id,
+            "full_name": full_name,
+            "target_band": target_band,
+            "achieved_band": achieved_band,
+            "cert_type": cert_type,
+            "speaking_band": scores.get("speaking"),
+            "writing_band": scores.get("writing"),
+            "reading_band": scores.get("reading"),
+            "listening_band": scores.get("listening"),
+        }).execute()
+        return True
+    except Exception:
+        return False
+
+
+def verify_certificate(cert_hash: str) -> dict:
+    """Look up a certificate by hash. Public — no auth required."""
+    supabase = get_supabase_client()
+    try:
+        res = supabase.table("certificates")\
+            .select("*")\
+            .eq("hash", cert_hash)\
+            .eq("is_valid", True)\
+            .single()\
+            .execute()
+        if res.data:
+            # Increment verified count
+            supabase.table("certificates")\
+                .update({"verified_count": res.data["verified_count"] + 1})\
+                .eq("hash", cert_hash)\
+                .execute()
+            return {"found": True, "data": res.data}
+        return {"found": False}
+    except Exception:
+        return {"found": False}
+
+
+def get_user_certificates(user_id: str) -> list:
+    """Get all certificates for a user."""
+    supabase = get_supabase_client()
+    try:
+        res = supabase.table("certificates")\
+            .select("*")\
+            .eq("user_id", user_id)\
+            .order("issued_at", desc=True)\
+            .execute()
+        return res.data or []
+    except Exception:
+        return []
