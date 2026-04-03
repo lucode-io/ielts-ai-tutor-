@@ -108,14 +108,13 @@ def inject_global_css(accent: str = "#F0C040"):
         transform: translateY(-1px);
     }}
     .btn-primary > button {{
-        background: linear-gradient(135deg, {accent} 0%, {accent}cc 100%) !important;
+        background: {accent} !important;
         color: #0a0a1a !important;
         border: none !important;
         font-weight: 700 !important;
-        box-shadow: 0 0 20px {accent}44 !important;
     }}
     .btn-primary > button:hover {{
-        box-shadow: 0 0 30px {accent}66 !important;
+        opacity: 0.9 !important;
         transform: translateY(-2px) scale(1.02) !important;
     }}
     button[kind="secondary"] {{
@@ -146,7 +145,6 @@ def inject_global_css(accent: str = "#F0C040"):
         padding: 20px 24px !important;
         max-width: 95% !important;
     }}
-
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span {{
@@ -183,7 +181,6 @@ def inject_global_css(accent: str = "#F0C040"):
         font-size: 13px !important;
     }}
 
-    /* ── FIX ALL INPUT TEXT COLORS ── */
     [data-testid="stChatInput"] {{
         background: rgba(255,255,255,0.04) !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
@@ -194,6 +191,7 @@ def inject_global_css(accent: str = "#F0C040"):
         border-color: {accent}88 !important;
         box-shadow: 0 0 0 3px {accent}18 !important;
     }}
+
     [data-testid="stTextInput"] input,
     [data-baseweb="input"] input,
     .stTextInput input,
@@ -245,15 +243,7 @@ def inject_global_css(accent: str = "#F0C040"):
         border-radius: 16px !important;
     }}
 
-    .pill {{
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        margin-right: 6px;
-        letter-spacing: 0.04em;
-    }}
+    .pill {{ display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-right: 6px; letter-spacing: 0.04em; }}
     .pill-gold {{ background: {accent}22; color: {accent}; border: 1px solid {accent}44; }}
     .pill-green {{ background: rgba(46,204,113,0.12); color: #2ECC71; border: 1px solid rgba(46,204,113,0.25); }}
     .pill-red {{ background: rgba(231,76,60,0.12); color: #E74C3C; border: 1px solid rgba(231,76,60,0.25); }}
@@ -292,7 +282,6 @@ def inject_global_css(accent: str = "#F0C040"):
         background: {accent}11;
     }}
 
-    /* ── CHALLENGE CALENDAR ── */
     .challenge-day {{
         width: 44px;
         height: 44px;
@@ -318,9 +307,7 @@ def inject_global_css(accent: str = "#F0C040"):
         color: {accent};
         animation: pulse 2s infinite;
     }}
-    .challenge-day.locked {{
-        opacity: 0.3;
-    }}
+    .challenge-day.locked {{ opacity: 0.3; }}
     .challenge-label {{
         font-size: 9px;
         text-align: center;
@@ -337,7 +324,6 @@ def inject_global_css(accent: str = "#F0C040"):
         50% {{ box-shadow: 0 0 30px {accent}88; }}
     }}
 
-    /* ── MOBILE ── */
     @media screen and (max-width: 768px) {{
         [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2):not(.keep-mobile) {{
             display: none !important;
@@ -381,5 +367,6 @@ def inject_global_css(accent: str = "#F0C040"):
         }}
         .glass-card {{ border-radius: 12px !important; padding: 10px !important; }}
     }}
+
     </style>
     """, unsafe_allow_html=True)
