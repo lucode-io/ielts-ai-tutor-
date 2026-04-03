@@ -116,10 +116,10 @@ def render_settings():
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("Retake Diagnostic Test", key="retake_diag"):
-                st.session_state.practice_mode = "Diagnostic"
-                st.session_state.current_view = "practice"
-                st.rerun()
+          if st.button("Retake Diagnostic Test", key="retake_diag"):
+    st.session_state.profile["baseline_band"] = None
+    st.session_state.current_view = "onboarding"
+    st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 
