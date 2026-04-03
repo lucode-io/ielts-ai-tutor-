@@ -7,10 +7,9 @@ import streamlit as st
 
 
 def inject_global_css(accent: str = "#F0C040"):
-    """Inject all platform CSS with dynamic accent color."""
     st.markdown(f"""
     <style>
-    /* ── GLOBAL ── */
+
     html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {{
         background: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 25%, #1b1b3a 50%, #0d1b2a 75%, #0a0a1a 100%) !important;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -18,7 +17,6 @@ def inject_global_css(accent: str = "#F0C040"):
     }}
     [data-testid="stHeader"] {{ background: transparent !important; }}
 
-    /* ── HIDE SIDEBAR ── */
     [data-testid="stSidebar"],
     [data-testid="stSidebarCollapsedControl"],
     button[kind="headerNoPadding"],
@@ -37,7 +35,6 @@ def inject_global_css(accent: str = "#F0C040"):
         max-width: 1280px;
     }}
 
-    /* ── GLASS CARD ── */
     .glass-card {{
         background: rgba(255,255,255,0.05);
         border-radius: 24px;
@@ -49,7 +46,6 @@ def inject_global_css(accent: str = "#F0C040"):
         margin-bottom: 16px;
     }}
 
-    /* ── TOP NAV ── */
     .top-nav {{
         background: rgba(255,255,255,0.04);
         border-radius: 20px;
@@ -66,7 +62,6 @@ def inject_global_css(accent: str = "#F0C040"):
     .top-nav-brand-text {{ font-size: 18px; font-weight: 700; color: {accent}; letter-spacing: 0.03em; }}
     .top-nav-brand-sub {{ font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 0.1em; text-transform: uppercase; }}
 
-    /* ── NAV TABS ── */
     .nav-tab-bar {{
         display: flex;
         gap: 6px;
@@ -94,7 +89,6 @@ def inject_global_css(accent: str = "#F0C040"):
         border: 1px solid {accent}44;
     }}
 
-    /* ── BUTTONS ── */
     .stButton > button {{
         border-radius: 14px !important;
         font-weight: 600 !important;
@@ -131,7 +125,6 @@ def inject_global_css(accent: str = "#F0C040"):
         border-radius: 14px !important;
     }}
 
-    /* ── CHAT MESSAGES ── */
     [data-testid="stChatMessage"] {{
         background: transparent !important;
         border: none !important;
@@ -154,7 +147,6 @@ def inject_global_css(accent: str = "#F0C040"):
         max-width: 95% !important;
     }}
 
-    /* ── TYPOGRAPHY IN CHAT ── */
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span {{
@@ -191,7 +183,7 @@ def inject_global_css(accent: str = "#F0C040"):
         font-size: 13px !important;
     }}
 
-    /* ── INPUTS ── */
+    /* ── FIX ALL INPUT TEXT COLORS ── */
     [data-testid="stChatInput"] {{
         background: rgba(255,255,255,0.04) !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
@@ -203,11 +195,20 @@ def inject_global_css(accent: str = "#F0C040"):
         box-shadow: 0 0 0 3px {accent}18 !important;
     }}
     [data-testid="stTextInput"] input,
-    [data-testid="stTextInput"] textarea {{
-        background: rgba(255,255,255,0.06) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 12px !important;
-        color: #e0e0e0 !important;
+    [data-baseweb="input"] input,
+    .stTextInput input,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"] {{
+        color: #1a1a2e !important;
+        background: #ffffff !important;
+        caret-color: #1a1a2e !important;
+    }}
+    [data-testid="stTextArea"] textarea,
+    [data-baseweb="textarea"] textarea {{
+        color: #1a1a2e !important;
+        background: #ffffff !important;
     }}
     [data-testid="stSelectbox"] > div > div {{
         background: rgba(255,255,255,0.06) !important;
@@ -217,7 +218,6 @@ def inject_global_css(accent: str = "#F0C040"):
     }}
     [data-testid="stSlider"] > div > div > div {{ background: {accent} !important; }}
 
-    /* ── METRICS ── */
     [data-testid="stMetric"] {{
         background: rgba(255,255,255,0.04) !important;
         border-radius: 16px !important;
@@ -227,7 +227,6 @@ def inject_global_css(accent: str = "#F0C040"):
     [data-testid="stMetricValue"] {{ color: {accent} !important; font-weight: 700 !important; }}
     [data-testid="stMetricLabel"] {{ color: rgba(255,255,255,0.4) !important; }}
 
-    /* ── ALERTS / STATUS ── */
     [data-testid="stAlert"] {{
         background: rgba(255,255,255,0.04) !important;
         border-left: 4px solid {accent} !important;
@@ -246,7 +245,6 @@ def inject_global_css(accent: str = "#F0C040"):
         border-radius: 16px !important;
     }}
 
-    /* ── PILLS ── */
     .pill {{
         display: inline-block;
         padding: 4px 12px;
@@ -262,12 +260,10 @@ def inject_global_css(accent: str = "#F0C040"):
     .pill-blue {{ background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.25); }}
     .pill-purple {{ background: rgba(167,139,250,0.12); color: #A78BFA; border: 1px solid rgba(167,139,250,0.25); }}
 
-    /* ── SCROLLBAR ── */
     ::-webkit-scrollbar {{ width: 5px; }}
     ::-webkit-scrollbar-track {{ background: transparent; }}
     ::-webkit-scrollbar-thumb {{ background: {accent}55; border-radius: 4px; }}
 
-    /* ── PROGRESS BAR ── */
     .progress-bar-wrap {{
         background: rgba(255,255,255,0.08);
         border-radius: 8px;
@@ -278,11 +274,10 @@ def inject_global_css(accent: str = "#F0C040"):
     .progress-bar-fill {{
         height: 100%;
         border-radius: 8px;
-        background: linear-gradient(90deg, {accent}, {accent}99);
+        background: {accent};
         transition: width 0.4s ease;
     }}
 
-    /* ── BAND SCORE RING ── */
     .band-ring {{
         display: inline-flex;
         align-items: center;
@@ -295,7 +290,6 @@ def inject_global_css(accent: str = "#F0C040"):
         font-weight: 800;
         color: {accent};
         background: {accent}11;
-        box-shadow: 0 0 20px {accent}33;
     }}
 
     /* ── CHALLENGE CALENDAR ── */
@@ -308,6 +302,7 @@ def inject_global_css(accent: str = "#F0C040"):
         justify-content: center;
         font-size: 13px;
         font-weight: 700;
+        margin: 0 auto 4px auto;
         border: 1px solid rgba(255,255,255,0.1);
         background: rgba(255,255,255,0.04);
         color: rgba(255,255,255,0.3);
@@ -316,17 +311,26 @@ def inject_global_css(accent: str = "#F0C040"):
         background: {accent}22;
         border-color: {accent}66;
         color: {accent};
-        box-shadow: 0 0 12px {accent}33;
     }}
     .challenge-day.today {{
         background: {accent}44;
         border-color: {accent};
         color: {accent};
-        box-shadow: 0 0 20px {accent}55;
         animation: pulse 2s infinite;
     }}
     .challenge-day.locked {{
         opacity: 0.3;
+    }}
+    .challenge-label {{
+        font-size: 9px;
+        text-align: center;
+        margin-top: 2px;
+        color: rgba(255,255,255,0.3);
+        font-weight: 400;
+    }}
+    .challenge-label.today-label {{
+        color: {accent};
+        font-weight: 700;
     }}
     @keyframes pulse {{
         0%, 100% {{ box-shadow: 0 0 20px {accent}55; }}
@@ -335,7 +339,6 @@ def inject_global_css(accent: str = "#F0C040"):
 
     /* ── MOBILE ── */
     @media screen and (max-width: 768px) {{
-        /* Hide side panel on mobile */
         [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2):not(.keep-mobile) {{
             display: none !important;
         }}
@@ -344,7 +347,6 @@ def inject_global_css(accent: str = "#F0C040"):
             flex: 1 1 100% !important;
             min-width: 100% !important;
         }}
-        /* Keep nav gear button visible */
         [data-testid="stHorizontalBlock"]:first-of-type > [data-testid="stColumn"]:nth-child(2) {{
             display: flex !important;
             visibility: visible !important;
