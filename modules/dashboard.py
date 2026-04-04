@@ -87,11 +87,9 @@ def render_dashboard():
             st.session_state.current_view = "practice"
             st.rerun()
     with q3:
-        st.markdown(_quick_card("🎧", "Listening", "Section 1 - 4", "#FCD34D"), unsafe_allow_html=True)
         if st.button("Start Listening", key="qs_listening", use_container_width=True):
-            st.session_state.practice_mode = "Listening - Section 1 (Conversation)"
-            st.session_state.current_view = "practice"
-            st.rerun()
+    st.session_state.current_view = "listening"
+    st.rerun()
     with q4:
         st.markdown(_quick_card("📖", "Reading", "Academic", "#34D399"), unsafe_allow_html=True)
         if st.button("Start Reading", key="qs_reading", use_container_width=True):

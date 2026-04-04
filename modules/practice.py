@@ -105,6 +105,10 @@ def render_practice():
         )
         st.session_state.practice_mode = mode
 
+if "Listening" in mode:
+    st.session_state.current_view = "listening"
+    st.rerun()
+
     with ctrl_col2:
         topic = st.selectbox("Topic", TOPICS,
                              label_visibility="collapsed", key="practice_topic")

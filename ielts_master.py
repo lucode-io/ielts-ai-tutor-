@@ -196,6 +196,10 @@ elif view == "mock_test":
     from modules.mock_test import render_mock_test
     render_mock_test()
 
+elif view == "listening":
+    from modules.practice_listening import render_listening_practice
+    render_listening_practice()
+
 else:
     st.error(f"Unknown view: {view}")
     st.session_state.current_view = "dashboard"
