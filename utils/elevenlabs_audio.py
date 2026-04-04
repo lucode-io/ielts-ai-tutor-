@@ -1,18 +1,20 @@
 # ============================================================
 # utils/elevenlabs_audio.py
-# ElevenLabs TTS integration for all listening sections
+# ElevenLabs TTS - with retry logic and silent fallback
 # ============================================================
 
 import streamlit as st
 import base64
 import requests
+import time
 from typing import Optional
 
 
 def generate_audio(text: str, voice_id: str = None) -> Optional[str]:
     """
     Generate audio using ElevenLabs TTS.
-    Returns base64-encoded MP3 string or None if failed.
+    Retries once on 429. Falls back to gTTS silently.
+    Returns base64 MP3 string or None.
     """
     try:
         api_key = st.secrets.get("ELEVENLABS_API_KEY", "")
@@ -38,18 +40,27 @@ def generate_audio(text: str, voice_id: str = None) -> Optional[str]:
                 "use_speaker_boost": True
             }
         }
+
+        # First attempt
         response = requests.post(url, json=payload, headers=headers, timeout=30)
+
+        # Handle 429 rate limit — wait and retry once
+        if response.status_code == 429:
+            time.sleep(3)
+            response = requests.post(url, json=payload, headers=headers, timeout=30)
+
         if response.status_code == 200:
             return base64.b64encode(response.content).decode()
-        else:
-            st.warning(f"ElevenLabs error {response.status_code}. Using fallback audio.")
-            return _fallback_tts(text)
-    except Exception as e:
+
+        # Any other error — silent fallback
+        return _fallback_tts(text)
+
+    except Exception:
         return _fallback_tts(text)
 
 
 def _fallback_tts(text: str) -> Optional[str]:
-    """Fallback to gTTS if ElevenLabs fails."""
+    """Silent fallback to gTTS if ElevenLabs fails."""
     try:
         from gtts import gTTS
         import io
@@ -66,14 +77,11 @@ def render_audio_player(
     audio_b64: str,
     title: str = "Listen carefully",
     subtitle: str = "You will hear this only once",
-    color: str = "#FCD34D",
-    autoplay: bool = False
+    color: str = "#FCD34D"
 ):
-    """Render a styled audio player with title."""
+    """Render a clean styled audio player."""
     if not audio_b64:
         return
-
-    autoplay_attr = "autoplay" if autoplay else ""
 
     st.markdown(f"""
     <div style="background:rgba(252,211,77,0.06);border:1px solid rgba(252,211,77,0.25);
@@ -85,12 +93,13 @@ def render_audio_player(
                 <div style="font-size:12px;color:rgba(255,255,255,0.4)">{subtitle}</div>
             </div>
         </div>
-        <audio controls {autoplay_attr}
+        <audio controls
                style="width:100%;border-radius:10px;accent-color:{color}">
             <source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3">
             Your browser does not support audio.
         </audio>
-        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;text-align:center">
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);
+                    margin-top:8px;text-align:center">
             Press play — listen once, then answer the questions below
         </div>
     </div>
@@ -100,7 +109,7 @@ def render_audio_player(
 def get_cached_audio(cache_key: str, text: str) -> Optional[str]:
     """
     Get audio from session cache or generate new.
-    Caches in session_state to avoid regenerating on every rerun.
+    Avoids regenerating on every Streamlit rerun.
     """
     cache_store = st.session_state.get("audio_cache", {})
     if cache_key in cache_store:
