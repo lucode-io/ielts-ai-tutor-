@@ -54,6 +54,7 @@ def get_system_prompt(mode: str, profile: dict) -> str:
     elif mode == "Diagnostic":
         return diagnostic_prompt()
     else:
+        from utils.ai import build_base_prompt
         return build_base_prompt(profile) + "\nYOU ARE: Personal IELTS Tutor. Help with whatever the student needs."
 
 
@@ -61,7 +62,6 @@ def render_annotation(text: str):
     """Render AI response with 3-color annotation system."""
     import re
 
-    # Convert annotation markers to styled HTML
     text = re.sub(
         r'🔴 \[RED[^\]]*\]:\s*(.+?)(?=\n|🔵|🟢|$)',
         lambda m: f'<div style="background:rgba(231,76,60,0.1);border-left:3px solid #E74C3C;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#E74C3C;font-weight:700">🔴 Band Killer</span><br>{m.group(1)}</div>',
@@ -78,9 +78,7 @@ def render_annotation(text: str):
         text, flags=re.DOTALL
     )
 
-    # Check if any annotation was rendered
     has_annotation = any(marker in text for marker in ['Band Killer', 'Band 8 Upgrade', 'Strategic Success'])
-
     if has_annotation:
         st.markdown(text, unsafe_allow_html=True)
     else:
@@ -105,9 +103,10 @@ def render_practice():
         )
         st.session_state.practice_mode = mode
 
-if "Listening" in mode:
-    st.session_state.current_view = "listening"
-    st.rerun()
+        # Redirect Listening modes to dedicated listening page
+        if "Listening" in mode:
+            st.session_state.current_view = "listening"
+            st.rerun()
 
     with ctrl_col2:
         topic = st.selectbox("Topic", TOPICS,

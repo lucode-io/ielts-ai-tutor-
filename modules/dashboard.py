@@ -87,9 +87,10 @@ def render_dashboard():
             st.session_state.current_view = "practice"
             st.rerun()
     with q3:
+        st.markdown(_quick_card("🎧", "Listening", "Sections 1-4", "#FCD34D"), unsafe_allow_html=True)
         if st.button("Start Listening", key="qs_listening", use_container_width=True):
-    st.session_state.current_view = "listening"
-    st.rerun()
+            st.session_state.current_view = "listening"
+            st.rerun()
     with q4:
         st.markdown(_quick_card("📖", "Reading", "Academic", "#34D399"), unsafe_allow_html=True)
         if st.button("Start Reading", key="qs_reading", use_container_width=True):
@@ -173,7 +174,6 @@ def render_dashboard():
                 icon = {"Speaking": "🎤", "Writing": "✍️", "Listening": "🎧",
                         "Reading": "📖", "Vocabulary": "📚"}.get(skill, "🎓")
                 band = s.get("overall_band")
-                # Safe band color — avoid float conversion errors
                 try:
                     band_color = "#2ECC71" if band and float(band) >= 7 else "#F0C040"
                 except (ValueError, TypeError):
