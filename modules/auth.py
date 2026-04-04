@@ -1,6 +1,5 @@
 # ============================================================
-# modules/auth.py
-# Login, signup, forgot password — mobile optimized
+# modules/auth.py - Mobile-first, clean UI
 # ============================================================
 
 import streamlit as st
@@ -12,7 +11,10 @@ def render_auth():
 
     st.markdown("""
     <style>
-    /* ── MOBILE AUTH FIXES ── */
+    /* Hide streamlit default padding */
+    .main .block-container { padding-top: 1rem !important; }
+
+    /* Force all inputs full width with dark text */
     [data-testid="stTextInput"] input,
     [data-baseweb="input"] input,
     input[type="text"],
@@ -22,40 +24,45 @@ def render_auth():
         background: #ffffff !important;
         caret-color: #1a1a2e !important;
         font-size: 16px !important;
+        width: 100% !important;
+        border-radius: 12px !important;
+        padding: 12px 16px !important;
     }
-    /* Fix tab labels being cut off */
-    [data-testid="stTabs"] button {
-        font-size: 14px !important;
-        padding: 8px 16px !important;
+
+    /* Fix tab labels */
+    [data-testid="stTabs"] [role="tab"] {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        padding: 10px 20px !important;
         white-space: nowrap !important;
+        min-width: 120px !important;
     }
-    /* Fix buttons wrapping on mobile */
-    .stButton > button {
+
+    /* Fix all auth buttons */
+    [data-testid="stButton"] > button {
+        width: 100% !important;
+        min-height: 52px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        border-radius: 14px !important;
         white-space: nowrap !important;
-        font-size: 14px !important;
-        padding: 12px 20px !important;
-        min-height: 48px !important;
+        padding: 12px 24px !important;
     }
-    /* Auth container full width on mobile */
-    @media screen and (max-width: 640px) {
-        .auth-container {
-            padding: 0 8px !important;
-        }
-        [data-testid="stTabs"] button {
-            font-size: 13px !important;
-            padding: 8px 12px !important;
-        }
+
+    /* Selectbox full width */
+    [data-testid="stSelectbox"] {
+        width: 100% !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
+    # Header
     st.markdown("""
-    <div style="text-align:center;padding:32px 16px 24px">
-        <div style="font-size:48px;margin-bottom:10px">🎓</div>
-        <div style="font-size:26px;font-weight:800;color:#F0C040;margin-bottom:6px">
-            IELTS Master
-        </div>
-        <div style="font-size:14px;color:rgba(255,255,255,0.4)">
+    <div style="text-align:center;padding:24px 0 20px">
+        <div style="font-size:56px;margin-bottom:10px">🎓</div>
+        <div style="font-size:28px;font-weight:800;color:#F0C040;margin-bottom:6px;
+                    letter-spacing:0.02em">IELTS Master</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.45)">
             Your AI-powered path to Band 7.0+
         </div>
     </div>
@@ -63,8 +70,8 @@ def render_auth():
 
     auth_view = st.session_state.get("auth_view", "login")
 
-    # Use responsive columns — wider on mobile
-    col = st.columns([0.1, 0.8, 0.1])[1]
+    # Full width on mobile, centered on desktop
+    _, col, _ = st.columns([0.05, 0.9, 0.05])
 
     with col:
         if auth_view == "forgot_password":
@@ -72,19 +79,27 @@ def render_auth():
         elif auth_view == "set_new_password":
             _render_set_new_password()
         else:
-            tab_login, tab_signup = st.tabs(["Sign In", "Create Account"])
+            tab_login, tab_signup = st.tabs(["🔑  Sign In", "✨  Create Account"])
             with tab_login:
                 _render_login()
             with tab_signup:
                 _render_signup()
 
-        st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
-        st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-        if st.button("Try Demo Mode (no account needed)",
+        st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
+        # Divider
+        st.markdown("""
+        <div style="display:flex;align-items:center;gap:12px;margin:4px 0 12px">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.1)"></div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.3)">or</div>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.1)"></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("🎮  Try Demo Mode — no account needed",
                      key="demo_mode", use_container_width=True):
             _load_demo_profile()
             st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
 
 def _check_reset_token():
@@ -101,20 +116,24 @@ def _check_reset_token():
 
 
 def _render_login():
-    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    email = st.text_input(
-        "Email", placeholder="you@email.com",
-        key="login_email", label_visibility="visible"
-    )
-    password = st.text_input(
-        "Password", type="password",
-        placeholder="Your password",
-        key="login_pass", label_visibility="visible"
-    )
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
+    email = st.text_input(
+        "Email address",
+        placeholder="you@email.com",
+        key="login_email"
+    )
+    password = st.text_input(
+        "Password",
+        type="password",
+        placeholder="Your password",
+        key="login_pass"
+    )
+
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
     st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-    if st.button("Sign In", use_container_width=True, key="do_login"):
+    if st.button("Sign In →", use_container_width=True, key="do_login"):
         if email and password:
             with st.spinner("Signing in..."):
                 result = sign_in(email, password)
@@ -126,9 +145,9 @@ def _render_login():
             else:
                 err = result["error"]
                 if "Invalid" in err or "invalid" in err:
-                    st.error("Wrong email or password.")
+                    st.error("Wrong email or password. Please try again.")
                 elif "confirmed" in err.lower() or "verify" in err.lower():
-                    st.error("Please verify your email first.")
+                    st.error("Please verify your email first. Check your inbox.")
                 else:
                     st.error(f"Sign in failed: {err}")
         else:
@@ -136,35 +155,42 @@ def _render_login():
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
     if st.button("Forgot password?", key="go_forgot", use_container_width=True):
         st.session_state.auth_view = "forgot_password"
         st.rerun()
 
 
 def _render_signup():
-    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    full_name = st.text_input(
-        "Full Name", placeholder="Your full name",
-        key="reg_name", label_visibility="visible"
-    )
-    email_r = st.text_input(
-        "Email", placeholder="you@email.com",
-        key="reg_email", label_visibility="visible"
-    )
-    pass_r = st.text_input(
-        "Password", type="password",
-        placeholder="Min 8 characters",
-        key="reg_pass", label_visibility="visible"
-    )
-    target = st.selectbox(
-        "Target Band Score",
-        [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0],
-        index=4, key="reg_band"
-    )
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
+    full_name = st.text_input(
+        "Full Name",
+        placeholder="Your full name",
+        key="reg_name"
+    )
+    email_r = st.text_input(
+        "Email address",
+        placeholder="you@email.com",
+        key="reg_email"
+    )
+    pass_r = st.text_input(
+        "Password",
+        type="password",
+        placeholder="At least 8 characters",
+        key="reg_pass"
+    )
+    target = st.selectbox(
+        "My target band score",
+        [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0],
+        index=4,
+        key="reg_band"
+    )
+
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
     st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-    if st.button("Create Account", use_container_width=True, key="do_signup"):
+    if st.button("Create My Account →", use_container_width=True, key="do_signup"):
         if full_name and email_r and pass_r:
             if len(pass_r) < 8:
                 st.error("Password must be at least 8 characters.")
@@ -183,7 +209,7 @@ def _render_signup():
                 else:
                     err = result["error"]
                     if "already" in err:
-                        st.error("Email already registered. Try signing in.")
+                        st.error("Email already registered. Try signing in instead.")
                     else:
                         st.error(f"Sign up failed: {err}")
         else:
@@ -193,27 +219,28 @@ def _render_signup():
 
 def _render_forgot_password():
     st.markdown("""
-    <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:32px;margin-bottom:8px">🔑</div>
-        <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px">
+    <div style="text-align:center;padding:20px 0">
+        <div style="font-size:40px;margin-bottom:12px">🔑</div>
+        <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">
             Reset Your Password
         </div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.4)">
+        <div style="font-size:14px;color:rgba(255,255,255,0.4);line-height:1.6">
             Enter your email and we'll send a reset link.
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     email = st.text_input(
-        "Email address", placeholder="you@email.com",
+        "Email address",
+        placeholder="you@email.com",
         key="forgot_email"
     )
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
     st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-    if st.button("Send Reset Link", use_container_width=True, key="do_reset"):
+    if st.button("Send Reset Link →", use_container_width=True, key="do_reset"):
         if email:
-            with st.spinner("Sending reset email..."):
+            with st.spinner("Sending..."):
                 result = _send_password_reset(email)
             if result["success"]:
                 st.success("Reset link sent! Check your inbox.")
@@ -225,41 +252,45 @@ def _render_forgot_password():
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    if st.button("Back to Sign In", key="back_login", use_container_width=True):
+    if st.button("← Back to Sign In", key="back_login", use_container_width=True):
         st.session_state.auth_view = "login"
         st.rerun()
 
 
 def _render_set_new_password():
     st.markdown("""
-    <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:32px;margin-bottom:8px">🔒</div>
-        <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px">
+    <div style="text-align:center;padding:20px 0">
+        <div style="font-size:40px;margin-bottom:12px">🔒</div>
+        <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">
             Set New Password
         </div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.4)">
+        <div style="font-size:14px;color:rgba(255,255,255,0.4)">
             Choose a strong new password.
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     new_pass = st.text_input(
-        "New Password", type="password",
-        placeholder="Min 8 characters", key="new_pass"
+        "New Password",
+        type="password",
+        placeholder="At least 8 characters",
+        key="new_pass"
     )
     confirm_pass = st.text_input(
-        "Confirm Password", type="password",
-        placeholder="Repeat your password", key="confirm_pass"
+        "Confirm Password",
+        type="password",
+        placeholder="Repeat your password",
+        key="confirm_pass"
     )
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
     st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-    if st.button("Save New Password", use_container_width=True, key="save_new_pass"):
+    if st.button("Save New Password →", use_container_width=True, key="save_new_pass"):
         if new_pass and confirm_pass:
             if new_pass != confirm_pass:
-                st.error("Passwords don't match.")
+                st.error("Passwords don't match. Try again.")
             elif len(new_pass) < 8:
-                st.error("Password must be at least 8 characters.")
+                st.error("Must be at least 8 characters.")
             else:
                 access_token = st.session_state.get("reset_access_token", "")
                 if access_token:
