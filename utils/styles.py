@@ -74,19 +74,68 @@ def inject_global_css(accent: str = "#4A9EFF"):
     .btn-primary .stButton>button:hover{{transform:translateY(-2px)!important;box-shadow:0 0 50px rgba(74,158,255,0.45),inset 0 1px 0 rgba(255,255,255,0.1)!important}}
     button[kind="secondary"]{{background:transparent!important;color:#ff3a4a!important;border:1px solid rgba(255,58,74,0.25)!important;border-radius:9px!important}}
 
-    /* ── CHAT MESSAGES ── */
-    [data-testid="stChatMessage"]{{background:transparent!important;border:none!important;padding:4px 0!important}}
-    [data-testid="stChatMessage"][data-author="user"]>div:last-child{{background:rgba(74,158,255,0.07)!important;border-radius:16px 16px 4px 16px!important;border:1px solid rgba(74,158,255,0.15)!important;padding:14px 18px!important;color:#f0f4ff!important;margin-left:auto!important;max-width:85%!important}}
-    [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{background:rgba(74,158,255,0.03)!important;border-radius:16px 16px 16px 4px!important;border:1px solid rgba(74,158,255,0.1)!important;padding:20px 24px!important;max-width:95%!important}}
+    /* ── CHAT MESSAGES — ChatGPT/Claude style ── */
+    [data-testid="stChatMessage"]{{
+        background:transparent!important;border:none!important;
+        padding:6px 0!important;margin-bottom:4px!important;
+        gap:12px!important
+    }}
+
+    /* ── ASSISTANT BUBBLE — left aligned ── */
+    [data-testid="stChatMessage"][data-author="assistant"]{{
+        flex-direction:row!important;justify-content:flex-start!important
+    }}
+    [data-testid="stChatMessage"][data-author="assistant"]>div:first-child{{
+        /* Avatar container */
+        width:34px!important;height:34px!important;min-width:34px!important;
+        border-radius:50%!important;
+        background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(26,95,212,0.3))!important;
+        border:1.5px solid rgba(74,158,255,0.35)!important;
+        display:flex!important;align-items:center!important;justify-content:center!important;
+        flex-shrink:0!important;margin-top:4px!important;
+        box-shadow:0 0 12px rgba(74,158,255,0.15)!important
+    }}
+    [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{
+        background:rgba(74,158,255,0.04)!important;
+        border-radius:4px 18px 18px 18px!important;
+        border:1px solid rgba(74,158,255,0.1)!important;
+        padding:18px 22px!important;max-width:88%!important;
+        position:relative!important
+    }}
+
+    /* ── USER BUBBLE — right aligned ── */
+    [data-testid="stChatMessage"][data-author="user"]{{
+        flex-direction:row-reverse!important;justify-content:flex-start!important
+    }}
+    [data-testid="stChatMessage"][data-author="user"]>div:first-child{{
+        /* Hide user avatar */
+        display:none!important
+    }}
+    [data-testid="stChatMessage"][data-author="user"]>div:last-child{{
+        background:rgba(74,158,255,0.12)!important;
+        border-radius:18px 4px 18px 18px!important;
+        border:1px solid rgba(74,158,255,0.22)!important;
+        padding:14px 18px!important;color:#f0f4ff!important;
+        margin-left:auto!important;max-width:75%!important
+    }}
+
+    /* ── CHAT TEXT STYLING ── */
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span{{font-size:15px!important;line-height:1.85!important;color:rgba(180,210,255,0.85)!important;letter-spacing:0.01em!important;user-select:text!important;-webkit-user-select:text!important}}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span{{
+        font-size:14.5px!important;line-height:1.8!important;
+        color:rgba(220,235,255,0.88)!important;letter-spacing:0.01em!important;
+        user-select:text!important;-webkit-user-select:text!important
+    }}
+    [data-testid="stChatMessage"][data-author="user"] [data-testid="stMarkdownContainer"] p{{
+        color:#f0f4ff!important;font-size:14.5px!important
+    }}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong{{color:{accent}!important;font-weight:600!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h1,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h2,
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h3{{color:{accent}!important;font-weight:700!important;font-size:16px!important;margin:1rem 0 0.4rem!important}}
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{margin-bottom:6px!important;color:rgba(180,210,255,0.75)!important}}
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] hr{{border-color:rgba(74,158,255,0.2)!important;margin:12px 0!important}}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h3{{color:{accent}!important;font-weight:700!important;font-size:15px!important;margin:0.8rem 0 0.3rem!important}}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{margin-bottom:5px!important;color:rgba(180,210,255,0.78)!important}}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] hr{{border-color:rgba(74,158,255,0.15)!important;margin:10px 0!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] code{{background:rgba(74,158,255,0.1)!important;color:{accent}!important;padding:2px 7px!important;border-radius:5px!important;font-size:13px!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"]{{user-select:text!important;-webkit-user-select:text!important;cursor:text!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] *{{user-select:text!important;-webkit-user-select:text!important}}
@@ -161,8 +210,11 @@ def inject_global_css(accent: str = "#4A9EFF"):
     /* ── MOBILE ── */
     @media screen and (max-width:768px){{
         .main .block-container{{padding-left:0.5rem!important;padding-right:0.5rem!important}}
-        [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{max-width:100%!important;padding:14px 16px!important}}
-        [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{font-size:14px!important;line-height:1.75!important}}
+        [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{max-width:95%!important;padding:14px 16px!important}}
+        [data-testid="stChatMessage"][data-author="user"]>div:last-child{{max-width:85%!important;padding:12px 14px!important}}
+        [data-testid="stChatMessage"][data-author="assistant"]>div:first-child{{width:28px!important;height:28px!important;min-width:28px!important}}
+        [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
+        [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{font-size:14px!important;line-height:1.7!important}}
         .glass-card{{border-radius:12px!important;padding:14px!important}}
         .im-top-nav{{padding:10px 14px!important;border-radius:10px!important}}
         .im-nav-tab{{font-size:11px!important;padding:6px 10px!important}}

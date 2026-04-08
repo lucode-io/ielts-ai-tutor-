@@ -110,61 +110,24 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Hidden Streamlit buttons to receive nav clicks from JS
-nav_container = st.container()
-with nav_container:
-    nav_cols = st.columns(len(nav_tabs))
-    for i, view_key in enumerate(nav_tabs.keys()):
-        with nav_cols[i]:
-            if st.button(f"nav_{view_key}", key=f"nav_{view_key}", use_container_width=True):
-                st.session_state.current_view = view_key
-                st.session_state.show_settings_panel = False
-                st.rerun()
-
-# Hide the hidden nav buttons with JS (CSS :has(button[key]) doesn't work in Streamlit)
-st.markdown("""
-<style>
-.hidden-nav-row {
-    position: absolute !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    pointer-events: none !important;
-}
-</style>
+# Navigation via HTML buttons that set query params (no hidden Streamlit buttons needed)
+st.markdown(f"""
 <script>
-// Hide nav relay buttons after render
-function hideNavButtons() {
-    const buttons = document.querySelectorAll('button[kind="secondary"]');
-    buttons.forEach(btn => {
-        if (btn.textContent.trim().startsWith('nav_')) {
-            let parent = btn.closest('[data-testid="stHorizontalBlock"]');
-            if (parent) {
-                parent.style.position = 'absolute';
-                parent.style.opacity = '0';
-                parent.style.height = '0';
-                parent.style.overflow = 'hidden';
-                parent.style.pointerEvents = 'none';
-            }
-        }
-    });
-}
-// Run on load and after Streamlit rerenders
-hideNavButtons();
-const observer = new MutationObserver(hideNavButtons);
-observer.observe(document.body, {childList: true, subtree: true});
-
-window.__imNav = function(view) {
-    const buttons = document.querySelectorAll('button[kind="secondary"]');
-    for (const btn of buttons) {
-        if (btn.textContent.trim() === 'nav_' + view) {
-            btn.click();
-            return;
-        }
-    }
-};
+window.__imNav = function(view) {{
+    const url = new URL(window.location);
+    url.searchParams.set('nav', view);
+    window.location.href = url.toString();
+}};
 </script>
 """, unsafe_allow_html=True)
+
+# Read nav from query params
+_nav_param = st.query_params.get("nav", "")
+if _nav_param and _nav_param in nav_tabs:
+    st.session_state.current_view = _nav_param
+    st.session_state.show_settings_panel = False
+    st.query_params.clear()
+    st.rerun()
 
 # ── INLINE SETTINGS PANEL ──
 if st.session_state.get("show_settings_panel"):
