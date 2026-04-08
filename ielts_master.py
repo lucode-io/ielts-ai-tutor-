@@ -36,7 +36,6 @@ def init_state():
 init_state()
 
 # ── CHECK AUTH ──
-# If already authenticated, skip auth screen
 if st.session_state.current_view == "auth" and st.session_state.get("auth_user"):
     st.session_state.current_view = "dashboard"
 
@@ -46,7 +45,7 @@ accent = st.session_state.get("profile", {}).get("accent_color", "#4A9EFF") \
 inject_global_css(accent)
 
 # ── AUTH GATE ──
-if st.session_state.current_view == "auth" or st.session_state.get("profile") is None:
+if st.session_state.current_view == "auth" or not st.session_state.get("profile"):
     from modules.auth import render_auth
     render_auth()
     st.stop()
@@ -69,21 +68,98 @@ name = profile.get("full_name", "Student").split()[0]
 streak = profile.get("streak_count", 0)
 current_view = st.session_state.current_view
 
-nav_left, nav_right = st.columns([8, 1])
+# ── NAV TABS CONFIG ──
+nav_tabs = {
+    "dashboard": ("🏠", "Dashboard"),
+    "practice": ("🎯", "Practice"),
+    "reports": ("📊", "Reports"),
+    "challenge": ("🚀", "21-Day"),
+    "settings": ("⚙️", "HQ"),
+}
 
-with nav_left:
-    st.markdown(f"""<div style="background:rgba(1,1,10,0.92);border-radius:14px;border:1px solid rgba(74,158,255,0.12);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="display:flex;align-items:center;gap:10px"><div style="font-size:24px">🎓</div><div><div style="font-size:16px;font-weight:800;color:#f0f4ff;letter-spacing:0.05em">IELTS Master</div><div style="font-size:10px;color:rgba(180,210,255,0.38);letter-spacing:0.1em;text-transform:uppercase">Powered by Claude</div></div></div><div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.5)"><span>👋 {name}</span><span style="color:{accent};font-weight:700">🔥 {streak}</span></div></div>""", unsafe_allow_html=True)
+# Build nav items HTML
+nav_items_html = ""
+for view_key, (icon, label) in nav_tabs.items():
+    active_cls = "active" if current_view == view_key else ""
+    nav_items_html += f'<button class="im-nav-tab {active_cls}" onclick="window.__imNav(\'{view_key}\')">{icon} {label}</button>'
 
-with nav_right:
-    if st.button("⚙️", key="top_gear", help="Settings", use_container_width=True):
-        st.session_state.show_settings_panel = not st.session_state.get("show_settings_panel", False)
+# Render header + nav as a single HTML block — guaranteed to display
+st.markdown(f"""
+<div class="im-top-nav">
+    <div class="im-top-nav-left">
+        <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
+            <rect width="56" height="56" rx="14" fill="rgba(255,255,255,0.06)"/>
+            <polygon points="28,14 46,24 28,34 10,24" fill="rgba(255,255,255,0.08)"
+                stroke="{accent}" stroke-width="2" stroke-linejoin="round"/>
+            <line x1="40" y1="27" x2="40" y2="38" stroke="{accent}" stroke-width="2" stroke-linecap="round"/>
+            <path d="M34,38 Q40,42 46,38" fill="none" stroke="{accent}" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="43" cy="13" r="1.5" fill="{accent}"/>
+        </svg>
+        <div>
+            <div class="im-brand-text">IELTS Master</div>
+            <div class="im-brand-sub">POWERED BY CLAUDE</div>
+        </div>
+    </div>
+    <div class="im-top-nav-right">
+        <span class="im-user-badge">👋 {name}</span>
+        <span class="im-streak-badge">🔥 {streak}</span>
+    </div>
+</div>
+<div class="im-nav-bar">
+    {nav_items_html}
+</div>
+""", unsafe_allow_html=True)
+
+# Hidden Streamlit buttons to receive nav clicks from JS
+nav_container = st.container()
+with nav_container:
+    nav_cols = st.columns(len(nav_tabs))
+    for i, view_key in enumerate(nav_tabs.keys()):
+        with nav_cols[i]:
+            if st.button(f"nav_{view_key}", key=f"nav_{view_key}", use_container_width=True):
+                st.session_state.current_view = view_key
+                st.session_state.show_settings_panel = False
+                st.rerun()
+
+# Hide the hidden nav buttons with a unique wrapper
+st.markdown("""
+<style>
+/* Hide ONLY the hidden relay nav buttons, not all horizontal blocks */
+div[data-testid="stHorizontalBlock"]:has(button[key^="nav_"]) {
+    position: absolute !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+</style>
+<script>
+window.__imNav = function(view) {
+    // Find the hidden Streamlit button and click it
+    const buttons = document.querySelectorAll('button[kind="secondary"]');
+    for (const btn of buttons) {
+        if (btn.textContent.trim() === 'nav_' + view) {
+            btn.click();
+            return;
+        }
+    }
+};
+</script>
+""", unsafe_allow_html=True)
 
 # ── INLINE SETTINGS PANEL ──
 if st.session_state.get("show_settings_panel"):
     from modules.settings import LANGUAGES, ACCENT_OPTIONS
     with st.container():
-        st.markdown('<div style="background:rgba(13,27,42,0.97);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 16px 48px rgba(0,0,0,0.5);">', unsafe_allow_html=True)
-        st.markdown(f"<div style='font-size:13px;font-weight:700;color:{accent};letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px'>Quick Settings</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="background:rgba(13,27,42,0.97);border:1px solid rgba(74,158,255,0.15);
+                    border-radius:20px;padding:20px;margin-bottom:16px;
+                    box-shadow:0 16px 48px rgba(0,0,0,0.5);">
+            <div style="font-size:13px;font-weight:700;color:{accent};
+                        letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px">
+                Quick Settings
+            </div>
+        """, unsafe_allow_html=True)
 
         sc1, sc2, sc3, sc4 = st.columns(4)
         with sc1:
@@ -114,57 +190,6 @@ if st.session_state.get("show_settings_panel"):
                 st.session_state.show_settings_panel = False
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
-
-# ── TAB NAVIGATION ──
-nav_tabs = {
-    "dashboard": ("🏠", "Dashboard"),
-    "practice": ("🎯", "Practice"),
-    "reports": ("📊", "Reports"),
-    "challenge": ("🚀", "21-Day"),
-    "settings": ("⚙️", "HQ"),
-}
-
-# Style nav buttons to match tab bar design
-st.markdown(f"""
-<style>
-[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) {{display:none!important}}
-.nav-btn-row {{
-    display:flex;gap:4px;background:rgba(74,158,255,0.03);border-radius:12px;
-    padding:4px;margin-bottom:16px;border:1px solid rgba(74,158,255,0.08);flex-wrap:wrap;
-    justify-content:center
-}}
-.nav-btn-row .stButton>button {{
-    background:transparent!important;border:1px solid transparent!important;
-    border-radius:9px!important;font-size:12px!important;font-weight:600!important;
-    padding:8px 16px!important;color:rgba(180,210,255,0.45)!important;
-    letter-spacing:0.03em!important;min-height:unset!important;
-    box-shadow:none!important;transform:none!important
-}}
-.nav-btn-row .stButton>button:hover {{
-    background:rgba(74,158,255,0.06)!important;color:#4A9EFF!important;
-    border-color:rgba(74,158,255,0.15)!important;
-    box-shadow:none!important;transform:none!important
-}}
-.nav-btn-row .nav-active .stButton>button {{
-    background:rgba(74,158,255,0.1)!important;color:#4A9EFF!important;
-    border:1px solid rgba(74,158,255,0.25)!important
-}}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="nav-btn-row">', unsafe_allow_html=True)
-nav_cols = st.columns(len(nav_tabs))
-for i, (view_key, (icon, label)) in enumerate(nav_tabs.items()):
-    with nav_cols[i]:
-        is_active = current_view == view_key
-        if is_active:
-            st.markdown('<div class="nav-active">', unsafe_allow_html=True)
-        if st.button(f"{icon} {label}", key=f"nav_{view_key}", use_container_width=True):
-            st.session_state.current_view = view_key
-            st.rerun()
-        if is_active:
-            st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
