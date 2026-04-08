@@ -12,7 +12,7 @@ from utils.database import create_session, save_band_score, update_session
 def render_listening_practice():
     """Full listening practice module with ElevenLabs audio."""
     profile = st.session_state.get("profile", {})
-    accent = profile.get("accent_color", "#F0C040")
+    accent = profile.get("accent_color", "#4A9EFF")
     user_id = st.session_state.get("user_id", "demo")
 
     # ── HEADER ──

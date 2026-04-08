@@ -87,7 +87,7 @@ def render_annotation(text: str):
 
 def render_practice():
     profile = st.session_state.get("profile", {})
-    accent = profile.get("accent_color", "#F0C040")
+    accent = profile.get("accent_color", "#4A9EFF")
     tutor_name = profile.get("tutor_name", "Alex")
     user_id = st.session_state.get("user_id", "demo")
 
@@ -229,7 +229,7 @@ def render_practice():
         st.markdown("""
         <div style="background:rgba(255,255,255,0.04);border-radius:16px;
                     border:1px solid rgba(240,192,64,0.15);padding:14px 18px;margin-bottom:10px">
-            <div style="font-weight:700;font-size:13px;color:#F0C040;margin-bottom:4px">Voice Recording</div>
+            <div style="font-weight:700;font-size:13px;color:#4A9EFF;margin-bottom:4px">Voice Recording</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.35)">Click Start, speak your answer, click Stop.</div>
         </div>
         """, unsafe_allow_html=True)

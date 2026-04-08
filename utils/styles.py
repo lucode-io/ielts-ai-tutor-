@@ -33,8 +33,8 @@ def inject_global_css(accent: str = "#4A9EFF"):
 
     .stButton>button{border-radius:9px!important;font-weight:600!important;font-size:13px!important;padding:10px 18px!important;transition:all 0.25s!important;width:100%!important;background:rgba(74,158,255,0.05)!important;color:#f0f4ff!important;border:1px solid rgba(74,158,255,0.15)!important;letter-spacing:0.02em!important}
     .stButton>button:hover{background:rgba(74,158,255,0.1)!important;color:#fff!important;border-color:rgba(74,158,255,0.35)!important;transform:translateY(-1px)!important;box-shadow:0 0 20px rgba(74,158,255,0.15)!important}
-    .btn-primary>button{background:linear-gradient(135deg,#4A9EFF,#1a5fd4)!important;color:#fff!important;border:none!important;font-weight:700!important;box-shadow:0 0 30px rgba(74,158,255,0.25),inset 0 1px 0 rgba(255,255,255,0.1)!important}
-    .btn-primary>button:hover{transform:translateY(-2px)!important;box-shadow:0 0 50px rgba(74,158,255,0.45),inset 0 1px 0 rgba(255,255,255,0.1)!important}
+    .btn-primary .stButton>button{background:linear-gradient(135deg,#4A9EFF,#1a5fd4)!important;color:#fff!important;border:none!important;font-weight:700!important;box-shadow:0 0 30px rgba(74,158,255,0.25),inset 0 1px 0 rgba(255,255,255,0.1)!important}
+    .btn-primary .stButton>button:hover{transform:translateY(-2px)!important;box-shadow:0 0 50px rgba(74,158,255,0.45),inset 0 1px 0 rgba(255,255,255,0.1)!important}
     button[kind="secondary"]{background:transparent!important;color:#ff3a4a!important;border:1px solid rgba(255,58,74,0.25)!important;border-radius:9px!important}
 
     [data-testid="stChatMessage"]{background:transparent!important;border:none!important;padding:4px 0!important}
@@ -125,6 +125,8 @@ def inject_global_css(accent: str = "#4A9EFF"):
     <canvas id="ielts-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;width:100%;height:100%;"></canvas>
     <script>
     (function(){
+        if(window.__ielts_bg_init)return;
+        window.__ielts_bg_init=true;
         const canvas=document.getElementById('ielts-bg');
         if(!canvas)return;
         const ctx=canvas.getContext('2d');

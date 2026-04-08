@@ -18,7 +18,7 @@ def render_dashboard():
     baseline = profile.get("baseline_band", None)
     streak = profile.get("streak_count", 0)
     tutor = profile.get("tutor_name", "Alex")
-    accent = profile.get("accent_color", "#F0C040")
+    accent = profile.get("accent_color", "#4A9EFF")
 
     hour = datetime.now().hour
     greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"

@@ -339,6 +339,7 @@ def _load_profile(user_id: str):
         st.session_state.profile = profile
         st.session_state.user_id = user_id
         st.session_state.current_view = "onboarding" if not profile.get("baseline_band") else "dashboard"
+        st.session_state.onboarding_step = 0
     else:
         st.session_state.profile = {
             "id": user_id,
@@ -353,12 +354,13 @@ def _load_profile(user_id: str):
             "challenge_completed": False,
             "tutor_name": "Alex",
             "response_language": "English",
-            "accent_color": "#F0C040",
+            "accent_color": "#4A9EFF",
             "subscription_status": "free",
             "native_language": "English",
         }
         st.session_state.user_id = user_id
         st.session_state.current_view = "onboarding"
+        st.session_state.onboarding_step = 0
 
 
 def _load_demo_profile():
@@ -375,7 +377,7 @@ def _load_demo_profile():
         "challenge_completed": False,
         "tutor_name": "Alex",
         "response_language": "English",
-        "accent_color": "#F0C040",
+        "accent_color": "#4A9EFF",
         "subscription_status": "free",
         "native_language": "English",
     }

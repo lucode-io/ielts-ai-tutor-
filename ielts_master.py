@@ -25,7 +25,7 @@ def init_state():
         "practice_messages": [],
         "current_session_id": None,
         "practice_mode": "Speaking - Part 1 (Personal questions)",
-        "onboarding_step": 1,
+        "onboarding_step": 0,
         "diagnostic_messages": [],
         "show_settings_panel": False,
     }
@@ -41,14 +41,26 @@ if st.session_state.current_view == "auth" and st.session_state.get("auth_user")
     st.session_state.current_view = "dashboard"
 
 # ── INJECT CSS ──
-accent = st.session_state.get("profile", {}).get("accent_color", "#F0C040") \
-         if st.session_state.get("profile") else "#F0C040"
+accent = st.session_state.get("profile", {}).get("accent_color", "#4A9EFF") \
+         if st.session_state.get("profile") else "#4A9EFF"
 inject_global_css(accent)
 
 # ── AUTH GATE ──
 if st.session_state.current_view == "auth" or not st.session_state.get("profile"):
     from modules.auth import render_auth
     render_auth()
+    st.stop()
+
+# ── ONBOARDING GATE (skip nav for onboarding) ──
+if st.session_state.current_view == "onboarding":
+    from modules.onboarding import render_onboarding
+    render_onboarding()
+    st.stop()
+
+# ── MOCK TEST GATE (full-screen, no nav) ──
+if st.session_state.current_view == "mock_test":
+    from modules.mock_test import render_mock_test
+    render_mock_test()
     st.stop()
 
 # ── TOP NAVIGATION BAR ──
@@ -105,7 +117,7 @@ if st.session_state.get("show_settings_panel"):
                                 label_visibility="visible", key="qs_lang")
         with sc3:
             acc_label = st.selectbox("Accent", list(ACCENT_OPTIONS.keys()),
-                                     index=list(ACCENT_OPTIONS.values()).index(profile.get("accent_color", "#F0C040"))
+                                     index=list(ACCENT_OPTIONS.values()).index(profile.get("accent_color", "#4A9EFF"))
                                            if profile.get("accent_color") in ACCENT_OPTIONS.values() else 0,
                                      label_visibility="visible", key="qs_accent")
         with sc4:
@@ -126,53 +138,61 @@ if st.session_state.get("show_settings_panel"):
 
 # ── TAB NAVIGATION ──
 nav_tabs = {
-    "dashboard": "🏠 Dashboard",
-    "practice": "🎯 Practice",
-    "reports": "📊 Reports",
-    "challenge": "🚀 21-Day",
-    "settings": "⚙️ HQ",
+    "dashboard": ("🏠", "Dashboard"),
+    "practice": ("🎯", "Practice"),
+    "reports": ("📊", "Reports"),
+    "challenge": ("🚀", "21-Day"),
+    "settings": ("⚙️", "HQ"),
 }
 
-tab_html = '<div class="nav-tab-bar">'
-for view_key, label in nav_tabs.items():
-    active_class = "active" if current_view == view_key else ""
-    tab_html += f'<span class="nav-tab {active_class}" onclick="">{label}</span>'
-tab_html += '</div>'
-st.markdown(tab_html, unsafe_allow_html=True)
+# Style nav buttons to match tab bar design
+st.markdown(f"""
+<style>
+[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) {{display:none!important}}
+.nav-btn-row {{
+    display:flex;gap:4px;background:rgba(74,158,255,0.03);border-radius:12px;
+    padding:4px;margin-bottom:16px;border:1px solid rgba(74,158,255,0.08);flex-wrap:wrap;
+    justify-content:center
+}}
+.nav-btn-row .stButton>button {{
+    background:transparent!important;border:1px solid transparent!important;
+    border-radius:9px!important;font-size:12px!important;font-weight:600!important;
+    padding:8px 16px!important;color:rgba(180,210,255,0.45)!important;
+    letter-spacing:0.03em!important;min-height:unset!important;
+    box-shadow:none!important;transform:none!important
+}}
+.nav-btn-row .stButton>button:hover {{
+    background:rgba(74,158,255,0.06)!important;color:#4A9EFF!important;
+    border-color:rgba(74,158,255,0.15)!important;
+    box-shadow:none!important;transform:none!important
+}}
+.nav-btn-row .nav-active .stButton>button {{
+    background:rgba(74,158,255,0.1)!important;color:#4A9EFF!important;
+    border:1px solid rgba(74,158,255,0.25)!important
+}}
+</style>
+""", unsafe_allow_html=True)
 
-# Streamlit buttons for navigation (invisible but functional)
-t1, t2, t3, t4, t5 = st.columns(5)
-with t1:
-    if st.button("🏠 Dashboard", key="nav_dash", use_container_width=True):
-        st.session_state.current_view = "dashboard"
-        st.rerun()
-with t2:
-    if st.button("🎯 Practice", key="nav_prac", use_container_width=True):
-        st.session_state.current_view = "practice"
-        st.rerun()
-with t3:
-    if st.button("📊 Reports", key="nav_rep", use_container_width=True):
-        st.session_state.current_view = "reports"
-        st.rerun()
-with t4:
-    if st.button("🚀 21-Day", key="nav_chal", use_container_width=True):
-        st.session_state.current_view = "challenge"
-        st.rerun()
-with t5:
-    if st.button("⚙️ HQ", key="nav_hq", use_container_width=True):
-        st.session_state.current_view = "settings"
-        st.rerun()
+st.markdown('<div class="nav-btn-row">', unsafe_allow_html=True)
+nav_cols = st.columns(len(nav_tabs))
+for i, (view_key, (icon, label)) in enumerate(nav_tabs.items()):
+    with nav_cols[i]:
+        is_active = current_view == view_key
+        if is_active:
+            st.markdown('<div class="nav-active">', unsafe_allow_html=True)
+        if st.button(f"{icon} {label}", key=f"nav_{view_key}", use_container_width=True):
+            st.session_state.current_view = view_key
+            st.rerun()
+        if is_active:
+            st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
 # ── ROUTER ──
 view = st.session_state.current_view
 
-if view == "onboarding":
-    from modules.onboarding import render_onboarding
-    render_onboarding()
-
-elif view == "dashboard":
+if view == "dashboard":
     from modules.dashboard import render_dashboard
     render_dashboard()
 
@@ -191,10 +211,6 @@ elif view == "challenge":
 elif view == "settings":
     from modules.settings import render_settings
     render_settings()
-
-elif view == "mock_test":
-    from modules.mock_test import render_mock_test
-    render_mock_test()
 
 elif view == "listening":
     from modules.practice_listening import render_listening_practice

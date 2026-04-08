@@ -92,7 +92,7 @@ LISTENING_ANSWERS = ["1998", "6:30", "240", "50", "tuesday", "first monday", "th
 
 def render_mock_test():
     profile = st.session_state.get("profile", {})
-    accent = profile.get("accent_color", "#F0C040")
+    accent = "#4A9EFF"  # Match theme, not profile accent
     target_band = float(profile.get("target_band", 7.0))
 
     for key, default in [("mock_stage","intro"),("mock_scores",{}),
