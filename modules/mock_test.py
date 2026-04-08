@@ -411,10 +411,11 @@ def _render_results(profile, accent, target_band):
     reading = scores.get("reading", 0)
     listening = scores.get("listening", 0)
 
-    if all([speaking, writing, reading, listening]):
+    if all([speaking, writing, reading, listening]) and all(s > 0 for s in [speaking, writing, reading, listening]):
         overall = round((speaking + writing + reading + listening) / 4 * 2) / 2
     else:
         overall = 0
+        st.warning("Some scores could not be calculated. Please retry the test.")
 
     achieved = overall >= target_band
     cert_type = "gold" if achieved else "silver"
@@ -429,7 +430,7 @@ def _render_results(profile, accent, target_band):
 
         # Save to DB
         if user_id != "demo" and not st.session_state.get("mock_scores_saved"):
-            from utils.database import save_certificate
+            from utils.database import save_certificate, update_user_profile
             save_certificate(
                 user_id=user_id,
                 cert_hash=cert_hash,
@@ -440,6 +441,8 @@ def _render_results(profile, accent, target_band):
                 scores={"speaking": speaking, "writing": writing,
                         "reading": reading, "listening": listening}
             )
+            # Save final mock band to profile for challenge.py certificate
+            update_user_profile(user_id, {"final_mock_band": overall})
             session_id = create_session(user_id, "Final Mock Test", "All Skills", target_band)
             if session_id:
                 for skill, score in [("speaking", speaking), ("writing", writing),

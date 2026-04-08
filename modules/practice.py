@@ -12,7 +12,11 @@ from utils.ai import (
 from utils.database import (
     create_session, update_session, save_message, save_band_score
 )
-from streamlit_mic_recorder import speech_to_text
+try:
+    from streamlit_mic_recorder import speech_to_text
+    HAS_MIC_RECORDER = True
+except ImportError:
+    HAS_MIC_RECORDER = False
 
 MODES = [
     "Speaking - Part 1 (Personal questions)",
@@ -62,19 +66,20 @@ def render_annotation(text: str):
     """Render AI response with 3-color annotation system."""
     import re
 
+    # Pattern: 🔴 followed by any label text then colon, capture rest until next emoji marker or end
     text = re.sub(
-        r'🔴 \[RED[^\]]*\]:\s*(.+?)(?=\n|🔵|🟢|$)',
-        lambda m: f'<div style="background:rgba(231,76,60,0.1);border-left:3px solid #E74C3C;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#E74C3C;font-weight:700">🔴 Band Killer</span><br>{m.group(1)}</div>',
+        r'🔴\s*(?:\[?RED[^\]]*\]?[:\s—–-]*|Band Killer[:\s—–-]*)?(.+?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
+        lambda m: f'<div style="background:rgba(231,76,60,0.1);border-left:3px solid #E74C3C;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#E74C3C;font-weight:700">🔴 Band Killer</span><br>{m.group(1).strip()}</div>',
         text, flags=re.DOTALL
     )
     text = re.sub(
-        r'🔵 \[BLUE[^\]]*\]:\s*(.+?)(?=\n|🔴|🟢|$)',
-        lambda m: f'<div style="background:rgba(56,189,248,0.1);border-left:3px solid #38BDF8;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#38BDF8;font-weight:700">🔵 Band 8 Upgrade</span><br>{m.group(1)}</div>',
+        r'🔵\s*(?:\[?BLUE[^\]]*\]?[:\s—–-]*|Band 8 Upgrade[:\s—–-]*)?(.+?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
+        lambda m: f'<div style="background:rgba(56,189,248,0.1);border-left:3px solid #38BDF8;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#38BDF8;font-weight:700">🔵 Band 8 Upgrade</span><br>{m.group(1).strip()}</div>',
         text, flags=re.DOTALL
     )
     text = re.sub(
-        r'🟢 \[GREEN[^\]]*\]:\s*(.+?)(?=\n|🔴|🔵|$)',
-        lambda m: f'<div style="background:rgba(46,204,113,0.1);border-left:3px solid #2ECC71;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#2ECC71;font-weight:700">🟢 Strategic Success</span><br>{m.group(1)}</div>',
+        r'🟢\s*(?:\[?GREEN[^\]]*\]?[:\s—–-]*|Strategic Success[:\s—–-]*)?(.+?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
+        lambda m: f'<div style="background:rgba(46,204,113,0.1);border-left:3px solid #2ECC71;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#2ECC71;font-weight:700">🟢 Strategic Success</span><br>{m.group(1).strip()}</div>',
         text, flags=re.DOTALL
     )
 
@@ -105,6 +110,7 @@ def render_practice():
 
         # Redirect Listening modes to dedicated listening page
         if "Listening" in mode:
+            st.session_state.practice_mode = MODES[0]  # Reset to prevent loop
             st.session_state.current_view = "listening"
             st.rerun()
 
@@ -225,7 +231,7 @@ def render_practice():
                 st.markdown(msg["content"])
 
     # ── VOICE INPUT ──
-    if "Speaking" in mode:
+    if "Speaking" in mode and HAS_MIC_RECORDER:
         st.markdown("""
         <div style="background:rgba(255,255,255,0.04);border-radius:16px;
                     border:1px solid rgba(240,192,64,0.15);padding:14px 18px;margin-bottom:10px">

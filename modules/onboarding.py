@@ -275,20 +275,10 @@ def _render_target_band(name):
             selected = currently_selected == band
             border = "2px solid #4A9EFF" if selected else "1px solid rgba(74,158,255,0.12)"
             bg = "rgba(74,158,255,0.1)" if selected else "rgba(74,158,255,0.03)"
-            check = '<div style="position:absolute;top:10px;right:12px;font-size:14px;color:#4A9EFF">✓</div>' if selected else ''
+            check = "✓ " if selected else ""
 
             with all_cols[i]:
-                st.markdown(f"""
-                <div style="background:{bg};border:{border};border-radius:14px;
-                            padding:16px 14px;margin-bottom:8px;position:relative;
-                            transition:all 0.2s">
-                    {check}
-                    <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
-                                color:#4A9EFF;line-height:1;margin-bottom:4px">{band}</div>
-                    <div style="font-size:12px;font-weight:700;color:#f0f4ff;margin-bottom:4px">{label}</div>
-                    <div style="font-size:10px;color:rgba(180,210,255,0.45);line-height:1.5">{meaning}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"""<div style="background:{bg};border:{border};border-radius:14px;padding:16px 14px;margin-bottom:8px"><div style="font-size:28px;font-weight:800;color:#4A9EFF;line-height:1;margin-bottom:4px">{check}{band}</div><div style="font-size:12px;font-weight:700;color:#f0f4ff;margin-bottom:4px">{label}</div><div style="font-size:10px;color:rgba(180,210,255,0.45);line-height:1.5">{meaning}</div></div>""", unsafe_allow_html=True)
                 if st.button(f"Band {band}", use_container_width=True, key=f"band_{band}"):
                     st.session_state.setup_target_band = band
                     st.session_state.onboarding_step = 3
@@ -402,27 +392,31 @@ def _render_hours(name):
 
         currently_selected = st.session_state.get("setup_hours")
 
-        c1, c2 = st.columns(2)
-        all_hour_cols = [c1, c2, c1, c2]
-
-        for i, opt in enumerate(HOURS_OPTIONS):
+        # Row 1: first two options
+        hr1, hr2 = st.columns(2)
+        for i, (col_el, opt) in enumerate(zip([hr1, hr2], HOURS_OPTIONS[:2])):
             selected = currently_selected == opt["value"]
             border = "2px solid #4A9EFF" if selected else "1px solid rgba(74,158,255,0.12)"
             bg = "rgba(74,158,255,0.1)" if selected else "rgba(74,158,255,0.03)"
+            check = '<div style="margin-top:8px;font-size:11px;color:#4A9EFF;font-weight:600">✓ Selected</div>' if selected else ''
 
-            with all_hour_cols[i]:
-                st.markdown(f"""
-                <div style="background:{bg};border:{border};border-radius:14px;
-                            padding:20px 16px;text-align:center;margin-bottom:10px;
-                            transition:all 0.2s">
-                    <div style="font-size:32px;margin-bottom:8px">{opt['icon']}</div>
-                    <div style="font-size:20px;font-weight:800;color:#4A9EFF;margin-bottom:4px">
-                        {opt['label']}
-                    </div>
-                    <div style="font-size:11px;color:rgba(180,210,255,0.45)">{opt['desc']}</div>
-                    {'<div style="margin-top:8px;font-size:11px;color:#4A9EFF;font-weight:600">✓ Selected</div>' if selected else ''}
-                </div>
-                """, unsafe_allow_html=True)
+            with col_el:
+                st.markdown(f"""<div style="background:{bg};border:{border};border-radius:14px;padding:20px 16px;text-align:center;margin-bottom:10px"><div style="font-size:32px;margin-bottom:8px">{opt['icon']}</div><div style="font-size:20px;font-weight:800;color:#4A9EFF;margin-bottom:4px">{opt['label']}</div><div style="font-size:11px;color:rgba(180,210,255,0.45)">{opt['desc']}</div>{check}</div>""", unsafe_allow_html=True)
+                if st.button(f"{opt['label']}/session", use_container_width=True, key=f"hours_{opt['value']}"):
+                    st.session_state.setup_hours = opt["value"]
+                    st.session_state.onboarding_step = 5
+                    st.rerun()
+
+        # Row 2: last two options
+        hr3, hr4 = st.columns(2)
+        for i, (col_el, opt) in enumerate(zip([hr3, hr4], HOURS_OPTIONS[2:])):
+            selected = currently_selected == opt["value"]
+            border = "2px solid #4A9EFF" if selected else "1px solid rgba(74,158,255,0.12)"
+            bg = "rgba(74,158,255,0.1)" if selected else "rgba(74,158,255,0.03)"
+            check = '<div style="margin-top:8px;font-size:11px;color:#4A9EFF;font-weight:600">✓ Selected</div>' if selected else ''
+
+            with col_el:
+                st.markdown(f"""<div style="background:{bg};border:{border};border-radius:14px;padding:20px 16px;text-align:center;margin-bottom:10px"><div style="font-size:32px;margin-bottom:8px">{opt['icon']}</div><div style="font-size:20px;font-weight:800;color:#4A9EFF;margin-bottom:4px">{opt['label']}</div><div style="font-size:11px;color:rgba(180,210,255,0.45)">{opt['desc']}</div>{check}</div>""", unsafe_allow_html=True)
                 if st.button(f"{opt['label']}/session", use_container_width=True, key=f"hours_{opt['value']}"):
                     st.session_state.setup_hours = opt["value"]
                     st.session_state.onboarding_step = 5
@@ -453,61 +447,28 @@ def _render_setup_summary(name, profile, user_id):
         </div>
         """, unsafe_allow_html=True)
 
-        # Summary card
+        # Summary card — use st.columns instead of CSS grid
         band_label, band_meaning = BAND_INFO.get(target_band, ("Good", ""))
         sched_info = SCHEDULES.get(schedule, {"days": 5, "icon": "📅"})
         days_per_week = sched_info["days"]
         hours_per_week = days_per_week * hours
         weeks_estimate = _estimate_weeks(target_band, hours_per_week)
 
-        st.markdown(f"""
-        <div style="background:rgba(74,158,255,0.06);border:1px solid rgba(74,158,255,0.2);
-                    border-radius:18px;padding:24px;margin-bottom:20px;position:relative;
-                    overflow:hidden">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;
-                        background:linear-gradient(90deg,transparent,#4A9EFF,transparent)"></div>
+        hours_display = f"{hours} {'hour' if hours == 1 else 'hours' if hours > 1 else '30 min'}/day" if hours >= 1 else "30 min/day"
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
-                <div style="background:rgba(74,158,255,0.08);border-radius:12px;padding:14px">
-                    <div style="font-size:10px;color:rgba(180,210,255,0.4);text-transform:uppercase;
-                                letter-spacing:0.08em;margin-bottom:4px">Exam Type</div>
-                    <div style="font-size:16px;font-weight:700;color:#f0f4ff">{exam_type}</div>
-                </div>
-                <div style="background:rgba(74,158,255,0.08);border-radius:12px;padding:14px">
-                    <div style="font-size:10px;color:rgba(180,210,255,0.4);text-transform:uppercase;
-                                letter-spacing:0.08em;margin-bottom:4px">Target Band</div>
-                    <div style="font-size:16px;font-weight:700;color:#4A9EFF">
-                        {target_band} — {band_label}
-                    </div>
-                </div>
-                <div style="background:rgba(74,158,255,0.08);border-radius:12px;padding:14px">
-                    <div style="font-size:10px;color:rgba(180,210,255,0.4);text-transform:uppercase;
-                                letter-spacing:0.08em;margin-bottom:4px">Practice Schedule</div>
-                    <div style="font-size:16px;font-weight:700;color:#f0f4ff">{schedule}</div>
-                </div>
-                <div style="background:rgba(74,158,255,0.08);border-radius:12px;padding:14px">
-                    <div style="font-size:10px;color:rgba(180,210,255,0.4);text-transform:uppercase;
-                                letter-spacing:0.08em;margin-bottom:4px">Daily Session</div>
-                    <div style="font-size:16px;font-weight:700;color:#f0f4ff">
-                        {hours if hours >= 1 else '30 min'} {'hour' if hours == 1 else 'hours' if hours > 1 else ''}/day
-                    </div>
-                </div>
-            </div>
+        sc1, sc2 = st.columns(2)
+        with sc1:
+            st.markdown(f"""<div style="background:rgba(74,158,255,0.08);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:rgba(180,210,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Exam Type</div><div style="font-size:16px;font-weight:700;color:#f0f4ff">{exam_type}</div></div>""", unsafe_allow_html=True)
+        with sc2:
+            st.markdown(f"""<div style="background:rgba(74,158,255,0.08);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:rgba(180,210,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Target Band</div><div style="font-size:16px;font-weight:700;color:#4A9EFF">{target_band} — {band_label}</div></div>""", unsafe_allow_html=True)
 
-            <div style="background:rgba(0,232,122,0.06);border:1px solid rgba(0,232,122,0.15);
-                        border-radius:12px;padding:14px 16px">
-                <div style="font-size:12px;font-weight:700;color:#00e87a;margin-bottom:4px">
-                    📊 Your AI Forecast
-                </div>
-                <div style="font-size:13px;color:rgba(180,210,255,0.7);line-height:1.6">
-                    At <strong style="color:#f0f4ff">{hours_per_week:.1f} hours/week</strong>,
-                    most students reach Band {target_band} in
-                    <strong style="color:#00e87a">{weeks_estimate} weeks</strong>.
-                    Your AI tutor will track your progress and adjust your plan weekly.
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        sc3, sc4 = st.columns(2)
+        with sc3:
+            st.markdown(f"""<div style="background:rgba(74,158,255,0.08);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:rgba(180,210,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Practice Schedule</div><div style="font-size:16px;font-weight:700;color:#f0f4ff">{schedule}</div></div>""", unsafe_allow_html=True)
+        with sc4:
+            st.markdown(f"""<div style="background:rgba(74,158,255,0.08);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:rgba(180,210,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Daily Session</div><div style="font-size:16px;font-weight:700;color:#f0f4ff">{hours_display}</div></div>""", unsafe_allow_html=True)
+
+        st.markdown(f"""<div style="background:rgba(0,232,122,0.06);border:1px solid rgba(0,232,122,0.15);border-radius:12px;padding:14px 16px;margin-bottom:20px"><div style="font-size:12px;font-weight:700;color:#00e87a;margin-bottom:4px">📊 Your AI Forecast</div><div style="font-size:13px;color:rgba(180,210,255,0.7);line-height:1.6">At <strong style="color:#f0f4ff">{hours_per_week:.1f} hours/week</strong>, most students reach Band {target_band} in <strong style="color:#00e87a">{weeks_estimate} weeks</strong>. Your AI tutor will track your progress and adjust your plan weekly.</div></div>""", unsafe_allow_html=True)
 
         # What target band means
         st.markdown(f"""
@@ -844,23 +805,8 @@ def _render_results(profile, user_id):
         """, unsafe_allow_html=True)
 
         # Overall score
-        st.markdown(f"""
-        <div style="background:rgba(74,158,255,0.08);border:2px solid rgba(74,158,255,0.3);
-                    border-radius:20px;padding:24px;text-align:center;margin:16px 0;position:relative;overflow:hidden">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;
-                        background:linear-gradient(90deg,transparent,#4A9EFF,transparent)"></div>
-            <div style="font-size:12px;color:rgba(180,210,255,0.4);text-transform:uppercase;
-                        letter-spacing:0.08em;margin-bottom:6px">Overall Baseline Band</div>
-            <div style="font-family:'Syne',sans-serif;font-size:64px;font-weight:800;
-                        color:#4A9EFF;line-height:1">{overall}</div>
-            <div style="font-size:13px;color:rgba(180,210,255,0.35);margin-top:6px">
-                Target: Band {target} &nbsp;·&nbsp;
-                Gap: <span style="color:{'#00e87a' if gap <= 0.5 else '#FCD34D' if gap <= 1.5 else '#ff3a4a'}">
-                    {gap if gap > 0 else '0'} bands
-                </span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        gap_color = '#00e87a' if gap <= 0.5 else '#FCD34D' if gap <= 1.5 else '#ff3a4a'
+        st.markdown(f"""<div style="background:rgba(74,158,255,0.08);border:2px solid rgba(74,158,255,0.3);border-radius:20px;padding:24px;text-align:center;margin:16px 0"><div style="font-size:12px;color:rgba(180,210,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Overall Baseline Band</div><div style="font-size:64px;font-weight:800;color:#4A9EFF;line-height:1">{overall}</div><div style="font-size:13px;color:rgba(180,210,255,0.35);margin-top:6px">Target: Band {target} · Gap: <span style="color:{gap_color}">{gap if gap > 0 else '0'} bands</span></div></div>""", unsafe_allow_html=True)
 
         # Skill breakdown
         skill_data = [
@@ -871,16 +817,9 @@ def _render_results(profile, user_id):
         ]
         cols = st.columns(4)
         for col_el, (icon, skill, score, color) in zip(cols, skill_data):
+            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
             with col_el:
-                st.markdown(f"""
-                <div style="background:{color}0d;border:1px solid {color}22;
-                            border-radius:12px;padding:14px;text-align:center">
-                    <div style="font-size:20px;margin-bottom:4px">{icon}</div>
-                    <div style="font-size:10px;color:{color};text-transform:uppercase;
-                                letter-spacing:0.06em;margin-bottom:5px">{skill}</div>
-                    <div style="font-size:26px;font-weight:800;color:{color}">{score}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"""<div style="background:rgba({r},{g},{b},0.05);border:1px solid rgba({r},{g},{b},0.13);border-radius:12px;padding:14px;text-align:center"><div style="font-size:20px;margin-bottom:4px">{icon}</div><div style="font-size:10px;color:{color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">{skill}</div><div style="font-size:26px;font-weight:800;color:{color}">{score}</div></div>""", unsafe_allow_html=True)
 
         st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 

@@ -46,7 +46,7 @@ accent = st.session_state.get("profile", {}).get("accent_color", "#4A9EFF") \
 inject_global_css(accent)
 
 # ── AUTH GATE ──
-if st.session_state.current_view == "auth" or not st.session_state.get("profile"):
+if st.session_state.current_view == "auth" or st.session_state.get("profile") is None:
     from modules.auth import render_auth
     render_auth()
     st.stop()
@@ -72,28 +72,7 @@ current_view = st.session_state.current_view
 nav_left, nav_right = st.columns([8, 1])
 
 with nav_left:
-    st.markdown(f"""
-    <div class="top-nav">
-        <div class="top-nav-brand">
-            <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
-                <rect width="56" height="56" rx="14" fill="rgba(255,255,255,0.06)"/>
-                <polygon points="28,14 46,24 28,34 10,24" fill="rgba(255,255,255,0.08)"
-                    stroke="{accent}" stroke-width="2" stroke-linejoin="round"/>
-                <line x1="40" y1="27" x2="40" y2="38" stroke="{accent}" stroke-width="2" stroke-linecap="round"/>
-                <path d="M34,38 Q40,42 46,38" fill="none" stroke="{accent}" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="43" cy="13" r="1.5" fill="{accent}"/>
-            </svg>
-            <div>
-                <div class="top-nav-brand-text">IELTS Master</div>
-                <div class="top-nav-brand-sub">Powered by Claude</div>
-            </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.5)">
-            <span>👋 {name}</span>
-            <span style="color:{accent};font-weight:700">🔥 {streak}</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"""<div style="background:rgba(1,1,10,0.92);border-radius:14px;border:1px solid rgba(74,158,255,0.12);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="display:flex;align-items:center;gap:10px"><div style="font-size:24px">🎓</div><div><div style="font-size:16px;font-weight:800;color:#f0f4ff;letter-spacing:0.05em">IELTS Master</div><div style="font-size:10px;color:rgba(180,210,255,0.38);letter-spacing:0.1em;text-transform:uppercase">Powered by Claude</div></div></div><div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.5)"><span>👋 {name}</span><span style="color:{accent};font-weight:700">🔥 {streak}</span></div></div>""", unsafe_allow_html=True)
 
 with nav_right:
     if st.button("⚙️", key="top_gear", help="Settings", use_container_width=True):

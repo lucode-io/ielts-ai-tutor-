@@ -11,7 +11,7 @@ from utils.database import (
     get_challenge_days, complete_challenge_day,
     update_user_profile, get_user_profile
 )
-from utils.certificate import generate_certificate_html
+from utils.certificate import generate_certificate_html, generate_cert_hash
 
 # ── MOTIVATIONAL QUOTES ──────────────────────────────────────
 QUOTES = [
@@ -152,7 +152,9 @@ def render_challenge():
             full_name=profile.get("full_name", "Student"),
             target_band=target,
             achieved_band=final_score,
-            cert_type=cert_type
+            cert_type=cert_type,
+            cert_hash=generate_cert_hash(user_id, profile.get("full_name", "Student"),
+                                          final_score or 0, cert_type)
         )
         label = "🏆 Download Gold Certificate" if achieved else "🥈 Download Silver Certificate"
         st.download_button(label=label, data=cert_html,

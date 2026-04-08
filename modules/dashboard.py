@@ -24,7 +24,11 @@ def render_dashboard():
     greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
 
     band_display = f"{baseline}" if baseline else "N/A"
-    progress_pct = min(100, int(((float(baseline) / float(target)) * 100))) if baseline else 0
+    # Scale: 4.0 = 0%, target = 100%
+    if baseline and target:
+        progress_pct = min(100, max(0, int(((float(baseline) - 4.0) / (float(target) - 4.0)) * 100)))
+    else:
+        progress_pct = 0
 
     st.markdown(f"""
     <div class="glass-card" style="background:linear-gradient(135deg,rgba(240,192,64,0.08),rgba(255,255,255,0.03));">
@@ -201,13 +205,9 @@ def render_dashboard():
 
 
 def _quick_card(icon, title, subtitle, color):
-    return f"""
-    <div style="background:{color}11;border-radius:16px;border:1px solid {color}33;
-                padding:16px;margin-bottom:10px;text-align:center">
-        <div style="font-size:28px;margin-bottom:6px">{icon}</div>
-        <div style="font-size:14px;font-weight:700;color:{color}">{title}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px">{subtitle}</div>
-    </div>"""
+    # Convert hex color to rgba for background
+    r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+    return f"""<div style="background:rgba({r},{g},{b},0.07);border-radius:16px;border:1px solid rgba({r},{g},{b},0.2);padding:16px;margin-bottom:10px;text-align:center"><div style="font-size:28px;margin-bottom:6px">{icon}</div><div style="font-size:14px;font-weight:700;color:{color}">{title}</div><div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px">{subtitle}</div></div>"""
 
 
 def _demo_errors():
