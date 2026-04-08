@@ -129,6 +129,27 @@ def get_user_sessions(user_id: str, limit: int = 20) -> List[Dict]:
         return []
 
 
+def get_session_count(user_id: str) -> int:
+    """Count total sessions for a user. Used by paywall gate."""
+    supabase = get_supabase_client()
+    try:
+        res = supabase.table("sessions")\
+            .select("id", count="exact")\
+            .eq("user_id", user_id)\
+            .execute()
+        return res.count if res.count is not None else len(res.data or [])
+    except Exception:
+        return 0
+
+
+def is_user_paid(user_id: str) -> bool:
+    """Check if user has lifetime subscription."""
+    profile = get_user_profile(user_id)
+    if not profile:
+        return False
+    return profile.get("subscription_status") in ("lifetime", "pro", "paid")
+
+
 # ── BAND SCORES ──
 
 def save_band_score(user_id: str, session_id: str, skill: str,

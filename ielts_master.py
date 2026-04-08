@@ -196,29 +196,110 @@ st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 # ── ROUTER ──
 view = st.session_state.current_view
 
+# ── PAYWALL GATE ──────────────────────────────────────────────
+# Free users get 7 sessions. After that, block practice + listening + challenge.
+FREE_SESSION_LIMIT = 7
+CHECKOUT_URL = "https://ieltsmaster-org.lemonsqueezy.com/checkout/buy/138f5144-e21e-4692-8631-feeee456bbbf"
+
+def _check_paywall(user_id, profile):
+    """Returns True if user is blocked by paywall. Shows upgrade wall."""
+    if user_id == "demo":
+        return False
+    if profile.get("subscription_status") in ("lifetime", "pro", "paid"):
+        return False
+
+    from utils.database import get_session_count
+    count = get_session_count(user_id)
+
+    # Cache count in session_state so dashboard can show remaining
+    st.session_state["_session_count"] = count
+
+    if count < FREE_SESSION_LIMIT:
+        # Show soft reminder at sessions 5 and 6
+        remaining = FREE_SESSION_LIMIT - count
+        if remaining <= 2:
+            st.markdown(f"""
+            <div style="background:rgba(240,192,64,0.08);border:1px solid rgba(240,192,64,0.2);
+                        border-radius:12px;padding:12px 16px;margin-bottom:16px;
+                        display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                <div style="font-size:13px;color:#FCD34D">
+                    ⚡ <strong>{remaining} free session{'s' if remaining != 1 else ''} remaining</strong>
+                </div>
+                <div style="font-size:12px;color:rgba(180,210,255,0.45)">
+                    Upgrade to Lifetime for unlimited access
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        return False
+
+    # ── BLOCKED — show upgrade wall ──
+    st.markdown(f"""
+    <div style="text-align:center;padding:48px 20px;max-width:480px;margin:0 auto">
+        <div style="font-size:56px;margin-bottom:16px">🔒</div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;
+                    color:#f0f4ff;margin-bottom:10px">
+            Free sessions used up
+        </div>
+        <div style="font-size:14px;color:rgba(180,210,255,0.5);line-height:1.7;margin-bottom:24px">
+            You've completed <strong style="color:#4A9EFF">{count} sessions</strong> — great progress!
+            Upgrade to Lifetime to continue practicing all 4 skills with your AI tutor, forever.
+        </div>
+        <div style="background:rgba(74,158,255,0.06);border:1px solid rgba(74,158,255,0.15);
+                    border-radius:16px;padding:24px;margin-bottom:24px">
+            <div style="font-size:36px;font-weight:900;color:#4A9EFF;margin-bottom:4px">$149</div>
+            <div style="font-size:13px;color:rgba(180,210,255,0.5)">One-time payment · Lifetime access · All 4 skills</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.35);margin-top:8px">
+                8 languages · 21-Day Challenge · Certificates · Score tracking
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="btn-primary" style="max-width:480px;margin:0 auto">', unsafe_allow_html=True)
+    if st.button("🚀 Upgrade to Lifetime — $149", key="paywall_upgrade", use_container_width=True):
+        st.markdown(f'<meta http-equiv="refresh" content="0;url={CHECKOUT_URL}">', unsafe_allow_html=True)
+        st.info("Redirecting to checkout...")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+    col1, col2, _ = st.columns([1, 1, 2])
+    with col1:
+        if st.button("📊 View my reports", key="paywall_reports"):
+            st.session_state.current_view = "reports"
+            st.rerun()
+    with col2:
+        if st.button("⚙️ Settings", key="paywall_settings"):
+            st.session_state.current_view = "settings"
+            st.rerun()
+
+    return True  # Blocked
+
 if view == "dashboard":
     from modules.dashboard import render_dashboard
     render_dashboard()
 
 elif view == "practice":
-    from modules.practice import render_practice
-    render_practice()
+    if not _check_paywall(st.session_state.get("user_id", "demo"), profile):
+        from modules.practice import render_practice
+        render_practice()
 
 elif view == "reports":
     from modules.reports import render_reports
     render_reports()
 
 elif view == "challenge":
-    from modules.challenge import render_challenge
-    render_challenge()
+    if not _check_paywall(st.session_state.get("user_id", "demo"), profile):
+        from modules.challenge import render_challenge
+        render_challenge()
 
 elif view == "settings":
     from modules.settings import render_settings
     render_settings()
 
 elif view == "listening":
-    from modules.practice_listening import render_listening_practice
-    render_listening_practice()
+    if not _check_paywall(st.session_state.get("user_id", "demo"), profile):
+        from modules.practice_listening import render_listening_practice
+        render_listening_practice()
 
 else:
     st.error(f"Unknown view: {view}")
