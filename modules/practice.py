@@ -63,31 +63,99 @@ def get_system_prompt(mode: str, profile: dict) -> str:
 
 
 def render_annotation(text: str):
-    """Render AI response with 3-color annotation system."""
+    """Render AI response with 3-color inline annotation system.
+    Matches the landing page style: colored background highlights on quoted text,
+    with a legend bar below the annotated section.
+    """
     import re
 
-    # Pattern: 🔴 followed by any label text then colon, capture rest until next emoji marker or end
-    text = re.sub(
-        r'🔴\s*(?:\[?RED[^\]]*\]?[:\s—–-]*|Band Killer[:\s—–-]*)?(.+?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
-        lambda m: f'<div style="background:rgba(231,76,60,0.1);border-left:3px solid #E74C3C;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#E74C3C;font-weight:700">🔴 Band Killer</span><br>{m.group(1).strip()}</div>',
-        text, flags=re.DOTALL
-    )
-    text = re.sub(
-        r'🔵\s*(?:\[?BLUE[^\]]*\]?[:\s—–-]*|Band 8 Upgrade[:\s—–-]*)?(.+?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
-        lambda m: f'<div style="background:rgba(56,189,248,0.1);border-left:3px solid #38BDF8;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#38BDF8;font-weight:700">🔵 Band 8 Upgrade</span><br>{m.group(1).strip()}</div>',
-        text, flags=re.DOTALL
-    )
-    text = re.sub(
-        r'🟢\s*(?:\[?GREEN[^\]]*\]?[:\s—–-]*|Strategic Success[:\s—–-]*)?(.+?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
-        lambda m: f'<div style="background:rgba(46,204,113,0.1);border-left:3px solid #2ECC71;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;font-size:13px;color:#dde6f0"><span style="color:#2ECC71;font-weight:700">🟢 Strategic Success</span><br>{m.group(1).strip()}</div>',
-        text, flags=re.DOTALL
-    )
+    # Extract annotation blocks and the rest of the response separately
+    # Pattern: emoji + label + quoted text + arrow + correction/explanation
+    annotation_pattern = r'(🔴|🔵|🟢)\s*(?:\[?(?:RED|BLUE|GREEN)[^\]]*\]?[:\s—–-]*|(?:Band Killer|Band 8 Upgrade|Strategic Success)[:\s—–-]*)(.+?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)'
 
-    has_annotation = any(marker in text for marker in ['Band Killer', 'Band 8 Upgrade', 'Strategic Success'])
-    if has_annotation:
-        st.markdown(text, unsafe_allow_html=True)
-    else:
+    matches = list(re.finditer(annotation_pattern, text, flags=re.DOTALL))
+
+    if not matches:
         st.markdown(text)
+        return
+
+    # Split text: everything before first annotation is "normal" text
+    first_match_start = matches[0].start()
+    pre_text = text[:first_match_start].strip()
+    post_text_start = matches[-1].end()
+    post_text = text[post_text_start:].strip()
+
+    # Render the normal feedback text (band scores, comments, etc.)
+    if pre_text:
+        st.markdown(pre_text)
+
+    # Color map matching landing page exactly
+    color_map = {
+        '🔴': {'bg': 'rgba(231,76,60,0.18)', 'border': '#E74C3C', 'label': 'Band Killer', 'dot': '#E74C3C'},
+        '🔵': {'bg': 'rgba(56,189,248,0.18)', 'border': '#38BDF8', 'label': 'Band 8 Upgrade', 'dot': '#38BDF8'},
+        '🟢': {'bg': 'rgba(46,204,113,0.18)', 'border': '#2ECC71', 'label': 'Strategic Success', 'dot': '#2ECC71'},
+    }
+
+    # Build annotation HTML — inline highlighted spans
+    annotation_html = '<div style="background:rgba(255,255,255,0.03);border-radius:14px;padding:20px;margin:16px 0;border:1px solid rgba(74,158,255,0.08)">'
+
+    # Group annotations by paragraph: red = errors, blue = upgrades, green = successes
+    for match in matches:
+        emoji = match.group(1)
+        content = match.group(2).strip()
+        colors = color_map.get(emoji, color_map['🔴'])
+
+        # Try to extract quoted text vs explanation
+        # Common formats: "quoted text" → correction → explanation
+        #                 Quote: "text" | Correction: "text" | Why: text
+        quote_match = re.search(r'["""](.+?)["""]', content)
+
+        if quote_match:
+            quoted = quote_match.group(1)
+            rest = content[quote_match.end():].strip()
+            rest = re.sub(r'^[→►\-—–:\s]+', '', rest).strip()
+
+            annotation_html += f'''
+            <div style="margin-bottom:12px">
+                <span style="background:{colors['bg']};border-bottom:2px solid {colors['border']};
+                             padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;
+                             line-height:2;display:inline">{quoted}</span>
+                <div style="font-size:12px;color:rgba(180,210,255,0.6);margin-top:4px;padding-left:4px">{rest}</div>
+            </div>'''
+        else:
+            # No clear quote — render as a highlighted block
+            annotation_html += f'''
+            <div style="margin-bottom:12px">
+                <span style="background:{colors['bg']};border-bottom:2px solid {colors['border']};
+                             padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;
+                             line-height:2;display:inline">{content[:120]}</span>
+                {f'<div style="font-size:12px;color:rgba(180,210,255,0.6);margin-top:4px;padding-left:4px">{content[120:]}</div>' if len(content) > 120 else ''}
+            </div>'''
+
+    # Legend bar — matches landing page exactly
+    annotation_html += '''
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:12px;border-top:1px solid rgba(74,158,255,0.08)">
+        <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(180,210,255,0.5)">
+            <span style="width:8px;height:8px;border-radius:2px;background:#E74C3C;display:inline-block"></span>
+            Band Killer — fix immediately
+        </span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(180,210,255,0.5)">
+            <span style="width:8px;height:8px;border-radius:2px;background:#38BDF8;display:inline-block"></span>
+            Band 8 Upgrade — use this
+        </span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(180,210,255,0.5)">
+            <span style="width:8px;height:8px;border-radius:2px;background:#2ECC71;display:inline-block"></span>
+            Strategic Success — P-R-E-A done right
+        </span>
+    </div>'''
+
+    annotation_html += '</div>'
+
+    st.markdown(annotation_html, unsafe_allow_html=True)
+
+    # Render any text after annotations
+    if post_text:
+        st.markdown(post_text)
 
 
 def render_practice():
