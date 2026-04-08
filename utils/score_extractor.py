@@ -63,7 +63,7 @@ def extract_score_via_llm(text: str, skill: str, default: float = 5.5) -> float:
         from utils.ai import get_claude_client
         client = get_claude_client()
         response = client.messages.create(
-            model="claude-sonnet-4-5-20250514",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=20,
             system="Extract the IELTS band score. Return ONLY a number like 6.5 — nothing else.",
             messages=[{
