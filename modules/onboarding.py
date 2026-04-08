@@ -878,25 +878,31 @@ def _render_results(profile, user_id):
 # ── HELPERS ───────────────────────────────────────────────────
 
 def _extract_partial_scores(text: str):
+    """Extract band scores from diagnostic AI response — robust version."""
+    from utils.score_extractor import extract_all_scores_from_text, extract_all_scores_from_messages
+
     scores = st.session_state.get("diag_scores", {})
-    for skill in ["Speaking", "Writing", "Reading"]:
-        if skill.lower() not in scores:
-            for pattern in [
-                rf"{skill}[^:]*?Band[:\s]+(\d+\.?\d*)",
-                rf"{skill}[:\s]+(\d+\.?\d*)",
-            ]:
-                match = re.search(pattern, text, re.IGNORECASE)
-                if match:
-                    try:
-                        val = float(match.group(1))
-                        if 3.0 <= val <= 9.0:
-                            scores[skill.lower()] = val
-                            break
-                    except Exception:
-                        pass
+
+    # Method 1: Extract from the latest message
+    found = extract_all_scores_from_text(text)
+    for skill in ["speaking", "writing", "reading"]:
+        if skill not in scores and skill in found:
+            scores[skill] = found[skill]
+
+    # Method 2: If still missing, scan ALL diagnostic messages
+    if any(skill not in scores for skill in ["speaking", "writing", "reading"]):
+        messages = st.session_state.get("diagnostic_messages", [])
+        if messages:
+            from_all = extract_all_scores_from_messages(messages)
+            for skill in ["speaking", "writing", "reading"]:
+                if skill not in scores and skill in from_all and from_all[skill] != 5.5:
+                    scores[skill] = from_all[skill]
+
+    # Final fallback — 5.5 only if truly nothing found
     for skill in ["speaking", "writing", "reading"]:
         if skill not in scores:
             scores[skill] = 5.5
+
     st.session_state.diag_scores = scores
 
 

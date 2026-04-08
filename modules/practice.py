@@ -297,17 +297,27 @@ def _send_message(text: str, mode: str, topic: str,
 
 
 def _try_extract_and_save_band(response: str, mode: str, user_id: str, session_id: str):
+    """Extract band score from practice response and save to DB — robust version."""
     if not session_id or user_id == "demo":
         return
-    import re
-    match = re.search(r"Overall (?:Band|Speaking Band|Band Estimate)[:\s]+(\d+\.?\d*)", response)
-    if match:
+
+    from utils.score_extractor import extract_band_score_from_text
+
+    skill = (
+        "speaking" if "Speaking" in mode else
+        "writing" if "Writing" in mode else
+        "reading" if "Reading" in mode else
+        "listening" if "Listening" in mode else
+        "general"
+    )
+
+    # Try skill-specific extraction first, then overall
+    band = extract_band_score_from_text(response, skill=skill, default=None)
+    if band is None:
+        band = extract_band_score_from_text(response, skill="overall", default=None)
+
+    if band is not None:
         try:
-            band = float(match.group(1))
-            skill = (
-                "speaking" if "Speaking" in mode else "writing" if "Writing" in mode else
-                "reading" if "Reading" in mode else "listening" if "Listening" in mode else "general"
-            )
             save_band_score(user_id, session_id, skill, band)
             update_session(session_id, {"overall_band": band})
         except Exception:

@@ -583,12 +583,14 @@ def _score_listening() -> float:
 
 
 def _extract_score(text: str, default: float = 5.5) -> float:
-    matches = re.findall(r'\b([3-9]\.?[05]?)\b', text)
-    for m in matches:
-        try:
-            v = float(m)
-            if 3.0 <= v <= 9.0:
-                return round(v * 2) / 2
-        except Exception:
-            pass
-    return default
+    """Extract band score from mock test AI response — robust version with LLM fallback."""
+    from utils.score_extractor import extract_band_score_from_text, extract_score_via_llm
+
+    # Try regex first (fast, free)
+    score = extract_band_score_from_text(text, skill=None, default=None)
+    if score is not None:
+        return score
+
+    # LLM fallback for mock test (critical path — worth 200 tokens)
+    score = extract_score_via_llm(text, "overall", default)
+    return score
