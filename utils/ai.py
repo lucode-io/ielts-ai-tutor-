@@ -20,7 +20,7 @@ def chat(messages: List[Dict], system_prompt: str, max_tokens: int = 2048) -> st
     client = get_claude_client()
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-5-20241022",
+            model="claude-sonnet-4-5-20250514",
             max_tokens=max_tokens,
             system=system_prompt,
             messages=[{"role": m["role"], "content": m["content"]} for m in messages]

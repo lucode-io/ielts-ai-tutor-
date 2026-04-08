@@ -121,11 +121,10 @@ with nav_container:
                 st.session_state.show_settings_panel = False
                 st.rerun()
 
-# Hide the hidden nav buttons with a unique wrapper
+# Hide the hidden nav buttons with JS (CSS :has(button[key]) doesn't work in Streamlit)
 st.markdown("""
 <style>
-/* Hide ONLY the hidden relay nav buttons, not all horizontal blocks */
-div[data-testid="stHorizontalBlock"]:has(button[key^="nav_"]) {
+.hidden-nav-row {
     position: absolute !important;
     opacity: 0 !important;
     height: 0 !important;
@@ -134,8 +133,28 @@ div[data-testid="stHorizontalBlock"]:has(button[key^="nav_"]) {
 }
 </style>
 <script>
+// Hide nav relay buttons after render
+function hideNavButtons() {
+    const buttons = document.querySelectorAll('button[kind="secondary"]');
+    buttons.forEach(btn => {
+        if (btn.textContent.trim().startsWith('nav_')) {
+            let parent = btn.closest('[data-testid="stHorizontalBlock"]');
+            if (parent) {
+                parent.style.position = 'absolute';
+                parent.style.opacity = '0';
+                parent.style.height = '0';
+                parent.style.overflow = 'hidden';
+                parent.style.pointerEvents = 'none';
+            }
+        }
+    });
+}
+// Run on load and after Streamlit rerenders
+hideNavButtons();
+const observer = new MutationObserver(hideNavButtons);
+observer.observe(document.body, {childList: true, subtree: true});
+
 window.__imNav = function(view) {
-    // Find the hidden Streamlit button and click it
     const buttons = document.querySelectorAll('button[kind="secondary"]');
     for (const btn of buttons) {
         if (btn.textContent.trim() === 'nav_' + view) {
