@@ -77,13 +77,7 @@ nav_tabs = {
     "settings": ("⚙️", "HQ"),
 }
 
-# Build nav items HTML
-nav_items_html = ""
-for view_key, (icon, label) in nav_tabs.items():
-    active_cls = "active" if current_view == view_key else ""
-    nav_items_html += f'<button class="im-nav-tab {active_cls}" onclick="window.__imNav(\'{view_key}\')">{icon} {label}</button>'
-
-# Render header + nav as a single HTML block — guaranteed to display
+# Render header
 st.markdown(f"""
 <div class="im-top-nav">
     <div class="im-top-nav-left">
@@ -105,29 +99,19 @@ st.markdown(f"""
         <span class="im-streak-badge">🔥 {streak}</span>
     </div>
 </div>
-<div class="im-nav-bar">
-    {nav_items_html}
-</div>
 """, unsafe_allow_html=True)
 
-# Navigation via HTML buttons that set query params (no hidden Streamlit buttons needed)
-st.markdown(f"""
-<script>
-window.__imNav = function(view) {{
-    const url = new URL(window.location);
-    url.searchParams.set('nav', view);
-    window.location.href = url.toString();
-}};
-</script>
-""", unsafe_allow_html=True)
-
-# Read nav from query params
-_nav_param = st.query_params.get("nav", "")
-if _nav_param and _nav_param in nav_tabs:
-    st.session_state.current_view = _nav_param
-    st.session_state.show_settings_panel = False
-    st.query_params.clear()
-    st.rerun()
+# ── REAL STREAMLIT NAV BUTTONS (styled as tab bar) ──
+nav_cols = st.columns(len(nav_tabs))
+for i, (view_key, (icon, label)) in enumerate(nav_tabs.items()):
+    with nav_cols[i]:
+        is_active = current_view == view_key
+        # Style active tab differently
+        btn_type = "primary" if is_active else "secondary"
+        if st.button(f"{icon} {label}", key=f"nav_{view_key}", use_container_width=True, type=btn_type):
+            st.session_state.current_view = view_key
+            st.session_state.show_settings_panel = False
+            st.rerun()
 
 # ── INLINE SETTINGS PANEL ──
 if st.session_state.get("show_settings_panel"):
