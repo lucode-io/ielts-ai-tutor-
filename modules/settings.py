@@ -131,7 +131,7 @@ def render_settings():
     if sub_status == "free":
         if st.button("🚀 Upgrade to Lifetime Pro — $149 one-time", key="upgrade_btn", use_container_width=True):
             st.markdown("""
-            <meta http-equiv="refresh" content="0;url=https://ieltsmaster-org.lemonsqueezy.com/checkout/buy/138f5144-e21e-4692-8631-feeee456bbbf">
+            <meta http-equiv="refresh" content="0;url=https://www.paypal.com/ncp/payment/ZVNEYQCPY5TQN">
             """, unsafe_allow_html=True)
             st.info("Redirecting to checkout... If not redirected, visit [ieltsmaster.org/pricing](https://ieltsmaster.org)")
     st.markdown('</div>', unsafe_allow_html=True)

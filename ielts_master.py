@@ -165,7 +165,7 @@ view = st.session_state.current_view
 # ── PAYWALL GATE ──────────────────────────────────────────────
 # Free users get 7 sessions. After that, block practice + listening + challenge.
 FREE_SESSION_LIMIT = 7
-CHECKOUT_URL = "https://ieltsmaster-org.lemonsqueezy.com/checkout/buy/138f5144-e21e-4692-8631-feeee456bbbf"
+CHECKOUT_URL = "https://www.paypal.com/ncp/payment/ZVNEYQCPY5TQN"
 
 def _check_paywall(user_id, profile):
     """Returns True if user is blocked by paywall. Shows upgrade wall."""
