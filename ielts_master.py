@@ -163,25 +163,38 @@ st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 view = st.session_state.current_view
 
 # ── PAYWALL GATE ──────────────────────────────────────────────
-# Free users get 7 sessions. After that, block practice + listening + challenge.
-FREE_SESSION_LIMIT = 7
-CHECKOUT_URL = "https://www.paypal.com/ncp/payment/ZVNEYQCPY5TQN"
+FREE_SESSION_LIMIT = 3  # 3 sessions per day for free users
+
+# Tier limits: sessions_per_day, calls_per_session
+TIER_LIMITS = {
+    "free":      {"sessions": 3,  "calls": 1},
+    "starter":   {"sessions": 5,  "calls": 3},
+    "pro":       {"sessions": 8,  "calls": 4},
+    "intensive": {"sessions": 10, "calls": 2},
+    "lifetime":  {"sessions": 6,  "calls": 2},
+}
+
+# PayPal payment URLs
+PAYPAL_URLS = {
+    "starter":   "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-8CU37273YY437041HNHNAQIA",
+    "pro":       "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-26J94392NK133254HNHNAOQY",
+    "intensive": "https://www.paypal.com/ncp/payment/W52FTAGH9JQLL",
+    "lifetime":  "https://www.paypal.com/ncp/payment/ZVNEYQCPY5TQN",
+}
 
 def _check_paywall(user_id, profile):
-    """Returns True if user is blocked by paywall. Shows upgrade wall."""
+    """Returns True if user is blocked by paywall. Shows 5-tier pricing wall."""
     if user_id == "demo":
         return False
-    if profile.get("subscription_status") in ("lifetime", "pro", "paid"):
+    sub = profile.get("subscription_status", "free")
+    if sub in ("lifetime", "pro", "starter", "intensive", "paid"):
         return False
 
     from utils.database import get_session_count
     count = get_session_count(user_id)
-
-    # Cache count in session_state so dashboard can show remaining
     st.session_state["_session_count"] = count
 
     if count < FREE_SESSION_LIMIT:
-        # Show soft reminder at sessions 5 and 6
         remaining = FREE_SESSION_LIMIT - count
         if remaining <= 2:
             st.markdown(f"""
@@ -192,48 +205,134 @@ def _check_paywall(user_id, profile):
                     ⚡ <strong>{remaining} free session{'s' if remaining != 1 else ''} remaining</strong>
                 </div>
                 <div style="font-size:12px;color:rgba(180,210,255,0.45)">
-                    Upgrade to Lifetime for unlimited access
+                    Upgrade for unlimited access
                 </div>
             </div>
             """, unsafe_allow_html=True)
         return False
 
-    # ── BLOCKED — show upgrade wall ──
+    # ── BLOCKED — 5-TIER PRICING WALL ──
     st.markdown(f"""
-    <div style="text-align:center;padding:48px 20px;max-width:480px;margin:0 auto">
-        <div style="font-size:56px;margin-bottom:16px">🔒</div>
+    <div style="text-align:center;padding:32px 20px 16px">
+        <div style="font-size:44px;margin-bottom:12px">🔒</div>
         <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;
-                    color:#f0f4ff;margin-bottom:10px">
-            Free sessions used up
+                    color:#f0f4ff;margin-bottom:8px">
+            Choose Your Plan
         </div>
-        <div style="font-size:14px;color:rgba(180,210,255,0.5);line-height:1.7;margin-bottom:24px">
+        <div style="font-size:14px;color:rgba(180,210,255,0.5);line-height:1.7;margin-bottom:8px">
             You've completed <strong style="color:#4A9EFF">{count} sessions</strong> — great progress!
-            Upgrade to Lifetime to continue practicing all 4 skills with your AI tutor, forever.
-        </div>
-        <div style="background:rgba(74,158,255,0.06);border:1px solid rgba(74,158,255,0.15);
-                    border-radius:16px;padding:24px;margin-bottom:24px">
-            <div style="font-size:36px;font-weight:900;color:#4A9EFF;margin-bottom:4px">$149</div>
-            <div style="font-size:13px;color:rgba(180,210,255,0.5)">One-time payment · Lifetime access · All 4 skills</div>
-            <div style="font-size:12px;color:rgba(180,210,255,0.35);margin-top:8px">
-                8 languages · 21-Day Challenge · Certificates · Score tracking
-            </div>
+            Pick a plan to continue your IELTS journey.
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="btn-primary" style="max-width:480px;margin:0 auto">', unsafe_allow_html=True)
-    if st.button("🚀 Upgrade to Lifetime — $149", key="paywall_upgrade", use_container_width=True):
-        st.markdown(f'<meta http-equiv="refresh" content="0;url={CHECKOUT_URL}">', unsafe_allow_html=True)
-        st.info("Redirecting to checkout...")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Pricing cards
+    c1, c2, c3, c4 = st.columns(4)
+
+    # Starter
+    with c1:
+        st.markdown("""
+        <div style="background:rgba(74,158,255,0.04);border:1px solid rgba(74,158,255,0.12);
+                    border-radius:16px;padding:20px 16px;text-align:center;height:100%">
+            <div style="font-size:12px;color:rgba(180,210,255,0.5);text-transform:uppercase;
+                        letter-spacing:0.06em;margin-bottom:8px">Starter</div>
+            <div style="font-size:32px;font-weight:900;color:#38BDF8">$19</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.4);margin-bottom:12px">/month</div>
+            <div style="font-size:11px;color:rgba(180,210,255,0.45);line-height:1.8;text-align:left">
+                ✓ 5 sessions/day<br>
+                ✓ 3 AI calls/session<br>
+                ✓ Speaking + Writing<br>
+                ✓ Band scoring<br>
+                ✗ Listening + Reading<br>
+                ✗ 21-Day Challenge
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Start — $19/mo", key="pw_starter", use_container_width=True):
+            st.markdown(f'<meta http-equiv="refresh" content="0;url={PAYPAL_URLS["starter"]}">', unsafe_allow_html=True)
+
+    # Pro
+    with c2:
+        st.markdown("""
+        <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);
+                    border-radius:16px;padding:20px 16px;text-align:center;height:100%">
+            <div style="font-size:12px;color:#A78BFA;text-transform:uppercase;
+                        letter-spacing:0.06em;margin-bottom:8px">Pro</div>
+            <div style="font-size:32px;font-weight:900;color:#A78BFA">$29</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.4);margin-bottom:12px">/month</div>
+            <div style="font-size:11px;color:rgba(180,210,255,0.45);line-height:1.8;text-align:left">
+                ✓ 8 sessions/day<br>
+                ✓ 4 AI calls/session<br>
+                ✓ All 4 IELTS skills<br>
+                ✓ 3-color annotation<br>
+                ✓ Fluency gap analysis<br>
+                ✓ 21-Day Challenge
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Go Pro — $29/mo", key="pw_pro", use_container_width=True):
+            st.markdown(f'<meta http-equiv="refresh" content="0;url={PAYPAL_URLS["pro"]}">', unsafe_allow_html=True)
+
+    # Intensive
+    with c3:
+        st.markdown("""
+        <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);
+                    border-radius:16px;padding:20px 16px;text-align:center;height:100%">
+            <div style="font-size:12px;color:#34D399;text-transform:uppercase;
+                        letter-spacing:0.06em;margin-bottom:8px">Intensive</div>
+            <div style="font-size:32px;font-weight:900;color:#34D399">$79</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.4);margin-bottom:12px">one-time · 60 days</div>
+            <div style="font-size:11px;color:rgba(180,210,255,0.45);line-height:1.8;text-align:left">
+                ✓ 10 sessions/day<br>
+                ✓ 2 AI calls/session<br>
+                ✓ All 4 IELTS skills<br>
+                ✓ 3-color annotation<br>
+                ✓ Fluency gap analysis<br>
+                ✓ 21-Day Challenge
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Intensive — $79", key="pw_intensive", use_container_width=True):
+            st.markdown(f'<meta http-equiv="refresh" content="0;url={PAYPAL_URLS["intensive"]}">', unsafe_allow_html=True)
+
+    # Lifetime (highlighted)
+    with c4:
+        st.markdown("""
+        <div style="background:rgba(240,192,64,0.06);border:2px solid rgba(240,192,64,0.3);
+                    border-radius:16px;padding:20px 16px;text-align:center;height:100%;position:relative">
+            <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+                        background:linear-gradient(135deg,#F0C040,#e6a817);color:#01010a;
+                        font-size:10px;font-weight:800;padding:3px 12px;border-radius:20px;
+                        letter-spacing:0.06em;text-transform:uppercase">Best Value</div>
+            <div style="font-size:12px;color:#F0C040;text-transform:uppercase;
+                        letter-spacing:0.06em;margin-bottom:8px;margin-top:4px">Lifetime</div>
+            <div style="font-size:32px;font-weight:900;color:#F0C040">$199</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.4);margin-bottom:4px">one-time · forever</div>
+            <div style="font-size:11px;color:rgba(240,192,64,0.6);margin-bottom:12px">
+                <s style="color:rgba(180,210,255,0.3)">$348/yr</s> save 43%
+            </div>
+            <div style="font-size:11px;color:rgba(180,210,255,0.45);line-height:1.8;text-align:left">
+                ✓ 6 sessions/day<br>
+                ✓ 2 AI calls/session<br>
+                ✓ All 4 IELTS skills<br>
+                ✓ All future updates<br>
+                ✓ Priority support<br>
+                ✓ Gold certificate
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
+        if st.button("🏆 Lifetime — $199", key="pw_lifetime", use_container_width=True):
+            st.markdown(f'<meta http-equiv="refresh" content="0;url={PAYPAL_URLS["lifetime"]}">', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-    col1, col2, _ = st.columns([1, 1, 2])
-    with col1:
+    rpt_col, set_col, _ = st.columns([1, 1, 2])
+    with rpt_col:
         if st.button("📊 View my reports", key="paywall_reports"):
             st.session_state.current_view = "reports"
             st.rerun()
-    with col2:
+    with set_col:
         if st.button("⚙️ Settings", key="paywall_settings"):
             st.session_state.current_view = "settings"
             st.rerun()
