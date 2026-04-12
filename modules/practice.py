@@ -140,14 +140,14 @@ def render_annotation(text):
 
     # Try multiple patterns — Claude outputs annotations inconsistently
     patterns = [
-        # Pattern 1: 🔴 [RED — Band Killer]: "quote" → correction
-        r'(🔴|🔵|🟢)\s*(?:\[?(?:RED|BLUE|GREEN)[^\]]*\]?[:\s—–-]*)(.*?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
-        # Pattern 2: 🔴 Band Killer: content
-        r'(🔴|🔵|🟢)\s*(?:Band Killer|Band 8 Upgrade|Strategic Success)[:\s—–-]*(.*?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
-        # Pattern 3: 🔴 any content after emoji
-        r'(🔴|🔵|🟢)\s*(.*?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
-        # Pattern 4: **RED** or **BLUE** or **GREEN** (no emoji)
-        r'\*\*(RED|BLUE|GREEN)[^*]*\*\*[:\s—–-]*(.*?)(?=(?:\n\s*\*\*(?:RED|BLUE|GREEN))|$)',
+        # Pattern 1: emoji + [RED/BLUE/GREEN ...]: content
+        r'(\U0001f534|\U0001f535|\U0001f7e2)\s*(?:\[?(?:RED|BLUE|GREEN)[^\]]*\]?[:\s\u2014\u2013-]*)(.*?)(?=(?:\n\s*(?:\U0001f534|\U0001f535|\U0001f7e2))|$)',
+        # Pattern 2: emoji + Band Killer/Upgrade/Success: content
+        r'(\U0001f534|\U0001f535|\U0001f7e2)\s*(?:Band Killer|Band 8 Upgrade|Strategic Success)[:\s\u2014\u2013-]*(.*?)(?=(?:\n\s*(?:\U0001f534|\U0001f535|\U0001f7e2))|$)',
+        # Pattern 3: emoji + any content
+        r'(\U0001f534|\U0001f535|\U0001f7e2)\s*(.*?)(?=(?:\n\s*(?:\U0001f534|\U0001f535|\U0001f7e2))|$)',
+        # Pattern 4: **RED/BLUE/GREEN**: content (no emoji)
+        r'\*\*(RED|BLUE|GREEN)[^*]*\*\*[:\s\u2014\u2013-]*(.*?)(?=(?:\n\s*\*\*(?:RED|BLUE|GREEN))|$)',
     ]
 
     matches = []
@@ -167,9 +167,9 @@ def render_annotation(text):
         st.markdown(pre_text)
 
     color_map = {
-        '🔴': {'bg': 'rgba(231,76,60,0.18)', 'border': '#E74C3C'},
-        '🔵': {'bg': 'rgba(56,189,248,0.18)', 'border': '#38BDF8'},
-        '🟢': {'bg': 'rgba(46,204,113,0.18)', 'border': '#2ECC71'},
+        '\U0001f534': {'bg': 'rgba(231,76,60,0.18)', 'border': '#E74C3C'},
+        '\U0001f535': {'bg': 'rgba(56,189,248,0.18)', 'border': '#38BDF8'},
+        '\U0001f7e2': {'bg': 'rgba(46,204,113,0.18)', 'border': '#2ECC71'},
         'RED': {'bg': 'rgba(231,76,60,0.18)', 'border': '#E74C3C'},
         'BLUE': {'bg': 'rgba(56,189,248,0.18)', 'border': '#38BDF8'},
         'GREEN': {'bg': 'rgba(46,204,113,0.18)', 'border': '#2ECC71'},
@@ -183,21 +183,23 @@ def render_annotation(text):
         content = match.group(2).strip()
         if not content:
             continue
-        c = color_map.get(key, color_map['🔴'])
+        c = color_map.get(key, color_map['\U0001f534'])
 
-        # Try to extract quoted text
-        quote_match = re.search(r'["""\'](.+?)["""\']', content)
+        # Try to extract quoted text (ASCII-safe regex)
+        quote_match = re.search(r'"(.+?)"', content)
+        if not quote_match:
+            quote_match = re.search(r"'(.+?)'", content)
         if quote_match:
             quoted = quote_match.group(1)
             rest = content[quote_match.end():].strip()
-            rest = re.sub(r'^[→►\-—–:\s]+', '', rest)
+            rest = re.sub(r'^[\u2192\u25ba\-\u2014\u2013:\s]+', '', rest)
             html += f'<div style="margin-bottom:14px"><span style="background:{c["bg"]};border-bottom:2px solid {c["border"]};padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;line-height:2;display:inline">{quoted}</span>'
             if rest:
                 html += f'<div style="font-size:12px;color:rgba(180,210,255,0.6);margin-top:4px;padding-left:4px">{rest}</div>'
             html += '</div>'
         else:
             # No quotes — show first sentence as highlight, rest as explanation
-            parts = re.split(r'[→►—–]', content, maxsplit=1)
+            parts = re.split(r'[\u2192\u25ba\u2014\u2013]', content, maxsplit=1)
             highlight = parts[0].strip()[:150]
             explanation = parts[1].strip() if len(parts) > 1 else ""
             html += f'<div style="margin-bottom:14px"><span style="background:{c["bg"]};border-bottom:2px solid {c["border"]};padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;line-height:2;display:inline">{highlight}</span>'
@@ -222,7 +224,6 @@ def render_practice():
     tutor_name = profile.get("tutor_name", "Alex")
     user_id = st.session_state.get("user_id", "demo")
 
-<<<<<<< HEAD
     # ── TIER LIMITS ──
     TIER_LIMITS = {
         "free":      {"sessions": 3,  "calls": 1,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
@@ -269,72 +270,25 @@ def render_practice():
             index=available_modes.index(st.session_state.get("practice_mode", available_modes[0]))
                   if st.session_state.get("practice_mode") in available_modes else 0,
             label_visibility="collapsed", key="practice_mode_select")
-=======
-   # ── CONTROLS ROW ──
-    ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4, ctrl_col5 = st.columns([3, 2, 1, 1, 1])
-
-    with ctrl_col1:
-        mode = st.selectbox(
-            "Mode", MODES,
-            index=MODES.index(st.session_state.get("practice_mode", MODES[0]))
-                  if st.session_state.get("practice_mode") in MODES else 0,
-            label_visibility="collapsed", key="practice_mode_select"
-        )
->>>>>>> d018c8333efac213ed6b8100642dd02d1c321965
         st.session_state.practice_mode = mode
         if "Listening" in mode:
             st.session_state.practice_mode = available_modes[0]
             st.session_state.current_view = "listening"
             st.rerun()
-
     with ctrl_col2:
-        topic = st.selectbox("Topic", TOPICS,
-                             label_visibility="collapsed", key="practice_topic")
-
+        topic = st.selectbox("Topic", TOPICS, label_visibility="collapsed", key="practice_topic")
     with ctrl_col3:
-        target_band = st.selectbox(
-            "Band",
-            options=[5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0],
-            index=[5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0].index(
-                float(profile.get("target_band", 7.0))
-            ),
-            label_visibility="collapsed", key="practice_band"
-        )
-
+        target_band = st.selectbox("Band", [5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0],
+            index=[5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0].index(float(profile.get("target_band",7.0))),
+            label_visibility="collapsed", key="practice_band")
     with ctrl_col4:
-        # Feedback mode toggle — visible label so user knows what it does
-        is_detailed = profile.get("feedback_mode", "detailed") == "detailed"
-        label = "🎯 Detailed" if is_detailed else "📝 Simple"
-        if st.button(label, use_container_width=True, key="toggle_feedback_mode",
-                     help="Detailed = 3-color annotation + fluency gap. Simple = clean scores only."):
-            st.session_state.profile["feedback_mode"] = "simple" if is_detailed else "detailed"
-            st.rerun()
-
-    with ctrl_col5:
         if st.button("🗑️ Clear", use_container_width=True, key="clear_chat"):
+            for key in list(st.session_state.keys()):
+                if key.startswith("practice_timer_"):
+                    del st.session_state[key]
             st.session_state.practice_messages = []
             st.session_state.current_session_id = None
             st.rerun()
-
-    # ── MODE + FEEDBACK STATUS PILLS ──
-    mode_color = (
-        "#A78BFA" if "Speaking" in mode else "#38BDF8" if "Writing" in mode else
-        "#FCD34D" if "Listening" in mode else "#34D399" if "Reading" in mode else
-        "#F472B6" if "Vocabulary" in mode else "rgba(255,255,255,0.4)"
-    )
-    is_detailed = profile.get("feedback_mode", "detailed") == "detailed"
-    feedback_pill_color = "#4A9EFF" if is_detailed else "rgba(255,255,255,0.3)"
-    feedback_pill_label = "🎯 Detailed feedback ON" if is_detailed else "📝 Simple feedback"
-
-    st.markdown(f"""
-    <div style="margin:8px 0 14px">
-        <span class="pill pill-gold">{mode.split("-")[0].strip()}</span>
-        <span class="pill" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)">{topic}</span>
-        <span class="pill pill-green">Band {target_band}</span>
-        <span class="pill" style="background:{feedback_pill_color}18;color:{feedback_pill_color};border:1px solid {feedback_pill_color}44">{feedback_pill_label}</span>
-        <span style="float:right;font-size:11px;font-weight:600;color:{mode_color};background:{mode_color}18;padding:4px 10px;border-radius:20px;border:1px solid {mode_color}44">{mode}</span>
-    </div>
-    """, unsafe_allow_html=True)
 
     # ── TIMER ──
     _render_practice_timer(mode)
