@@ -132,17 +132,17 @@ def render_settings():
         sc1, sc2 = st.columns(2)
         with sc1:
             if st.button("🏆 Lifetime — $199 one-time", key="upgrade_lifetime", use_container_width=True):
-                st.markdown('<meta http-equiv="refresh" content="0;url=https://www.paypal.com/ncp/payment/ZVNEYQCPY5TQN">', unsafe_allow_html=True)
+                st.markdown('<meta http-equiv="refresh" content="0;url=https://mlogshir.gumroad.com/l/Lifetime">', unsafe_allow_html=True)
         with sc2:
             if st.button("🎯 Pro — $29/month", key="upgrade_pro", use_container_width=True):
-                st.markdown('<meta http-equiv="refresh" content="0;url=https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-26J94392NK133254HNHNAOQY">', unsafe_allow_html=True)
+                st.markdown('<meta http-equiv="refresh" content="0;url=https://mlogshir.gumroad.com/l/Pro">', unsafe_allow_html=True)
         sc3, sc4 = st.columns(2)
         with sc3:
-            if st.button("⚡ Intensive — $79 (30 days)", key="upgrade_intensive", use_container_width=True):
-                st.markdown('<meta http-equiv="refresh" content="0;url=https://www.paypal.com/ncp/payment/W52FTAGH9JQLL">', unsafe_allow_html=True)
+            if st.button("⚡ Intensive — $79 (60 days)", key="upgrade_intensive", use_container_width=True):
+                st.markdown('<meta http-equiv="refresh" content="0;url=https://mlogshir.gumroad.com/l/Intensive">', unsafe_allow_html=True)
         with sc4:
             if st.button("📚 Starter — $19/month", key="upgrade_starter", use_container_width=True):
-                st.markdown('<meta http-equiv="refresh" content="0;url=https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-8CU37273YY437041HNHNAQIA">', unsafe_allow_html=True)
+                st.markdown('<meta http-equiv="refresh" content="0;url=https://mlogshir.gumroad.com/l/Starter">', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ── SIGN OUT ──

@@ -174,12 +174,12 @@ TIER_LIMITS = {
     "lifetime":  {"sessions": 6,  "calls": 2},
 }
 
-# PayPal payment URLs
+# PayPal/Gumroad payment URLs
 PAYPAL_URLS = {
-    "starter":   "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-8CU37273YY437041HNHNAQIA",
-    "pro":       "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-26J94392NK133254HNHNAOQY",
-    "intensive": "https://www.paypal.com/ncp/payment/W52FTAGH9JQLL",
-    "lifetime":  "https://www.paypal.com/ncp/payment/ZVNEYQCPY5TQN",
+    "starter":   "https://mlogshir.gumroad.com/l/Starter",
+    "pro":       "https://mlogshir.gumroad.com/l/Pro",
+    "intensive": "https://mlogshir.gumroad.com/l/Intensive",
+    "lifetime":  "https://mlogshir.gumroad.com/l/Lifetime",
 }
 
 def _check_paywall(user_id, profile):
