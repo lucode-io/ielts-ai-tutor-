@@ -129,20 +129,14 @@ def render_settings():
     """, unsafe_allow_html=True)
 
     if sub_status == "free":
-        sc1, sc2 = st.columns(2)
-        with sc1:
-            if st.button("🏆 Lifetime — $199 one-time", key="upgrade_lifetime", use_container_width=True):
-                st.markdown('<meta http-equiv="refresh" content="0;url=https://mlogshir.gumroad.com/l/Lifetime">', unsafe_allow_html=True)
-        with sc2:
-            if st.button("🎯 Pro — $29/month", key="upgrade_pro", use_container_width=True):
-                st.markdown('<meta http-equiv="refresh" content="0;url=https://mlogshir.gumroad.com/l/Pro">', unsafe_allow_html=True)
-        sc3, sc4 = st.columns(2)
-        with sc3:
-            if st.button("⚡ Intensive — $79 (60 days)", key="upgrade_intensive", use_container_width=True):
-                st.markdown('<meta http-equiv="refresh" content="0;url=https://mlogshir.gumroad.com/l/Intensive">', unsafe_allow_html=True)
-        with sc4:
-            if st.button("📚 Starter — $19/month", key="upgrade_starter", use_container_width=True):
-                st.markdown('<meta http-equiv="refresh" content="0;url=https://mlogshir.gumroad.com/l/Starter">', unsafe_allow_html=True)
+        st.markdown("""
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+            <a href="https://mlogshir.gumroad.com/l/Lifetime" target="_blank" style="display:block;text-align:center;padding:12px;background:linear-gradient(135deg,#F0C040,#e6a817);border-radius:9px;color:#01010a;font-weight:800;font-size:13px;text-decoration:none">🏆 Lifetime — $199</a>
+            <a href="https://mlogshir.gumroad.com/l/Pro" target="_blank" style="display:block;text-align:center;padding:12px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:9px;color:#A78BFA;font-weight:700;font-size:13px;text-decoration:none">🎯 Pro — $29/mo</a>
+            <a href="https://mlogshir.gumroad.com/l/Intensive" target="_blank" style="display:block;text-align:center;padding:12px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:9px;color:#34D399;font-weight:700;font-size:13px;text-decoration:none">⚡ Intensive — $79</a>
+            <a href="https://mlogshir.gumroad.com/l/Starter" target="_blank" style="display:block;text-align:center;padding:12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:9px;color:#38BDF8;font-weight:700;font-size:13px;text-decoration:none">📚 Starter — $19/mo</a>
+        </div>
+        """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ── SIGN OUT ──

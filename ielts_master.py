@@ -248,7 +248,7 @@ def _check_paywall(user_id, profile):
             </div>
         </div>
         """, unsafe_allow_html=True)
-        st.link_button("Start — $19/mo", PAYPAL_URLS["starter"], use_container_width=True)
+        st.markdown(f'<a href="{PAYPAL_URLS["starter"]}" target="_blank" style="display:block;text-align:center;padding:10px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:9px;color:#38BDF8;font-weight:700;font-size:13px;text-decoration:none">Start — $19/mo</a>', unsafe_allow_html=True)
 
     # Pro
     with c2:
@@ -269,7 +269,7 @@ def _check_paywall(user_id, profile):
             </div>
         </div>
         """, unsafe_allow_html=True)
-        st.link_button("Go Pro — $29/mo", PAYPAL_URLS["pro"], use_container_width=True)
+        st.markdown(f'<a href="{PAYPAL_URLS["pro"]}" target="_blank" style="display:block;text-align:center;padding:10px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:9px;color:#A78BFA;font-weight:700;font-size:13px;text-decoration:none">Go Pro — $29/mo</a>', unsafe_allow_html=True)
 
     # Intensive
     with c3:
@@ -290,7 +290,7 @@ def _check_paywall(user_id, profile):
             </div>
         </div>
         """, unsafe_allow_html=True)
-        st.link_button("Intensive — $79", PAYPAL_URLS["intensive"], use_container_width=True)
+        st.markdown(f'<a href="{PAYPAL_URLS["intensive"]}" target="_blank" style="display:block;text-align:center;padding:10px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:9px;color:#34D399;font-weight:700;font-size:13px;text-decoration:none">Intensive — $79</a>', unsafe_allow_html=True)
 
     # Lifetime (highlighted)
     with c4:
@@ -319,7 +319,7 @@ def _check_paywall(user_id, profile):
         </div>
         """, unsafe_allow_html=True)
         st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-        st.link_button("🏆 Lifetime — $199", PAYPAL_URLS["lifetime"], use_container_width=True)
+        st.markdown(f'<a href="{PAYPAL_URLS["lifetime"]}" target="_blank" style="display:block;text-align:center;padding:12px;background:linear-gradient(135deg,#F0C040,#e6a817);border:none;border-radius:9px;color:#01010a;font-weight:800;font-size:14px;text-decoration:none">🏆 Lifetime — $199</a>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
