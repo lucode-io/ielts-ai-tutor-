@@ -362,6 +362,41 @@ elif view == "listening":
         from modules.practice_listening import render_listening_practice
         render_listening_practice()
 
+elif view == "privacy":
+    st.markdown("""
+    <div style="max-width:700px;margin:0 auto;padding:20px">
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#f0f4ff;margin-bottom:20px">Privacy Policy & Terms of Service</div>
+        <div style="font-size:14px;color:rgba(180,210,255,0.7);line-height:1.8">
+            <p><strong style="color:#4A9EFF">IELTS Master</strong> — ieltsmaster.org</p>
+            <p><strong>Last updated:</strong> April 12, 2026</p>
+            <br>
+            <p><strong style="color:#f0f4ff">1. What we collect</strong></p>
+            <p>Email address, name, practice session data (essays, speaking responses, band scores), and payment information processed by Gumroad/PayPal.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">2. How we use it</strong></p>
+            <p>Your data powers AI-driven IELTS feedback, tracks your progress, and manages your subscription. We never sell your data to third parties.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">3. AI processing</strong></p>
+            <p>Your essays and speaking responses are sent to Anthropic's Claude API for scoring and feedback. Anthropic does not store or train on your data.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">4. Payments</strong></p>
+            <p>Payments are processed by Gumroad and PayPal. We do not store credit card numbers. All transactions are in USD.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">5. Data retention</strong></p>
+            <p>Your account data is retained as long as your account is active. You may request deletion by emailing mlogshir@gmail.com.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">6. Refund policy</strong></p>
+            <p>30-day money-back guarantee on all plans. Email mlogshir@gmail.com with your receipt for a full refund.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">7. Terms of service</strong></p>
+            <p>By using IELTS Master, you agree to use the platform for personal IELTS preparation only. Sharing accounts, reselling access, or using the platform for automated scraping is prohibited.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">8. Contact</strong></p>
+            <p>Email: mlogshir@gmail.com | Website: ieltsmaster.org</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 else:
     st.error(f"Unknown view: {view}")
     st.session_state.current_view = "dashboard"

@@ -137,10 +137,26 @@ def get_system_prompt(mode, profile):
 
 def render_annotation(text):
     import re
-    annotation_pattern = r'(🔴|🔵|🟢)\s*(?:\[?(?:RED|BLUE|GREEN)[^\]]*\]?[:\s—–-]*|(?:Band Killer|Band 8 Upgrade|Strategic Success)[:\s—–-]*)(.+?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)'
-    matches = list(re.finditer(annotation_pattern, text, flags=re.DOTALL))
 
-    if not matches:
+    # Try multiple patterns — Claude outputs annotations inconsistently
+    patterns = [
+        # Pattern 1: 🔴 [RED — Band Killer]: "quote" → correction
+        r'(🔴|🔵|🟢)\s*(?:\[?(?:RED|BLUE|GREEN)[^\]]*\]?[:\s—–-]*)(.*?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
+        # Pattern 2: 🔴 Band Killer: content
+        r'(🔴|🔵|🟢)\s*(?:Band Killer|Band 8 Upgrade|Strategic Success)[:\s—–-]*(.*?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
+        # Pattern 3: 🔴 any content after emoji
+        r'(🔴|🔵|🟢)\s*(.*?)(?=(?:\n\s*(?:🔴|🔵|🟢))|$)',
+        # Pattern 4: **RED** or **BLUE** or **GREEN** (no emoji)
+        r'\*\*(RED|BLUE|GREEN)[^*]*\*\*[:\s—–-]*(.*?)(?=(?:\n\s*\*\*(?:RED|BLUE|GREEN))|$)',
+    ]
+
+    matches = []
+    for pattern in patterns:
+        matches = list(re.finditer(pattern, text, flags=re.DOTALL))
+        if matches and any(m.group(2).strip() for m in matches):
+            break
+
+    if not matches or not any(m.group(2).strip() for m in matches):
         st.markdown(text)
         return
 
@@ -154,20 +170,40 @@ def render_annotation(text):
         '🔴': {'bg': 'rgba(231,76,60,0.18)', 'border': '#E74C3C'},
         '🔵': {'bg': 'rgba(56,189,248,0.18)', 'border': '#38BDF8'},
         '🟢': {'bg': 'rgba(46,204,113,0.18)', 'border': '#2ECC71'},
+        'RED': {'bg': 'rgba(231,76,60,0.18)', 'border': '#E74C3C'},
+        'BLUE': {'bg': 'rgba(56,189,248,0.18)', 'border': '#38BDF8'},
+        'GREEN': {'bg': 'rgba(46,204,113,0.18)', 'border': '#2ECC71'},
     }
 
     html = '<div style="background:rgba(255,255,255,0.03);border-radius:14px;padding:20px;margin:16px 0;border:1px solid rgba(74,158,255,0.08)">'
+    html += '<div style="font-size:12px;font-weight:700;color:#4A9EFF;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px">3-COLOR ANNOTATION</div>'
+
     for match in matches:
-        emoji = match.group(1)
+        key = match.group(1)
         content = match.group(2).strip()
-        c = color_map.get(emoji, color_map['🔴'])
-        quote_match = re.search(r'["""](.+?)["""]', content)
+        if not content:
+            continue
+        c = color_map.get(key, color_map['🔴'])
+
+        # Try to extract quoted text
+        quote_match = re.search(r'["""\'](.+?)["""\']', content)
         if quote_match:
             quoted = quote_match.group(1)
-            rest = re.sub(r'^[→►\-—–:\s]+', '', content[quote_match.end():].strip())
-            html += f'<div style="margin-bottom:12px"><span style="background:{c["bg"]};border-bottom:2px solid {c["border"]};padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;line-height:2;display:inline">{quoted}</span><div style="font-size:12px;color:rgba(180,210,255,0.6);margin-top:4px;padding-left:4px">{rest}</div></div>'
+            rest = content[quote_match.end():].strip()
+            rest = re.sub(r'^[→►\-—–:\s]+', '', rest)
+            html += f'<div style="margin-bottom:14px"><span style="background:{c["bg"]};border-bottom:2px solid {c["border"]};padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;line-height:2;display:inline">{quoted}</span>'
+            if rest:
+                html += f'<div style="font-size:12px;color:rgba(180,210,255,0.6);margin-top:4px;padding-left:4px">{rest}</div>'
+            html += '</div>'
         else:
-            html += f'<div style="margin-bottom:12px"><span style="background:{c["bg"]};border-bottom:2px solid {c["border"]};padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;line-height:2;display:inline">{content[:120]}</span></div>'
+            # No quotes — show first sentence as highlight, rest as explanation
+            parts = re.split(r'[→►—–]', content, maxsplit=1)
+            highlight = parts[0].strip()[:150]
+            explanation = parts[1].strip() if len(parts) > 1 else ""
+            html += f'<div style="margin-bottom:14px"><span style="background:{c["bg"]};border-bottom:2px solid {c["border"]};padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;line-height:2;display:inline">{highlight}</span>'
+            if explanation:
+                html += f'<div style="font-size:12px;color:rgba(180,210,255,0.6);margin-top:4px;padding-left:4px">{explanation}</div>'
+            html += '</div>'
 
     html += '''<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:12px;border-top:1px solid rgba(74,158,255,0.08)">
         <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(180,210,255,0.5)"><span style="width:8px;height:8px;border-radius:2px;background:#E74C3C;display:inline-block"></span>Band Killer</span>
@@ -186,16 +222,55 @@ def render_practice():
     tutor_name = profile.get("tutor_name", "Alex")
     user_id = st.session_state.get("user_id", "demo")
 
+    # ── TIER LIMITS ──
+    TIER_LIMITS = {
+        "free":      {"sessions": 3,  "calls": 1,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
+        "starter":   {"sessions": 5,  "calls": 3,  "skills": ["Speaking", "Writing", "Vocabulary"]},
+        "pro":       {"sessions": 8,  "calls": 4,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
+        "intensive": {"sessions": 10, "calls": 2,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
+        "lifetime":  {"sessions": 6,  "calls": 2,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
+    }
+    tier = profile.get("subscription_status", "free")
+    limits = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
+
+    # Check daily session limit
+    if user_id != "demo":
+        from utils.database import get_daily_session_count
+        daily_sessions = get_daily_session_count(user_id)
+        if daily_sessions >= limits["sessions"]:
+            st.markdown(f"""
+            <div style="text-align:center;padding:40px 20px">
+                <div style="font-size:40px;margin-bottom:12px">⏰</div>
+                <div style="font-size:18px;font-weight:700;color:#f0f4ff;margin-bottom:8px">Daily session limit reached</div>
+                <div style="font-size:14px;color:rgba(180,210,255,0.5)">
+                    Your <strong style="color:#4A9EFF">{tier.title()}</strong> plan allows {limits["sessions"]} sessions/day.
+                    You've used {daily_sessions} today. Come back tomorrow or upgrade for more.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            return
+
+    # Track calls per session
+    call_key = "session_call_count"
+    if call_key not in st.session_state:
+        st.session_state[call_key] = 0
+
     # ── CONTROLS ──
+    # Filter modes based on tier
+    allowed_skills = limits["skills"]
+    available_modes = [m for m in MODES if any(s in m for s in allowed_skills)]
+    if not available_modes:
+        available_modes = MODES[:2]  # fallback to Speaking + Writing
+
     ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns([3, 2, 1, 1])
     with ctrl_col1:
-        mode = st.selectbox("Mode", MODES,
-            index=MODES.index(st.session_state.get("practice_mode", MODES[0]))
-                  if st.session_state.get("practice_mode") in MODES else 0,
+        mode = st.selectbox("Mode", available_modes,
+            index=available_modes.index(st.session_state.get("practice_mode", available_modes[0]))
+                  if st.session_state.get("practice_mode") in available_modes else 0,
             label_visibility="collapsed", key="practice_mode_select")
         st.session_state.practice_mode = mode
         if "Listening" in mode:
-            st.session_state.practice_mode = MODES[0]
+            st.session_state.practice_mode = available_modes[0]
             st.session_state.current_view = "listening"
             st.rerun()
     with ctrl_col2:
@@ -319,6 +394,13 @@ def _send_message(text, mode, topic, target_band, profile, user_id):
     if "practice_messages" not in st.session_state:
         st.session_state.practice_messages = []
 
+    # ── CALL LIMIT CHECK ──
+    if user_id != "demo":
+        current_calls = st.session_state.get(call_key, 0)
+        if current_calls >= limits["calls"]:
+            st.warning(f"You've reached your {limits['calls']} AI call limit for this session. Start a new session or upgrade your plan.")
+            return
+
     if not st.session_state.get("current_session_id") and user_id != "demo":
         session_id = create_session(user_id, mode, topic, target_band)
         st.session_state.current_session_id = session_id
@@ -331,6 +413,9 @@ def _send_message(text, mode, topic, target_band, profile, user_id):
 
     with st.chat_message("user"):
         st.markdown(text)
+
+    # Increment call count
+    st.session_state[call_key] = st.session_state.get(call_key, 0) + 1
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):

@@ -143,11 +143,46 @@ def get_session_count(user_id: str) -> int:
 
 
 def is_user_paid(user_id: str) -> bool:
-    """Check if user has lifetime subscription."""
+    """Check if user has any paid subscription."""
     profile = get_user_profile(user_id)
     if not profile:
         return False
-    return profile.get("subscription_status") in ("lifetime", "pro", "paid")
+    return profile.get("subscription_status") in ("lifetime", "pro", "starter", "intensive", "paid")
+
+
+def get_user_tier(user_id: str) -> str:
+    """Return user's subscription tier."""
+    profile = get_user_profile(user_id)
+    if not profile:
+        return "free"
+    return profile.get("subscription_status", "free")
+
+
+def get_daily_session_count(user_id: str) -> int:
+    """Count sessions created today for this user."""
+    supabase = get_supabase_client()
+    try:
+        today = date.today().isoformat()
+        res = supabase.table("sessions")\
+            .select("id", count="exact")\
+            .eq("user_id", user_id)\
+            .gte("created_at", today + "T00:00:00")\
+            .execute()
+        return res.count if res.count is not None else len(res.data or [])
+    except Exception:
+        return 0
+
+
+def get_daily_tts_count(user_id: str) -> int:
+    """Count TTS calls today. Stored in session_state, persisted per day."""
+    key = f"tts_count_{date.today().isoformat()}"
+    return st.session_state.get(key, 0)
+
+
+def increment_tts_count(user_id: str):
+    """Increment daily TTS counter."""
+    key = f"tts_count_{date.today().isoformat()}"
+    st.session_state[key] = st.session_state.get(key, 0) + 1
 
 
 # ── BAND SCORES ──

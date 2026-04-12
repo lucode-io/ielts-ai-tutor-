@@ -16,6 +16,17 @@ def generate_audio(text: str, voice_id: str = None) -> Optional[str]:
     Retries once on 429. Falls back to gTTS silently.
     Returns base64 MP3 string or None.
     """
+    # ── TTS DAILY CAP ──
+    TTS_LIMITS = {"free": 5, "starter": 10, "pro": 30, "intensive": 30, "lifetime": 50}
+    tier = st.session_state.get("profile", {}).get("subscription_status", "free")
+    max_tts = TTS_LIMITS.get(tier, 5)
+    from datetime import date
+    tts_key = f"tts_count_{date.today().isoformat()}"
+    current_tts = st.session_state.get(tts_key, 0)
+    if current_tts >= max_tts:
+        return _fallback_tts(text)  # Use free gTTS when limit hit
+    st.session_state[tts_key] = current_tts + 1
+
     try:
         api_key = st.secrets.get("ELEVENLABS_API_KEY", "")
         if not voice_id:
