@@ -72,73 +72,53 @@ def inject_global_css(accent: str = "#4A9EFF"):
     .stButton>button:hover{{background:rgba(74,158,255,0.1)!important;color:#fff!important;border-color:rgba(74,158,255,0.35)!important;transform:translateY(-1px)!important;box-shadow:0 0 20px rgba(74,158,255,0.15)!important}}
     .btn-primary .stButton>button{{background:linear-gradient(135deg,{accent},#1a5fd4)!important;color:#fff!important;border:none!important;font-weight:700!important;box-shadow:0 0 30px rgba(74,158,255,0.25),inset 0 1px 0 rgba(255,255,255,0.1)!important}}
     .btn-primary .stButton>button:hover{{transform:translateY(-2px)!important;box-shadow:0 0 50px rgba(74,158,255,0.45),inset 0 1px 0 rgba(255,255,255,0.1)!important}}
-    button[kind="secondary"]{{background:transparent!important;color:#ff3a4a!important;border:1px solid rgba(255,58,74,0.25)!important;border-radius:9px!important}}
+    button[kind="secondary"]{{background:transparent!important;color:{accent}!important;border:1px solid rgba(74,158,255,0.25)!important;border-radius:9px!important}}
 
-    /* ── CHAT MESSAGES — ChatGPT/Claude style ── */
-    [data-testid="stChatMessage"]{{
-        background:transparent!important;border:none!important;
-        padding:6px 0!important;margin-bottom:4px!important;
-        gap:12px!important
-    }}
-
-    /* ── ASSISTANT BUBBLE — left aligned ── */
-    [data-testid="stChatMessage"][data-author="assistant"]{{
-        flex-direction:row!important;justify-content:flex-start!important
-    }}
-    [data-testid="stChatMessage"][data-author="assistant"]>div:first-child{{
-        /* Avatar container */
-        width:34px!important;height:34px!important;min-width:34px!important;
-        border-radius:50%!important;
-        background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(26,95,212,0.3))!important;
-        border:1.5px solid rgba(74,158,255,0.35)!important;
-        display:flex!important;align-items:center!important;justify-content:center!important;
-        flex-shrink:0!important;margin-top:4px!important;
-        box-shadow:0 0 12px rgba(74,158,255,0.15)!important
-    }}
-    [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{
-        background:rgba(74,158,255,0.04)!important;
-        border-radius:4px 18px 18px 18px!important;
-        border:1px solid rgba(74,158,255,0.1)!important;
-        padding:18px 22px!important;max-width:88%!important;
-        position:relative!important
-    }}
-
-    /* ── USER BUBBLE — right aligned ── */
-    [data-testid="stChatMessage"][data-author="user"]{{
-        flex-direction:row-reverse!important;justify-content:flex-start!important
-    }}
-    [data-testid="stChatMessage"][data-author="user"]>div:first-child{{
-        /* Hide user avatar */
-        display:none!important
-    }}
-    [data-testid="stChatMessage"][data-author="user"]>div:last-child{{
-        background:rgba(74,158,255,0.12)!important;
-        border-radius:18px 4px 18px 18px!important;
-        border:1px solid rgba(74,158,255,0.22)!important;
-        padding:14px 18px!important;color:#f0f4ff!important;
-        margin-left:auto!important;max-width:75%!important
-    }}
-
-    /* ── CHAT TEXT STYLING ── */
+    /* ── CHAT MESSAGES — ChatGPT-style separated layout ── */
+    [data-testid="stChatMessage"]{{background:transparent!important;border:none!important;padding:0!important;margin:0 0 20px 0!important}}
+    [data-testid="stChatMessage"][data-author="user"]>div:last-child{{background:rgba(74,158,255,0.08)!important;border-radius:18px 18px 4px 18px!important;border:1px solid rgba(74,158,255,0.18)!important;padding:14px 18px!important;margin-left:20%!important;max-width:80%!important;float:right!important}}
+    [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{background:rgba(255,255,255,0.03)!important;border-radius:18px 18px 18px 4px!important;border:1px solid rgba(74,158,255,0.08)!important;padding:18px 22px!important;margin-right:10%!important;max-width:90%!important}}
+    /* Clear float after user messages */
+    [data-testid="stChatMessage"][data-author="user"]::after{{content:'';display:table;clear:both}}
+    /* Avatar styling */
+    [data-testid="stChatMessage"] [data-testid="stAvatar"]{{width:28px!important;height:28px!important;min-width:28px!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span{{
-        font-size:14.5px!important;line-height:1.8!important;
-        color:rgba(220,235,255,0.88)!important;letter-spacing:0.01em!important;
-        user-select:text!important;-webkit-user-select:text!important
-    }}
-    [data-testid="stChatMessage"][data-author="user"] [data-testid="stMarkdownContainer"] p{{
-        color:#f0f4ff!important;font-size:14.5px!important
-    }}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span{{font-size:14px!important;line-height:1.8!important;color:rgba(200,220,255,0.88)!important;letter-spacing:0.01em!important;user-select:text!important;-webkit-user-select:text!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong{{color:{accent}!important;font-weight:600!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h1,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h2,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h3{{color:{accent}!important;font-weight:700!important;font-size:15px!important;margin:0.8rem 0 0.3rem!important}}
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{margin-bottom:5px!important;color:rgba(180,210,255,0.78)!important}}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{margin-bottom:4px!important;color:rgba(180,210,255,0.75)!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] hr{{border-color:rgba(74,158,255,0.15)!important;margin:10px 0!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] code{{background:rgba(74,158,255,0.1)!important;color:{accent}!important;padding:2px 7px!important;border-radius:5px!important;font-size:13px!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"]{{user-select:text!important;-webkit-user-select:text!important;cursor:text!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] *{{user-select:text!important;-webkit-user-select:text!important}}
+
+    /* ── MOBILE RESPONSIVE ── */
+    @media (max-width:768px) {{
+        [data-testid="stChatMessage"][data-author="user"]>div:last-child{{margin-left:5%!important;max-width:95%!important}}
+        [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{margin-right:0!important;max-width:100%!important;padding:14px 16px!important}}
+        .im-top-nav{{padding:8px 12px!important;border-radius:10px!important}}
+        .im-brand-text{{font-size:14px!important}}
+        .im-nav-tab{{font-size:11px!important;padding:6px 8px!important}}
+        .main .block-container{{padding-left:0.5rem!important;padding-right:0.5rem!important}}
+        .glass-card{{padding:14px!important;border-radius:12px!important}}
+    }}
+
+    /* ── HIDE STREAMLIT BRANDING ── */
+    #MainMenu{{visibility:hidden!important}}
+    footer{{visibility:hidden!important}}
+    [data-testid="stToolbar"]{{display:none!important}}
+    [data-testid="stDecoration"]{{display:none!important}}
+    header[data-testid="stHeader"]{{display:none!important}}
+    div[data-testid="stStatusWidget"]{{display:none!important}}
+    .reportview-container .main footer{{visibility:hidden!important}}
+
+    /* ── REMOVE RED/ORANGE STREAMLIT DEFAULTS ── */
+    .stException{{background:rgba(74,158,255,0.05)!important;border:1px solid rgba(74,158,255,0.2)!important;color:#f0f4ff!important}}
+    .stAlert{{border-left-color:{accent}!important}}
+    div[data-baseweb="notification"]{{background:rgba(74,158,255,0.08)!important}}
 
     /* ── CHAT INPUT ── */
     [data-testid="stChatInput"]{{background:rgba(74,158,255,0.04)!important;border:1px solid rgba(74,158,255,0.18)!important;border-radius:12px!important;color:#f0f4ff!important}}
@@ -207,21 +187,13 @@ def inject_global_css(accent: str = "#4A9EFF"):
     .stat-num{{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;background:linear-gradient(135deg,#fff,{accent});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:4px}}
     .stat-label{{font-size:10px;color:rgba(180,210,255,0.38);letter-spacing:0.1em;text-transform:uppercase;font-weight:500}}
 
-    /* ── MOBILE ── */
-    @media screen and (max-width:768px){{
-        .main .block-container{{padding-left:0.5rem!important;padding-right:0.5rem!important}}
-        [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{max-width:95%!important;padding:14px 16px!important}}
-        [data-testid="stChatMessage"][data-author="user"]>div:last-child{{max-width:85%!important;padding:12px 14px!important}}
-        [data-testid="stChatMessage"][data-author="assistant"]>div:first-child{{width:28px!important;height:28px!important;min-width:28px!important}}
-        [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
-        [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{font-size:14px!important;line-height:1.7!important}}
-        .glass-card{{border-radius:12px!important;padding:14px!important}}
-        .im-top-nav{{padding:10px 14px!important;border-radius:10px!important}}
-        .im-nav-tab{{font-size:11px!important;padding:6px 10px!important}}
-        .band-ring{{width:54px;height:54px;font-size:18px}}
-        .challenge-day{{width:36px;height:36px;font-size:11px;border-radius:7px}}
+    /* ── MOBILE SMALL SCREENS ── */
+    @media screen and (max-width:480px){{
+        .main .block-container{{padding-left:0.25rem!important;padding-right:0.25rem!important}}
+        .im-nav-tab{{font-size:10px!important;padding:5px 6px!important}}
+        .band-ring{{width:48px;height:48px;font-size:16px}}
+        .challenge-day{{width:32px;height:32px;font-size:10px;border-radius:6px}}
     }}
-    @media screen and (max-width:480px){{.main .block-container{{padding-left:0.25rem!important;padding-right:0.25rem!important}}}}
     </style>
 
     <canvas id="ielts-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;width:100%;height:100%;"></canvas>
