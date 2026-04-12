@@ -307,6 +307,31 @@ def render_practice():
     </div>
     """, unsafe_allow_html=True)
 
+    # ── FEEDBACK MODE TOGGLE ──
+    if "feedback_mode" not in st.session_state:
+        st.session_state.feedback_mode = profile.get("feedback_mode", "detailed")
+
+    fb_col1, fb_col2 = st.columns([1, 3])
+    with fb_col1:
+        current_fb = st.session_state.feedback_mode
+        btn_label = "\U0001f3af Detailed Feedback" if current_fb == "basic" else "\U0001f4dd Basic Feedback"
+        if st.button(btn_label, key="toggle_feedback_mode", use_container_width=True):
+            st.session_state.feedback_mode = "basic" if current_fb == "detailed" else "detailed"
+            # Update profile so AI prompt picks it up
+            if "profile" in st.session_state:
+                st.session_state.profile["feedback_mode"] = st.session_state.feedback_mode
+            st.rerun()
+    with fb_col2:
+        fb_mode = st.session_state.feedback_mode
+        if fb_mode == "detailed":
+            st.markdown("""<div style="font-size:12px;color:rgba(180,210,255,0.5);padding-top:8px">
+                Feedback mode: <strong style="color:#4A9EFF">Detailed</strong> — 3-color annotation + fluency gap analysis active
+            </div>""", unsafe_allow_html=True)
+        else:
+            st.markdown("""<div style="font-size:12px;color:rgba(180,210,255,0.5);padding-top:8px">
+                Feedback mode: <strong style="color:rgba(180,210,255,0.7)">Basic</strong> — band score + general feedback
+            </div>""", unsafe_allow_html=True)
+
     # ── CHAT MESSAGES (ChatGPT-style separated bubbles) ──
     messages = st.session_state.get("practice_messages", [])
 
