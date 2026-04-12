@@ -186,32 +186,70 @@ def render_practice():
     tutor_name = profile.get("tutor_name", "Alex")
     user_id = st.session_state.get("user_id", "demo")
 
-    # ── CONTROLS ──
-    ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns([3, 2, 1, 1])
+   # ── CONTROLS ROW ──
+    ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4, ctrl_col5 = st.columns([3, 2, 1, 1, 1])
+
     with ctrl_col1:
-        mode = st.selectbox("Mode", MODES,
+        mode = st.selectbox(
+            "Mode", MODES,
             index=MODES.index(st.session_state.get("practice_mode", MODES[0]))
                   if st.session_state.get("practice_mode") in MODES else 0,
-            label_visibility="collapsed", key="practice_mode_select")
+            label_visibility="collapsed", key="practice_mode_select"
+        )
         st.session_state.practice_mode = mode
         if "Listening" in mode:
             st.session_state.practice_mode = MODES[0]
             st.session_state.current_view = "listening"
             st.rerun()
+
     with ctrl_col2:
-        topic = st.selectbox("Topic", TOPICS, label_visibility="collapsed", key="practice_topic")
+        topic = st.selectbox("Topic", TOPICS,
+                             label_visibility="collapsed", key="practice_topic")
+
     with ctrl_col3:
-        target_band = st.selectbox("Band", [5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0],
-            index=[5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0].index(float(profile.get("target_band",7.0))),
-            label_visibility="collapsed", key="practice_band")
+        target_band = st.selectbox(
+            "Band",
+            options=[5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0],
+            index=[5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0].index(
+                float(profile.get("target_band", 7.0))
+            ),
+            label_visibility="collapsed", key="practice_band"
+        )
+
     with ctrl_col4:
+        # Feedback mode toggle — visible label so user knows what it does
+        is_detailed = profile.get("feedback_mode", "detailed") == "detailed"
+        label = "🎯 Detailed" if is_detailed else "📝 Simple"
+        if st.button(label, use_container_width=True, key="toggle_feedback_mode",
+                     help="Detailed = 3-color annotation + fluency gap. Simple = clean scores only."):
+            st.session_state.profile["feedback_mode"] = "simple" if is_detailed else "detailed"
+            st.rerun()
+
+    with ctrl_col5:
         if st.button("🗑️ Clear", use_container_width=True, key="clear_chat"):
-            for key in list(st.session_state.keys()):
-                if key.startswith("practice_timer_"):
-                    del st.session_state[key]
             st.session_state.practice_messages = []
             st.session_state.current_session_id = None
             st.rerun()
+
+    # ── MODE + FEEDBACK STATUS PILLS ──
+    mode_color = (
+        "#A78BFA" if "Speaking" in mode else "#38BDF8" if "Writing" in mode else
+        "#FCD34D" if "Listening" in mode else "#34D399" if "Reading" in mode else
+        "#F472B6" if "Vocabulary" in mode else "rgba(255,255,255,0.4)"
+    )
+    is_detailed = profile.get("feedback_mode", "detailed") == "detailed"
+    feedback_pill_color = "#4A9EFF" if is_detailed else "rgba(255,255,255,0.3)"
+    feedback_pill_label = "🎯 Detailed feedback ON" if is_detailed else "📝 Simple feedback"
+
+    st.markdown(f"""
+    <div style="margin:8px 0 14px">
+        <span class="pill pill-gold">{mode.split("-")[0].strip()}</span>
+        <span class="pill" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)">{topic}</span>
+        <span class="pill pill-green">Band {target_band}</span>
+        <span class="pill" style="background:{feedback_pill_color}18;color:{feedback_pill_color};border:1px solid {feedback_pill_color}44">{feedback_pill_label}</span>
+        <span style="float:right;font-size:11px;font-weight:600;color:{mode_color};background:{mode_color}18;padding:4px 10px;border-radius:20px;border:1px solid {mode_color}44">{mode}</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ── TIMER ──
     _render_practice_timer(mode)
