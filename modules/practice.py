@@ -64,21 +64,9 @@ def _render_practice_timer(mode):
     if timer_key not in st.session_state:
         st.session_state[timer_key] = time.time()
 
-    elapsed = time.time() - st.session_state[timer_key]
+    start_time = st.session_state[timer_key]
+    elapsed = time.time() - start_time
     remaining = max(0, timer_secs - int(elapsed))
-    mins = remaining // 60
-    secs = remaining % 60
-    pct = (remaining / timer_secs) * 100
-
-    if remaining <= 120:
-        bar_color = "#E74C3C"
-        text_color = "#E74C3C"
-    elif remaining <= 300:
-        bar_color = "#F0C040"
-        text_color = "#F0C040"
-    else:
-        bar_color = "#4A9EFF"
-        text_color = "#4A9EFF"
 
     if "Task 1" in mode:
         label = "WRITING TASK 1"
@@ -91,25 +79,71 @@ def _render_practice_timer(mode):
     else:
         label = mode.split("-")[0].strip().upper()
 
+    # Live JavaScript countdown timer
+    timer_id = f"timer_{mode.replace(' ', '_').replace('-', '_').replace('(', '').replace(')', '')}"
     st.markdown(f"""
-    <div style="background:rgba(74,158,255,0.04);border:1px solid rgba(74,158,255,0.1);
+    <div id="{timer_id}_wrap" style="background:rgba(74,158,255,0.04);border:1px solid rgba(74,158,255,0.1);
                 border-radius:12px;padding:12px 16px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <div style="font-size:11px;color:rgba(180,210,255,0.45);text-transform:uppercase;
                         letter-spacing:0.06em">{label}</div>
-            <div style="font-size:11px;color:rgba(180,210,255,0.35)">{pct:.0f}% left</div>
+            <div id="{timer_id}_pct" style="font-size:11px;color:rgba(180,210,255,0.35)">100% left</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-            <div style="font-size:28px;font-weight:800;color:{text_color};font-family:monospace;
-                        min-width:80px">{mins:02d}:{secs:02d}</div>
+            <div id="{timer_id}_clock" style="font-size:28px;font-weight:800;color:#4A9EFF;font-family:monospace;
+                        min-width:80px">{remaining // 60:02d}:{remaining % 60:02d}</div>
             <div style="flex:1;height:6px;background:rgba(74,158,255,0.08);border-radius:3px;overflow:hidden">
-                <div style="width:{pct}%;height:100%;background:{bar_color};border-radius:3px;
+                <div id="{timer_id}_bar" style="width:100%;height:100%;background:#4A9EFF;border-radius:3px;
                             transition:width 1s linear"></div>
             </div>
         </div>
-        {'<div style="font-size:11px;color:#E74C3C;margin-top:6px;font-weight:600">Less than 2 minutes remaining!</div>' if remaining <= 120 and remaining > 0 else ''}
-        {'<div style="font-size:13px;color:#E74C3C;margin-top:6px;font-weight:700">Time is up!</div>' if remaining == 0 else ''}
+        <div id="{timer_id}_warn" style="display:none;font-size:11px;color:#E74C3C;margin-top:6px;font-weight:600"></div>
     </div>
+    <script>
+    (function() {{
+        var total = {timer_secs};
+        var remaining = {remaining};
+        var clock = document.getElementById('{timer_id}_clock');
+        var bar = document.getElementById('{timer_id}_bar');
+        var pct = document.getElementById('{timer_id}_pct');
+        var warn = document.getElementById('{timer_id}_warn');
+        if (!clock) return;
+        function tick() {{
+            if (remaining <= 0) {{
+                clock.textContent = '00:00';
+                clock.style.color = '#E74C3C';
+                bar.style.width = '0%';
+                pct.textContent = '0% left';
+                warn.style.display = 'block';
+                warn.textContent = 'Time is up!';
+                warn.style.fontSize = '13px';
+                warn.style.fontWeight = '700';
+                return;
+            }}
+            remaining--;
+            var m = Math.floor(remaining / 60);
+            var s = remaining % 60;
+            clock.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+            var p = (remaining / total) * 100;
+            bar.style.width = p + '%';
+            pct.textContent = Math.round(p) + '% left';
+            if (remaining <= 120) {{
+                clock.style.color = '#E74C3C';
+                bar.style.background = '#E74C3C';
+                warn.style.display = 'block';
+                warn.textContent = 'Less than 2 minutes remaining!';
+            }} else if (remaining <= 300) {{
+                clock.style.color = '#F0C040';
+                bar.style.background = '#F0C040';
+            }} else {{
+                clock.style.color = '#4A9EFF';
+                bar.style.background = '#4A9EFF';
+            }}
+            setTimeout(tick, 1000);
+        }}
+        setTimeout(tick, 1000);
+    }})();
+    </script>
     """, unsafe_allow_html=True)
 
 
@@ -365,8 +399,10 @@ def render_practice():
     if not messages:
         mode_descs = {
             "Speaking": "I'll ask you IELTS Speaking questions and score each answer with band feedback.",
+            "Writing - Task 1": "Give you a graph/chart description task and score your response.",
+            "Writing - Task 2": "Give you an essay topic and score your essay with 3-color annotation.",
             "Writing": "Give you Task 1 or Task 2 questions and score your essays in detail.",
-            "Reading": "Give you an academic passage with 13 exam-style questions.",
+            "Reading": "Give you an academic passage with questions. Answer all questions, then I'll score them.",
             "Vocabulary": "Teach you 5 high-band words and quiz you at the end.",
             "General": "Ask me anything about IELTS."}
         mode_label_short = mode.split("-")[0].strip()
@@ -375,19 +411,43 @@ def render_practice():
         with st.chat_message("assistant"):
             st.markdown(f"Hello! I'm **{tutor_name}**, your IELTS AI tutor. You're in **{mode_label_short}** mode — {mode_desc}\n\nWhat would you like to practice?")
 
-        chip1, chip2, chip3, chip4 = st.columns(4)
-        with chip1:
-            if st.button("Give me a question", key="chip_q", use_container_width=True):
-                _send_message(f"Give me an IELTS {mode_label_short} question about {topic}.", mode, topic, target_band, profile, user_id)
-        with chip2:
-            if st.button("Score my essay", key="chip_e", use_container_width=True):
-                _send_message("I want to submit my essay for scoring. Please wait for me to paste it.", mode, topic, target_band, profile, user_id)
-        with chip3:
-            if st.button("Teach vocabulary", key="chip_v", use_container_width=True):
-                _send_message(f"Teach me 5 high-band IELTS vocabulary words about {topic}.", mode, topic, target_band, profile, user_id)
-        with chip4:
-            if st.button("Explain strategy", key="chip_s", use_container_width=True):
-                _send_message(f"Explain the best strategy for IELTS {mode_label_short}.", mode, topic, target_band, profile, user_id)
+        # Mode-specific action buttons
+        if "Reading" in mode:
+            chip1, chip2, chip3 = st.columns(3)
+            with chip1:
+                if st.button("Generate passage + questions", key="chip_r1", use_container_width=True):
+                    _send_message(f"Generate an IELTS Academic reading passage about {topic} (600-800 words, paragraphs labeled A-D). Then give me 13 mixed questions (TFNG, matching headings, sentence completion, multiple choice). I will answer them one by one.", mode, topic, target_band, profile, user_id)
+            with chip2:
+                if st.button("TFNG practice only", key="chip_r2", use_container_width=True):
+                    _send_message(f"Generate a short 300-word academic passage about {topic} and give me 5 True/False/Not Given questions.", mode, topic, target_band, profile, user_id)
+            with chip3:
+                if st.button("Explain strategy", key="chip_r3", use_container_width=True):
+                    _send_message("Explain the best strategy for IELTS Academic Reading, especially for TFNG questions.", mode, topic, target_band, profile, user_id)
+        elif "Writing" in mode:
+            chip1, chip2, chip3 = st.columns(3)
+            with chip1:
+                if st.button("Give me a question", key="chip_w1", use_container_width=True):
+                    _send_message(f"Give me an IELTS {mode.split('(')[0].strip()} question about {topic}.", mode, topic, target_band, profile, user_id)
+            with chip2:
+                if st.button("Score my essay", key="chip_w2", use_container_width=True):
+                    _send_message("I want to submit my essay for scoring. Please wait for me to paste it.", mode, topic, target_band, profile, user_id)
+            with chip3:
+                if st.button("Explain strategy", key="chip_w3", use_container_width=True):
+                    _send_message(f"Explain the best strategy for IELTS {mode.split('(')[0].strip()}.", mode, topic, target_band, profile, user_id)
+        else:
+            chip1, chip2, chip3, chip4 = st.columns(4)
+            with chip1:
+                if st.button("Give me a question", key="chip_q", use_container_width=True):
+                    _send_message(f"Give me an IELTS {mode_label_short} question about {topic}.", mode, topic, target_band, profile, user_id)
+            with chip2:
+                if st.button("Score my essay", key="chip_e", use_container_width=True):
+                    _send_message("I want to submit my essay for scoring. Please wait for me to paste it.", mode, topic, target_band, profile, user_id)
+            with chip3:
+                if st.button("Teach vocabulary", key="chip_v", use_container_width=True):
+                    _send_message(f"Teach me 5 high-band IELTS vocabulary words about {topic}.", mode, topic, target_band, profile, user_id)
+            with chip4:
+                if st.button("Explain strategy", key="chip_s", use_container_width=True):
+                    _send_message(f"Explain the best strategy for IELTS {mode_label_short}.", mode, topic, target_band, profile, user_id)
     else:
         for msg in messages:
             with st.chat_message(msg["role"]):
