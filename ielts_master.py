@@ -39,6 +39,24 @@ init_state()
 if st.session_state.current_view == "auth" and st.session_state.get("auth_user"):
     st.session_state.current_view = "dashboard"
 
+# ── AUTO-RESTORE SESSION (prevents logout on browser back button) ──
+if not st.session_state.get("profile") and not st.session_state.get("auth_user"):
+    try:
+        from utils.database import get_supabase_client, get_user_profile
+        supabase = get_supabase_client()
+        session = supabase.auth.get_session()
+        if session and session.user:
+            user_id = session.user.id
+            profile = get_user_profile(user_id)
+            if profile:
+                st.session_state.auth_user = session.user
+                st.session_state.user_id = user_id
+                st.session_state.profile = profile
+                if st.session_state.current_view == "auth":
+                    st.session_state.current_view = "dashboard"
+    except Exception:
+        pass
+
 # ── INJECT CSS ──
 accent = st.session_state.get("profile", {}).get("accent_color", "#4A9EFF") \
          if st.session_state.get("profile") else "#4A9EFF"
