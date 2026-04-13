@@ -422,6 +422,17 @@ def _send_message(text, mode, topic, target_band, profile, user_id):
         st.session_state.practice_messages = []
 
     # ── CALL LIMIT CHECK ──
+    TIER_LIMITS = {
+        "free":      {"sessions": 3,  "calls": 1},
+        "starter":   {"sessions": 5,  "calls": 3},
+        "pro":       {"sessions": 8,  "calls": 4},
+        "intensive": {"sessions": 10, "calls": 2},
+        "lifetime":  {"sessions": 6,  "calls": 2},
+    }
+    tier = profile.get("subscription_status", "free")
+    limits = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
+    call_key = "session_call_count"
+
     if user_id != "demo":
         current_calls = st.session_state.get(call_key, 0)
         if current_calls >= limits["calls"]:
