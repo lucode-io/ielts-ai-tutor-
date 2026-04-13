@@ -110,25 +110,34 @@ def render_settings():
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     sub_status = profile.get("subscription_status", "free")
+    is_paid = sub_status in ("lifetime", "pro", "starter", "intensive", "paid")
+    tier_desc = {
+        "free": "3 free sessions per day",
+        "starter": "Starter — 5 sessions/day, Speaking + Writing",
+        "pro": "Pro — 8 sessions/day, all 4 skills",
+        "intensive": "Intensive — 10 sessions/day, 60-day access",
+        "lifetime": "Lifetime — unlimited access forever",
+        "paid": "Paid — full access",
+    }
     st.markdown(f"""
     <div style="font-size:13px;font-weight:700;color:{accent};
                 letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px">
         Subscription
     </div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="background:{'rgba(0,232,122,0.1)' if sub_status == 'pro' else 'rgba(255,255,255,0.06)'};
-                    border:1px solid {'rgba(0,232,122,0.3)' if sub_status == 'pro' else 'rgba(255,255,255,0.1)'};
+        <div style="background:{'rgba(0,232,122,0.1)' if is_paid else 'rgba(255,255,255,0.06)'};
+                    border:1px solid {'rgba(0,232,122,0.3)' if is_paid else 'rgba(255,255,255,0.1)'};
                     border-radius:100px;padding:4px 14px;font-size:12px;font-weight:700;
-                    color:{'#00e87a' if sub_status == 'pro' else 'rgba(180,210,255,0.5)'}">
+                    color:{'#00e87a' if is_paid else 'rgba(180,210,255,0.5)'}">
             {sub_status.upper()}
         </div>
         <div style="font-size:13px;color:rgba(180,210,255,0.45)">
-            {'Unlimited access to all features' if sub_status == 'pro' else '7 free sessions per month'}
+            {tier_desc.get(sub_status, '3 free sessions per day')}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    if sub_status == "free":
+    if not is_paid:
         st.markdown("""
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
             <a href="https://mlogshir.gumroad.com/l/Lifetime" target="_blank" style="display:block;text-align:center;padding:12px;background:linear-gradient(135deg,#F0C040,#e6a817);border-radius:9px;color:#01010a;font-weight:800;font-size:13px;text-decoration:none">🏆 Lifetime — $199</a>
