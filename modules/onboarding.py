@@ -630,19 +630,33 @@ def _render_diagnostic(profile, user_id):
 
     if not st.session_state.diagnostic_messages:
         system = _get_diagnostic_prompt(profile)
-        starter = [{"role": "user", "content": "Please start my baseline assessment."}]
-        with st.spinner("Starting your diagnostic test..."):
-            response = chat(starter, system, max_tokens=2000)
-        if response.startswith("ERROR"):
-            st.error(response)
-            if st.button("Skip to Dashboard", key="skip_err"):
+        starter = [{"role": "user", "content": "Please start my baseline assessment. Begin with Speaking Part 1."}]
+        try:
+            with st.spinner("Starting your diagnostic test..."):
+                response = chat(starter, system, max_tokens=2000)
+            if response.startswith("ERROR"):
+                st.error(f"AI could not start the test: {response}")
+                st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button("Retry", key="retry_diag", use_container_width=True):
+                        st.rerun()
+                with c2:
+                    if st.button("Skip to Dashboard", key="skip_diag_err", use_container_width=True):
+                        st.session_state.current_view = "dashboard"
+                        st.rerun()
+                return
+            st.session_state.diagnostic_messages = [
+                {"role": "user", "content": "Please start my baseline assessment. Begin with Speaking Part 1."},
+                {"role": "assistant", "content": response}
+            ]
+            st.rerun()
+        except Exception as e:
+            st.error(f"Could not connect to AI: {str(e)}")
+            if st.button("Skip to Dashboard", key="skip_diag_exc", use_container_width=True):
                 st.session_state.current_view = "dashboard"
                 st.rerun()
             return
-        st.session_state.diagnostic_messages = [
-            {"role": "user", "content": "Please start my baseline assessment."},
-            {"role": "assistant", "content": response}
-        ]
 
     st.markdown("""
     <div style="margin-bottom:16px">
