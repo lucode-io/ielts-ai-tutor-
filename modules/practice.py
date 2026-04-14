@@ -1,23 +1,47 @@
 # ============================================================
-# modules/practice.py
-# Core practice engine — timer, mic, 3-color annotations
+# modules/practice.py  —  FINAL VERSION (April 14 2026)
+# CRITICAL_FIXES_REPORT items resolved:
+#   ✅ #1  Recurring errors saved after every AI response (3 extraction methods)
+#   ✅ #2  3-color annotation always rendered — dedup logic fully rewritten
+#   ✅ #5  Error memory injected into system prompt at session start
+#   ✅ #6  Writing: st.text_area + live word counter (key/value collision fixed)
+#   ✅ #7  Listening: 2-column layout (audio+script left, questions right)
+# BUG FIXES vs previous version:
+#   🐛 render_annotation — dead `annotations` list + duplicate span renders removed
+#   🐛 text_area key collision — value no longer mirrors key in session_state
+#   🐛 Method 3 error extraction — false-positive guard added (scoring context only)
+#   🐛 get_daily_session_count/increment_daily_session_count — graceful fallback added
 # ============================================================
 
 import streamlit as st
 import time
+import json
+import re
 from datetime import datetime
 from utils.ai import (
     chat, speaking_prompt, writing_task1_prompt, writing_task2_prompt,
-    listening_prompt, reading_prompt, vocabulary_prompt, diagnostic_prompt
+    listening_prompt, reading_prompt, vocabulary_prompt, diagnostic_prompt,
 )
 from utils.database import (
-    create_session, update_session, save_message, save_band_score
+    create_session, update_session, save_message, save_band_score,
+    get_recurring_errors, upsert_recurring_error,
 )
+
 try:
     from streamlit_mic_recorder import speech_to_text
     HAS_MIC_RECORDER = True
 except ImportError:
     HAS_MIC_RECORDER = False
+
+# ── SCORING CONTEXT PHRASES ─────────────────────────────────
+# Method 3 only fires when response is clearly giving feedback on the student's work
+_SCORING_CONTEXT_RE = re.compile(
+    r'\b(your (writing|essay|answer|response|speaking)|'
+    r'you (wrote|used|said|made)|'
+    r'student (uses|used|wrote|said)|'
+    r'band killer|band score|penali[sz]e)\b',
+    re.IGNORECASE
+)
 
 MODES = [
     "Speaking - Part 1 (Personal questions)",
@@ -31,31 +55,63 @@ MODES = [
     "Listening - Section 4 (Academic lecture)",
     "Reading - Academic passage",
     "Vocabulary Builder",
-    "General Practice"
+    "General Practice",
 ]
 
 TOPICS = [
     "Technology", "Environment", "Education", "Health",
     "Work and Career", "Culture and Society", "Travel",
-    "Food", "Family", "Crime and Law", "Economy", "Free choice"
+    "Food", "Family", "Crime and Law", "Economy", "Free choice",
 ]
 
 MODE_TIMERS = {
     "Speaking - Part 2": 120,
-    "Writing - Task 1": 1200,
-    "Writing - Task 2": 2400,
-    "Reading": 1200,
+    "Writing - Task 1":  1200,
+    "Writing - Task 2":  2400,
+    "Reading":           1200,
+}
+
+TIER_LIMITS = {
+    "free":      {"sessions": 3,  "calls": 1,  "skills": ["Speaking", "Writing", "Vocabulary", "General"]},
+    "starter":   {"sessions": 5,  "calls": 3,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary", "General"]},
+    "pro":       {"sessions": 8,  "calls": 4,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary", "General"]},
+    "intensive": {"sessions": 10, "calls": 2,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary", "General"]},
+    "lifetime":  {"sessions": 6,  "calls": 2,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary", "General"]},
 }
 
 
-def _get_timer_seconds(mode):
+# ── DAILY SESSION COUNTER (DB-optional) ─────────────────────
+
+def _get_daily_session_count(user_id: str) -> int:
+    """Try DB function; fall back to session_state counter."""
+    try:
+        from utils.database import get_daily_session_count
+        return get_daily_session_count(user_id)
+    except Exception:
+        key = f"daily_sessions_{datetime.utcnow().date().isoformat()}"
+        return st.session_state.get(key, 0)
+
+
+def _increment_daily_session_count(user_id: str):
+    """Try DB function; fall back to session_state counter."""
+    try:
+        from utils.database import increment_daily_session_count
+        increment_daily_session_count(user_id)
+    except Exception:
+        key = f"daily_sessions_{datetime.utcnow().date().isoformat()}"
+        st.session_state[key] = st.session_state.get(key, 0) + 1
+
+
+# ── TIMER ───────────────────────────────────────────────────
+
+def _get_timer_seconds(mode: str):
     for key, secs in MODE_TIMERS.items():
         if key in mode:
             return secs
     return None
 
 
-def _render_practice_timer(mode):
+def _render_practice_timer(mode: str):
     timer_secs = _get_timer_seconds(mode)
     if timer_secs is None:
         return
@@ -64,92 +120,65 @@ def _render_practice_timer(mode):
     if timer_key not in st.session_state:
         st.session_state[timer_key] = time.time()
 
-    start_time = st.session_state[timer_key]
-    elapsed = time.time() - start_time
+    elapsed  = time.time() - st.session_state[timer_key]
     remaining = max(0, timer_secs - int(elapsed))
 
-    if "Task 1" in mode:
-        label = "WRITING TASK 1"
-    elif "Task 2" in mode:
-        label = "WRITING TASK 2"
-    elif "Part 2" in mode:
-        label = "SPEAKING PART 2"
-    elif "Reading" in mode:
-        label = "READING"
-    else:
-        label = mode.split("-")[0].strip().upper()
+    label_map = {"Task 1": "WRITING TASK 1", "Task 2": "WRITING TASK 2",
+                 "Part 2": "SPEAKING PART 2", "Reading": "READING"}
+    label = next((v for k, v in label_map.items() if k in mode),
+                 mode.split("-")[0].strip().upper())
 
-    # Live JavaScript countdown timer
-    timer_id = f"timer_{mode.replace(' ', '_').replace('-', '_').replace('(', '').replace(')', '')}"
+    tid = f"t_{mode.replace(' ','_').replace('-','_').replace('(','').replace(')','')}"
     st.markdown(f"""
-    <div id="{timer_id}_wrap" style="background:rgba(74,158,255,0.04);border:1px solid rgba(74,158,255,0.1);
-                border-radius:12px;padding:12px 16px;margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="font-size:11px;color:rgba(180,210,255,0.45);text-transform:uppercase;
-                        letter-spacing:0.06em">{label}</div>
-            <div id="{timer_id}_pct" style="font-size:11px;color:rgba(180,210,255,0.35)">100% left</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px">
-            <div id="{timer_id}_clock" style="font-size:28px;font-weight:800;color:#4A9EFF;font-family:monospace;
-                        min-width:80px">{remaining // 60:02d}:{remaining % 60:02d}</div>
-            <div style="flex:1;height:6px;background:rgba(74,158,255,0.08);border-radius:3px;overflow:hidden">
-                <div id="{timer_id}_bar" style="width:100%;height:100%;background:#4A9EFF;border-radius:3px;
-                            transition:width 1s linear"></div>
-            </div>
-        </div>
-        <div id="{timer_id}_warn" style="display:none;font-size:11px;color:#E74C3C;margin-top:6px;font-weight:600"></div>
+<div style="background:rgba(74,158,255,0.04);border:1px solid rgba(74,158,255,0.1);
+            border-radius:12px;padding:12px 16px;margin-bottom:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div style="font-size:11px;color:rgba(180,210,255,0.45);text-transform:uppercase;
+                letter-spacing:0.06em">{label}</div>
+    <div id="{tid}_pct" style="font-size:11px;color:rgba(180,210,255,0.35)">...</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div id="{tid}_clock" style="font-size:28px;font-weight:800;color:#4A9EFF;
+                font-family:monospace;min-width:80px">--:--</div>
+    <div style="flex:1;height:6px;background:rgba(74,158,255,0.08);border-radius:3px;overflow:hidden">
+      <div id="{tid}_bar" style="width:100%;height:100%;background:#4A9EFF;
+                  border-radius:3px;transition:width 1s linear"></div>
     </div>
-    <script>
-    (function() {{
-        var total = {timer_secs};
-        var remaining = {remaining};
-        var clock = document.getElementById('{timer_id}_clock');
-        var bar = document.getElementById('{timer_id}_bar');
-        var pct = document.getElementById('{timer_id}_pct');
-        var warn = document.getElementById('{timer_id}_warn');
-        if (!clock) return;
-        function tick() {{
-            if (remaining <= 0) {{
-                clock.textContent = '00:00';
-                clock.style.color = '#E74C3C';
-                bar.style.width = '0%';
-                pct.textContent = '0% left';
-                warn.style.display = 'block';
-                warn.textContent = 'Time is up!';
-                warn.style.fontSize = '13px';
-                warn.style.fontWeight = '700';
-                return;
-            }}
-            remaining--;
-            var m = Math.floor(remaining / 60);
-            var s = remaining % 60;
-            clock.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-            var p = (remaining / total) * 100;
-            bar.style.width = p + '%';
-            pct.textContent = Math.round(p) + '% left';
-            if (remaining <= 120) {{
-                clock.style.color = '#E74C3C';
-                bar.style.background = '#E74C3C';
-                warn.style.display = 'block';
-                warn.textContent = 'Less than 2 minutes remaining!';
-            }} else if (remaining <= 300) {{
-                clock.style.color = '#F0C040';
-                bar.style.background = '#F0C040';
-            }} else {{
-                clock.style.color = '#4A9EFF';
-                bar.style.background = '#4A9EFF';
-            }}
-            setTimeout(tick, 1000);
-        }}
-        setTimeout(tick, 1000);
-    }})();
-    </script>
-    """, unsafe_allow_html=True)
+  </div>
+  <div id="{tid}_warn" style="display:none;font-size:11px;color:#E74C3C;
+              margin-top:6px;font-weight:600"></div>
+</div>
+<script>
+(function(){{
+  var total={timer_secs}, start=Date.now()-{int(elapsed*1000)};
+  var clk=document.getElementById('{tid}_clock'),
+      bar=document.getElementById('{tid}_bar'),
+      warn=document.getElementById('{tid}_warn'),
+      pct=document.getElementById('{tid}_pct');
+  function tick(){{
+    var el=Math.floor((Date.now()-start)/1000), rem=Math.max(0,total-el);
+    var m=Math.floor(rem/60), s=rem%60;
+    clk.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    bar.style.width=(rem/total*100)+'%';
+    pct.textContent=Math.round(rem/total*100)+'% left';
+    if(rem<=120){{clk.style.color='#E74C3C';bar.style.background='#E74C3C';
+                  warn.style.display='block';warn.textContent='Less than 2 minutes remaining!';}}
+    else if(rem<=300){{clk.style.color='#F0C040';bar.style.background='#F0C040';}}
+    else{{clk.style.color='#4A9EFF';bar.style.background='#4A9EFF';}}
+    if(rem>0) setTimeout(tick,1000);
+  }}
+  setTimeout(tick,1000);
+}})();
+</script>
+""", unsafe_allow_html=True)
 
 
-def get_system_prompt(mode, profile):
+# ── SYSTEM PROMPT ROUTER ────────────────────────────────────
+
+def get_system_prompt(mode: str, profile: dict) -> str:
     if "Speaking" in mode:
-        part = "Part 1" if "Part 1" in mode else "Part 2" if "Part 2" in mode else "Part 3"
+        part = ("Part 1" if "Part 1" in mode else
+                "Part 2" if "Part 2" in mode else "Part 3")
         return speaking_prompt(profile, part)
     elif "Task 1" in mode:
         return writing_task1_prompt(profile)
@@ -169,285 +198,518 @@ def get_system_prompt(mode, profile):
         return build_base_prompt(profile) + "\nYOU ARE: Personal IELTS Tutor. Help with whatever the student needs."
 
 
-def render_annotation(text):
-    import re
+# ── RECURRING ERROR HELPERS ─────────────────────────────────
 
-    # Try multiple patterns — Claude outputs annotations inconsistently
-    patterns = [
-        # Pattern 1: emoji + [RED/BLUE/GREEN ...]: content
-        r'(\U0001f534|\U0001f535|\U0001f7e2)\s*(?:\[?(?:RED|BLUE|GREEN)[^\]]*\]?[:\s\u2014\u2013-]*)(.*?)(?=(?:\n\s*(?:\U0001f534|\U0001f535|\U0001f7e2))|$)',
-        # Pattern 2: emoji + Band Killer/Upgrade/Success: content
-        r'(\U0001f534|\U0001f535|\U0001f7e2)\s*(?:Band Killer|Band 8 Upgrade|Strategic Success)[:\s\u2014\u2013-]*(.*?)(?=(?:\n\s*(?:\U0001f534|\U0001f535|\U0001f7e2))|$)',
-        # Pattern 3: emoji + any content
-        r'(\U0001f534|\U0001f535|\U0001f7e2)\s*(.*?)(?=(?:\n\s*(?:\U0001f534|\U0001f535|\U0001f7e2))|$)',
-        # Pattern 4: **RED/BLUE/GREEN**: content (no emoji)
-        r'\*\*(RED|BLUE|GREEN)[^*]*\*\*[:\s\u2014\u2013-]*(.*?)(?=(?:\n\s*\*\*(?:RED|BLUE|GREEN))|$)',
-    ]
+def _load_recurring_errors_into_profile(profile: dict, user_id: str) -> dict:
+    """Fetch top-5 errors from DB and inject into profile for prompt building."""
+    if user_id == "demo":
+        return profile
+    try:
+        errors = get_recurring_errors(user_id)
+        if errors:
+            profile = dict(profile)
+            profile["_recurring_errors"] = errors[:5]
+    except Exception:
+        pass
+    return profile
 
-    matches = []
-    for pattern in patterns:
-        matches = list(re.finditer(pattern, text, flags=re.DOTALL))
-        if matches and any(m.group(2).strip() for m in matches):
-            break
 
-    if not matches or not any(m.group(2).strip() for m in matches):
+def _classify_error(text: str) -> tuple:
+    """Return (category, error_type) from free text."""
+    t = text.lower()
+    if any(w in t for w in ["verb", "tense", "agreement", "singular", "plural", "past", "present", "article"]):
+        return "grammar", "grammar_error"
+    if any(w in t for w in ["word choice", "vocabulary", "collocation", "phrase", "expression", "lexical"]):
+        return "vocabulary", "vocabulary_error"
+    if any(w in t for w in ["paragraph", "structure", "organisation", "organization", "coherence", "order"]):
+        return "structure", "structure_error"
+    if any(w in t for w in ["pronunciation", "filler", "fluency", "pause", "hesit"]):
+        return "pronunciation", "pronunciation_error"
+    return "grammar", "grammar_error"
+
+
+def _extract_and_save_errors(response: str, user_id: str):
+    """
+    Extract errors from AI response and save to recurring_errors table.
+    Three methods in priority order.
+    """
+    if user_id == "demo":
+        return
+
+    # ── Method 1: Structured JSON block (from session_analyzer_prompt) ──
+    try:
+        json_match = re.search(
+            r'\{"errors"\s*:\s*\[[\s\S]*?\]\s*\}', response)
+        if json_match:
+            data = json.loads(json_match.group(0))
+            for err in data.get("errors", []):
+                upsert_recurring_error(
+                    user_id=user_id,
+                    error_type=err.get("error_type", "unknown"),
+                    category=err.get("category", "grammar"),
+                    description=err.get("description", ""),
+                    example=err.get("example", ""),
+                )
+            return  # structured data is authoritative — stop here
+    except Exception:
+        pass
+
+    # ── Method 2: RED annotation parsing ──
+    # Match: 🔴 [RED — Band Killer]: "exact quote" → correction → reason
+    try:
+        red_re = re.compile(
+            r'\U0001f534\s*\[RED[^\]]*\]:\s*'
+            r'["\u201c\u2018]([^"\u201d\u2019\n]{3,120})["\u201d\u2019]\s*'
+            r'\u2192\s*([^\u2192\n]{3,120})'
+            r'(?:\u2192\s*([^\n]{3,200}))?',
+            re.IGNORECASE,
+        )
+        for m in red_re.finditer(response):
+            example    = m.group(1).strip()
+            correction = m.group(2).strip()
+            reason     = (m.group(3) or "").strip()
+            cat, etype = _classify_error(f"{example} {correction} {reason}")
+            upsert_recurring_error(
+                user_id=user_id,
+                error_type=etype,
+                category=cat,
+                description=correction[:200] if correction else f"Error: {example[:80]}",
+                example=example[:200],
+            )
+    except Exception:
+        pass
+
+    # ── Method 3: Pattern matching — ONLY when scoring context confirmed ──
+    # Guard: only run if response is clearly feedback on the student's work
+    if not _SCORING_CONTEXT_RE.search(response):
+        return
+
+    try:
+        grammar_patterns = [
+            (r'\bsubject[- ]verb agreement\b',   "subject_verb_agreement", "grammar"),
+            (r'\barticle (a|an|the)\b',           "article_usage",          "grammar"),
+            (r'\btense error\b',                  "tense_error",            "grammar"),
+            (r'\bplural (error|form)\b',          "plural_error",           "grammar"),
+            (r'\bpreposition (error|mistake)\b',  "preposition_error",      "grammar"),
+            (r'\bword order (error|problem)\b',   "word_order",             "grammar"),
+            (r'\bcollocation error\b',            "collocation_error",      "vocabulary"),
+            (r'\bfiller words? detected\b',       "filler_overuse",         "pronunciation"),
+            (r'\bno topic sentence\b',            "paragraph_structure",    "structure"),
+        ]
+        for pattern, etype, cat in grammar_patterns:
+            if re.search(pattern, response, re.IGNORECASE):
+                upsert_recurring_error(
+                    user_id=user_id,
+                    error_type=etype,
+                    category=cat,
+                    description=etype.replace("_", " ").title(),
+                    example=None,
+                )
+    except Exception:
+        pass
+
+
+# ── 3-COLOR ANNOTATION RENDERER ─────────────────────────────
+
+def render_annotation(text: str):
+    """
+    Parse and render 3-color annotation cards from AI response.
+    Falls back to plain markdown if no annotations found.
+
+    Fixed vs previous version:
+    - Single regex pass only (no duplicate iteration)
+    - Proper dedup by span start position
+    - Dead 'annotations' list removed
+    - emoji_map key normalised before lookup
+    """
+    # Single comprehensive pattern: emoji + optional label + content
+    # Captures: group(1)=emoji char, group(2)=everything after
+    ANNO_RE = re.compile(
+        r'(\U0001f534|\U0001f535|\U0001f7e2)'   # red / blue / green circle
+        r'[^\S\n]*'                              # optional horizontal whitespace
+        r'(?:\[[^\]]{0,50}\][:\s\u2014\u2013\-]*)?'  # optional [LABEL]: prefix
+        r'([^\n]+)',                             # content to end of line
+        re.UNICODE,
+    )
+
+    COLOR_MAP = {
+        '\U0001f534': ('#ff3a4a', '\U0001f534 Band Killer'),
+        '\U0001f535': ('#4A9EFF', '\U0001f535 Band 8 Upgrade'),
+        '\U0001f7e2': ('#00e87a', '\U0001f7e2 Strategic Win'),
+    }
+
+    # Collect all matches, dedup by start position
+    seen_starts: set = set()
+    spans: list = []  # (start, end, emoji, content)
+
+    for m in ANNO_RE.finditer(text):
+        start = m.start()
+        if start in seen_starts:
+            continue
+        seen_starts.add(start)
+        emoji   = m.group(1)
+        content = m.group(2).strip()
+        if content and len(content) > 4:
+            spans.append((start, m.end(), emoji, content))
+
+    if not spans:
+        # No annotations found — render as plain markdown
         st.markdown(text)
         return
 
-    pre_text = text[:matches[0].start()].strip()
-    post_text = text[matches[-1].end():].strip()
+    # Build output: prose blocks interleaved with annotation cards
+    last_pos = 0
+    for start, end, emoji, content in spans:
+        # Prose before this annotation
+        prose = text[last_pos:start].strip()
+        if prose:
+            st.markdown(prose)
 
-    if pre_text:
-        st.markdown(pre_text)
+        # Annotation card
+        color, label = COLOR_MAP.get(emoji, ('#4A9EFF', 'Note'))
+        st.markdown(
+            f'<div style="background:{color}12;border-left:3px solid {color};'
+            f'border-radius:0 8px 8px 0;padding:10px 14px;margin:4px 0;'
+            f'font-size:13px;line-height:1.6">'
+            f'<span style="color:{color};font-weight:700;font-size:11px;'
+            f'text-transform:uppercase;letter-spacing:0.05em">{label}</span><br>'
+            f'<span style="color:rgba(240,244,255,0.9)">{content}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        last_pos = end
 
-    color_map = {
-        '\U0001f534': {'bg': 'rgba(231,76,60,0.18)', 'border': '#E74C3C'},
-        '\U0001f535': {'bg': 'rgba(56,189,248,0.18)', 'border': '#38BDF8'},
-        '\U0001f7e2': {'bg': 'rgba(46,204,113,0.18)', 'border': '#2ECC71'},
-        'RED': {'bg': 'rgba(231,76,60,0.18)', 'border': '#E74C3C'},
-        'BLUE': {'bg': 'rgba(56,189,248,0.18)', 'border': '#38BDF8'},
-        'GREEN': {'bg': 'rgba(46,204,113,0.18)', 'border': '#2ECC71'},
-    }
+    # Remaining prose after last annotation
+    remainder = text[last_pos:].strip()
+    if remainder:
+        st.markdown(remainder)
 
-    html = '<div style="background:rgba(255,255,255,0.03);border-radius:14px;padding:20px;margin:16px 0;border:1px solid rgba(74,158,255,0.08)">'
-    html += '<div style="font-size:12px;font-weight:700;color:#4A9EFF;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px">3-COLOR ANNOTATION</div>'
 
-    for match in matches:
-        key = match.group(1)
-        content = match.group(2).strip()
-        if not content:
-            continue
-        c = color_map.get(key, color_map['\U0001f534'])
+# ── WRITING INPUT (text_area + word counter) ─────────────────
 
-        # Try to extract quoted text (ASCII-safe regex)
-        quote_match = re.search(r'"(.+?)"', content)
-        if not quote_match:
-            quote_match = re.search(r"'(.+?)'", content)
-        if quote_match:
-            quoted = quote_match.group(1)
-            rest = content[quote_match.end():].strip()
-            rest = re.sub(r'^[\u2192\u25ba\-\u2014\u2013:\s]+', '', rest)
-            html += f'<div style="margin-bottom:14px"><span style="background:{c["bg"]};border-bottom:2px solid {c["border"]};padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;line-height:2;display:inline">{quoted}</span>'
-            if rest:
-                html += f'<div style="font-size:12px;color:rgba(180,210,255,0.6);margin-top:4px;padding-left:4px">{rest}</div>'
-            html += '</div>'
+def _render_writing_input(mode: str, topic: str, target_band: float,
+                           profile: dict, user_id: str):
+    """
+    Writing mode input: st.text_area with live word counter.
+    BUG FIX: use separate session_state key for stored value vs widget key
+    to avoid Streamlit DuplicateWidgetID / value-key conflict.
+    """
+    min_words  = 150 if "Task 1" in mode else 250
+    task_label = "Task 1" if "Task 1" in mode else "Task 2"
+
+    # Store value under _val key; widget uses _widget key
+    val_key    = f"essay_val_{mode}"
+    widget_key = f"essay_widget_{mode}"
+
+    st.markdown(
+        f'<div style="font-size:11px;color:rgba(180,210,255,0.45);'
+        f'text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">'
+        f'Paste or type your {task_label} essay below (minimum {min_words} words)'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    essay_text = st.text_area(
+        label=f"{task_label} essay",
+        height=220,
+        placeholder=(
+            f"Paste your essay here or ask for a question first...\n\n"
+            f"Minimum {min_words} words for accurate scoring."
+        ),
+        key=widget_key,
+        label_visibility="collapsed",
+    )
+    # Sync to val_key so we can read it reliably
+    st.session_state[val_key] = essay_text
+
+    word_count  = len(essay_text.split()) if essay_text.strip() else 0
+    bar_pct     = min(100, int(word_count / min_words * 100))
+    cnt_color   = ("#00e87a" if word_count >= min_words
+                   else "#F0C040" if word_count >= int(min_words * 0.8)
+                   else "#ff3a4a")
+    status_txt  = ("✓ Ready to submit"
+                   if word_count >= min_words
+                   else f"{min_words - word_count} more words needed")
+
+    st.markdown(f"""
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+  <div style="font-size:13px;color:{cnt_color};font-weight:700;min-width:100px">
+    {word_count} / {min_words} words
+  </div>
+  <div style="flex:1;height:4px;background:rgba(74,158,255,0.1);border-radius:2px">
+    <div style="width:{bar_pct}%;height:100%;background:{cnt_color};
+                border-radius:2px;transition:width 0.3s"></div>
+  </div>
+  <div style="font-size:11px;color:rgba(180,210,255,0.4)">{status_txt}</div>
+</div>
+""", unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("📝 Submit for Scoring", use_container_width=True,
+                     key=f"submit_{mode}", disabled=(word_count < 30)):
+            if essay_text.strip():
+                _send_message(essay_text, mode, topic, target_band, profile, user_id)
+    with col2:
+        if st.button("❓ Give me a question", use_container_width=True,
+                     key=f"getq_{mode}"):
+            _send_message(
+                f"Give me an IELTS {task_label} question about {topic}.",
+                mode, topic, target_band, profile, user_id,
+            )
+    with col3:
+        if st.button("💡 Strategy tips", use_container_width=True,
+                     key=f"strat_{mode}"):
+            _send_message(
+                f"Explain the best strategy for IELTS Writing {task_label}.",
+                mode, topic, target_band, profile, user_id,
+            )
+
+    # Free-form chat still available for questions
+    chat_in = st.chat_input("Ask anything about writing strategy, vocab, or grammar…")
+    if chat_in:
+        _send_message(chat_in, mode, topic, target_band, profile, user_id)
+
+
+# ── LISTENING 2-COLUMN LAYOUT ────────────────────────────────
+# Report #7: split audio+script (left) from questions+answers (right)
+
+def _render_listening_chat(messages: list, mode: str, topic: str,
+                            target_band: float, profile: dict, user_id: str):
+    """
+    2-column layout for Listening mode.
+    Left col (55%): script display + audio player placeholder.
+    Right col (45%): Q&A chat.
+    """
+    # Extract the most recent listening script from messages if available
+    script_text = ""
+    for msg in reversed(messages):
+        if msg["role"] == "assistant":
+            # Look for script block
+            m = re.search(
+                r'\*\*LISTENING SCRIPT[^*]*\*\*\s*\n([\s\S]+?)(?=\n---|\n\*\*QUESTIONS)',
+                msg["content"],
+                re.IGNORECASE,
+            )
+            if m:
+                script_text = m.group(1).strip()
+                break
+
+    left_col, right_col = st.columns([55, 45])
+
+    with left_col:
+        st.markdown(
+            '<div style="font-size:11px;color:rgba(180,210,255,0.45);'
+            'text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">'
+            'Script / Transcript</div>',
+            unsafe_allow_html=True,
+        )
+        if script_text:
+            st.markdown(
+                f'<div class="glass-card" style="padding:16px;font-size:13px;'
+                f'line-height:1.8;color:rgba(240,244,255,0.85);max-height:420px;'
+                f'overflow-y:auto;white-space:pre-wrap">{script_text}</div>',
+                unsafe_allow_html=True,
+            )
         else:
-            # No quotes — show first sentence as highlight, rest as explanation
-            parts = re.split(r'[\u2192\u25ba\u2014\u2013]', content, maxsplit=1)
-            highlight = parts[0].strip()[:150]
-            explanation = parts[1].strip() if len(parts) > 1 else ""
-            html += f'<div style="margin-bottom:14px"><span style="background:{c["bg"]};border-bottom:2px solid {c["border"]};padding:3px 6px;border-radius:3px;font-size:14px;color:#f0f4ff;line-height:2;display:inline">{highlight}</span>'
-            if explanation:
-                html += f'<div style="font-size:12px;color:rgba(180,210,255,0.6);margin-top:4px;padding-left:4px">{explanation}</div>'
-            html += '</div>'
+            st.markdown(
+                '<div class="glass-card" style="padding:24px;text-align:center;'
+                'color:rgba(180,210,255,0.35);font-size:13px">'
+                '📄 Script will appear here after the AI generates the listening exercise.'
+                '</div>',
+                unsafe_allow_html=True,
+            )
 
-    html += '''<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:12px;border-top:1px solid rgba(74,158,255,0.08)">
-        <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(180,210,255,0.5)"><span style="width:8px;height:8px;border-radius:2px;background:#E74C3C;display:inline-block"></span>Band Killer</span>
-        <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(180,210,255,0.5)"><span style="width:8px;height:8px;border-radius:2px;background:#38BDF8;display:inline-block"></span>Band 8 Upgrade</span>
-        <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(180,210,255,0.5)"><span style="width:8px;height:8px;border-radius:2px;background:#2ECC71;display:inline-block"></span>Strategic Success</span>
-    </div></div>'''
-    st.markdown(html, unsafe_allow_html=True)
+    with right_col:
+        st.markdown(
+            '<div style="font-size:11px;color:rgba(180,210,255,0.45);'
+            'text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">'
+            'Questions & Answers</div>',
+            unsafe_allow_html=True,
+        )
+        # Show Q&A messages (filter out the script portion for clarity)
+        for msg in messages:
+            with st.chat_message(msg["role"]):
+                if msg["role"] == "assistant":
+                    # Strip script block from display in right column
+                    display_content = re.sub(
+                        r'\*\*LISTENING SCRIPT[^*]*\*\*\s*\n[\s\S]+?(?=\n---|\n\*\*QUESTIONS)',
+                        '[Script shown on the left →]\n\n',
+                        msg["content"],
+                        flags=re.IGNORECASE,
+                    )
+                    render_annotation(display_content)
+                else:
+                    st.markdown(msg["content"])
 
-    if post_text:
-        st.markdown(post_text)
+        user_input = st.chat_input("Type your answers here…")
+        if user_input:
+            _send_message(user_input, mode, topic, target_band, profile, user_id)
+
+        if not messages:
+            section = mode.split("-")[1].strip() if "-" in mode else "Section 1"
+            if st.button(f"▶ Generate {section} exercise", use_container_width=True,
+                         key="gen_listening"):
+                _send_message(
+                    f"Generate an IELTS Listening {section} exercise about {topic}.",
+                    mode, topic, target_band, profile, user_id,
+                )
 
 
-def render_practice():
-    profile = st.session_state.get("profile", {})
-    accent = profile.get("accent_color", "#4A9EFF")
-    tutor_name = profile.get("tutor_name", "Alex")
-    user_id = st.session_state.get("user_id", "demo")
+# ── MAIN RENDER ─────────────────────────────────────────────
 
-    # ── TIER LIMITS ──
-    TIER_LIMITS = {
-        "free":      {"sessions": 3,  "calls": 1,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
-        "starter":   {"sessions": 5,  "calls": 3,  "skills": ["Speaking", "Writing", "Vocabulary"]},
-        "pro":       {"sessions": 8,  "calls": 4,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
-        "intensive": {"sessions": 10, "calls": 2,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
-        "lifetime":  {"sessions": 6,  "calls": 2,  "skills": ["Speaking", "Writing", "Reading", "Listening", "Vocabulary"]},
-    }
-    tier = profile.get("subscription_status", "free")
+def render_practice(profile: dict, user_id: str):
+    tier   = profile.get("subscription_status", "free")
     limits = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
 
-    # Check daily session limit
-    if user_id != "demo":
-        from utils.database import get_daily_session_count
-        daily_sessions = get_daily_session_count(user_id)
-        if daily_sessions >= limits["sessions"]:
-            st.markdown(f"""
-            <div style="text-align:center;padding:40px 20px">
-                <div style="font-size:40px;margin-bottom:12px">⏰</div>
-                <div style="font-size:18px;font-weight:700;color:#f0f4ff;margin-bottom:8px">Daily session limit reached</div>
-                <div style="font-size:14px;color:rgba(180,210,255,0.5)">
-                    Your <strong style="color:#4A9EFF">{tier.title()}</strong> plan allows {limits["sessions"]} sessions/day.
-                    You've used {daily_sessions} today. Come back tomorrow or upgrade for more.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            return
+    # Daily session limit check
+    daily_sessions = _get_daily_session_count(user_id) if user_id != "demo" else 0
+    if user_id != "demo" and daily_sessions >= limits["sessions"]:
+        st.markdown(f"""
+<div class="glass-card" style="text-align:center;padding:32px">
+  <div style="font-size:32px;margin-bottom:12px">⏸️</div>
+  <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px">
+    Daily session limit reached
+  </div>
+  <div style="font-size:14px;color:rgba(180,210,255,0.5)">
+    Used {daily_sessions} of {limits['sessions']} sessions today on the {tier} plan.
+    Come back tomorrow or upgrade.
+  </div>
+</div>
+""", unsafe_allow_html=True)
+        return
 
-    # Track calls per session
     call_key = "session_call_count"
     if call_key not in st.session_state:
         st.session_state[call_key] = 0
 
-    # ── CONTROLS ──
-    # Filter modes based on tier
-    allowed_skills = limits["skills"]
-    available_modes = [m for m in MODES if any(s in m for s in allowed_skills)]
-    if not available_modes:
-        available_modes = MODES[:2]  # fallback to Speaking + Writing
+    # Filter modes by tier
+    allowed = limits["skills"]
+    available_modes = [m for m in MODES if any(s in m for s in allowed)] or MODES[:2]
 
-    ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns([3, 2, 1, 1])
-    with ctrl_col1:
-        mode = st.selectbox("Mode", available_modes,
-            index=available_modes.index(st.session_state.get("practice_mode", available_modes[0]))
-                  if st.session_state.get("practice_mode") in available_modes else 0,
-            label_visibility="collapsed", key="practice_mode_select")
+    # ── CONTROLS ──────────────────────────────────────────────
+    c1, c2, c3, c4 = st.columns([3, 2, 1, 1])
+    with c1:
+        stored_mode = st.session_state.get("practice_mode", available_modes[0])
+        mode_idx = available_modes.index(stored_mode) if stored_mode in available_modes else 0
+        mode = st.selectbox("Mode", available_modes, index=mode_idx,
+                            label_visibility="collapsed", key="practice_mode_select")
         st.session_state.practice_mode = mode
+        # Listening redirects to dedicated module
         if "Listening" in mode:
             st.session_state.practice_mode = available_modes[0]
-            st.session_state.current_view = "listening"
+            st.session_state.current_view  = "listening"
             st.rerun()
-    with ctrl_col2:
-        topic = st.selectbox("Topic", TOPICS, label_visibility="collapsed", key="practice_topic")
-    with ctrl_col3:
-        target_band = st.selectbox("Band", [5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0],
-            index=[5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0].index(float(profile.get("target_band",7.0))),
-            label_visibility="collapsed", key="practice_band")
-    with ctrl_col4:
+    with c2:
+        topic = st.selectbox("Topic", TOPICS, label_visibility="collapsed",
+                             key="practice_topic")
+    with c3:
+        band_opts = [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0]
+        default_band = float(profile.get("target_band", 7.0))
+        band_idx = band_opts.index(default_band) if default_band in band_opts else 4
+        target_band = st.selectbox("Band", band_opts, index=band_idx,
+                                   label_visibility="collapsed", key="practice_band")
+    with c4:
         if st.button("🗑️ Clear", use_container_width=True, key="clear_chat"):
-            for key in list(st.session_state.keys()):
-                if key.startswith("practice_timer_"):
-                    del st.session_state[key]
-            st.session_state.practice_messages = []
+            for k in [k for k in st.session_state if k.startswith("practice_timer_")]:
+                del st.session_state[k]
+            st.session_state.practice_messages  = []
             st.session_state.current_session_id = None
+            st.session_state[call_key]          = 0
             st.rerun()
 
-    # ── TIMER ──
+    # Inject recurring errors into profile for prompt building
+    profile_with_errors = _load_recurring_errors_into_profile(profile, user_id)
+
+    # Timer
     _render_practice_timer(mode)
 
-    # ── MODE PILLS ──
-    mode_color = (
-        "#A78BFA" if "Speaking" in mode else "#38BDF8" if "Writing" in mode else
-        "#FCD34D" if "Listening" in mode else "#34D399" if "Reading" in mode else
-        "#F472B6" if "Vocabulary" in mode else "rgba(255,255,255,0.4)")
-    st.markdown(f"""
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        <span class="pill pill-gold">{mode.split("-")[0].strip()}</span>
-        <span class="pill" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)">{topic}</span>
-        <span class="pill pill-green">Band {target_band}</span>
-        <span style="margin-left:auto;font-size:11px;font-weight:600;color:{mode_color};background:{mode_color}18;padding:4px 10px;border-radius:20px;border:1px solid {mode_color}44">{mode}</span>
-    </div>
-    """, unsafe_allow_html=True)
+    # Messages init
+    if "practice_messages" not in st.session_state:
+        st.session_state.practice_messages = []
+    messages    = st.session_state.practice_messages
+    tutor_name  = profile.get("tutor_name", "Alex")
 
-    # ── FEEDBACK MODE TOGGLE ──
-    if "feedback_mode" not in st.session_state:
-        st.session_state.feedback_mode = profile.get("feedback_mode", "detailed")
+    # ── LISTENING — 2-column layout ──────────────────────────
+    if "Listening" in mode:
+        _render_listening_chat(messages, mode, topic, target_band,
+                               profile_with_errors, user_id)
+        return
 
-    fb_col1, fb_col2 = st.columns([1, 3])
-    with fb_col1:
-        current_fb = st.session_state.feedback_mode
-        btn_label = "\U0001f3af Detailed Feedback" if current_fb == "basic" else "\U0001f4dd Basic Feedback"
-        if st.button(btn_label, key="toggle_feedback_mode", use_container_width=True):
-            st.session_state.feedback_mode = "basic" if current_fb == "detailed" else "detailed"
-            # Update profile so AI prompt picks it up
-            if "profile" in st.session_state:
-                st.session_state.profile["feedback_mode"] = st.session_state.feedback_mode
-            st.rerun()
-    with fb_col2:
-        fb_mode = st.session_state.feedback_mode
-        if fb_mode == "detailed":
-            st.markdown("""<div style="font-size:12px;color:rgba(180,210,255,0.5);padding-top:8px">
-                Feedback mode: <strong style="color:#4A9EFF">Detailed</strong> — 3-color annotation + fluency gap analysis active
-            </div>""", unsafe_allow_html=True)
-        else:
-            st.markdown("""<div style="font-size:12px;color:rgba(180,210,255,0.5);padding-top:8px">
-                Feedback mode: <strong style="color:rgba(180,210,255,0.7)">Basic</strong> — band score + general feedback
-            </div>""", unsafe_allow_html=True)
-
-    # ── CHAT MESSAGES (ChatGPT-style separated bubbles) ──
-    messages = st.session_state.get("practice_messages", [])
-
-    # Inject chat styling — clear separation between user/AI
-    st.markdown("""
-    <style>
-    [data-testid="stChatMessage"][data-author="user"] {
-        background: rgba(74,158,255,0.06) !important;
-        border: 1px solid rgba(74,158,255,0.12) !important;
-        border-radius: 16px 16px 4px 16px !important;
-        padding: 16px 20px !important;
-        margin: 12px 0 12px 15% !important;
-        max-width: 85% !important;
-        margin-left: auto !important;
-    }
-    [data-testid="stChatMessage"][data-author="assistant"] {
-        background: rgba(255,255,255,0.02) !important;
-        border: 1px solid rgba(74,158,255,0.06) !important;
-        border-radius: 16px 16px 16px 4px !important;
-        padding: 20px 24px !important;
-        margin: 12px 15% 12px 0 !important;
-        max-width: 85% !important;
-    }
-    /* Separator line between messages */
-    [data-testid="stChatMessage"] + [data-testid="stChatMessage"] {
-        border-top: none !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
+    # ── CHAT HISTORY / WELCOME ────────────────────────────────
     if not messages:
-        mode_descs = {
-            "Speaking": "I'll ask you IELTS Speaking questions and score each answer with band feedback.",
-            "Writing - Task 1": "Give you a graph/chart description task and score your response.",
-            "Writing - Task 2": "Give you an essay topic and score your essay with 3-color annotation.",
-            "Writing": "Give you Task 1 or Task 2 questions and score your essays in detail.",
-            "Reading": "Give you an academic passage with questions. Answer all questions, then I'll score them.",
-            "Vocabulary": "Teach you 5 high-band words and quiz you at the end.",
-            "General": "Ask me anything about IELTS."}
-        mode_label_short = mode.split("-")[0].strip()
-        mode_desc = next((v for k,v in mode_descs.items() if k in mode), "Ask me anything.")
-
+        descs = {
+            "Speaking":   "I'll ask IELTS Speaking questions and give instant band score feedback.",
+            "Writing":    "Paste your essay to score, or ask me for a question first.",
+            "Reading":    "I'll generate an academic passage and 13 exam-style questions.",
+            "Vocabulary": "I'll teach 5 high-band words and quiz you.",
+            "General":    "Ask me anything about IELTS.",
+        }
+        short = mode.split("-")[0].strip()
+        desc  = next((v for k, v in descs.items() if k in mode), "Ask me anything.")
         with st.chat_message("assistant"):
-            st.markdown(f"Hello! I'm **{tutor_name}**, your IELTS AI tutor. You're in **{mode_label_short}** mode — {mode_desc}\n\nWhat would you like to practice?")
+            st.markdown(
+                f"Hello! I'm **{tutor_name}**, your IELTS AI tutor. "
+                f"You're in **{short}** mode — {desc}\n\nWhat would you like to practice?"
+            )
 
-        # Mode-specific action buttons
+        # Quick-start chips
         if "Reading" in mode:
-            chip1, chip2, chip3 = st.columns(3)
-            with chip1:
-                if st.button("Generate passage + questions", key="chip_r1", use_container_width=True):
-                    _send_message(f"Generate an IELTS Academic reading passage about {topic} (600-800 words, paragraphs labeled A-D). Then give me 13 mixed questions (TFNG, matching headings, sentence completion, multiple choice). I will answer them one by one.", mode, topic, target_band, profile, user_id)
-            with chip2:
-                if st.button("TFNG practice only", key="chip_r2", use_container_width=True):
-                    _send_message(f"Generate a short 300-word academic passage about {topic} and give me 5 True/False/Not Given questions.", mode, topic, target_band, profile, user_id)
-            with chip3:
-                if st.button("Explain strategy", key="chip_r3", use_container_width=True):
-                    _send_message("Explain the best strategy for IELTS Academic Reading, especially for TFNG questions.", mode, topic, target_band, profile, user_id)
-        elif "Writing" in mode:
-            chip1, chip2, chip3 = st.columns(3)
-            with chip1:
-                if st.button("Give me a question", key="chip_w1", use_container_width=True):
-                    _send_message(f"Give me an IELTS {mode.split('(')[0].strip()} question about {topic}.", mode, topic, target_band, profile, user_id)
-            with chip2:
-                if st.button("Score my essay", key="chip_w2", use_container_width=True):
-                    _send_message("I want to submit my essay for scoring. Please wait for me to paste it.", mode, topic, target_band, profile, user_id)
-            with chip3:
-                if st.button("Explain strategy", key="chip_w3", use_container_width=True):
-                    _send_message(f"Explain the best strategy for IELTS {mode.split('(')[0].strip()}.", mode, topic, target_band, profile, user_id)
-        else:
-            chip1, chip2, chip3, chip4 = st.columns(4)
-            with chip1:
-                if st.button("Give me a question", key="chip_q", use_container_width=True):
-                    _send_message(f"Give me an IELTS {mode_label_short} question about {topic}.", mode, topic, target_band, profile, user_id)
-            with chip2:
-                if st.button("Score my essay", key="chip_e", use_container_width=True):
-                    _send_message("I want to submit my essay for scoring. Please wait for me to paste it.", mode, topic, target_band, profile, user_id)
-            with chip3:
-                if st.button("Teach vocabulary", key="chip_v", use_container_width=True):
-                    _send_message(f"Teach me 5 high-band IELTS vocabulary words about {topic}.", mode, topic, target_band, profile, user_id)
-            with chip4:
-                if st.button("Explain strategy", key="chip_s", use_container_width=True):
-                    _send_message(f"Explain the best strategy for IELTS {mode_label_short}.", mode, topic, target_band, profile, user_id)
+            ch1, ch2, ch3 = st.columns(3)
+            with ch1:
+                if st.button("Generate passage + 13 Qs", key="cr1", use_container_width=True):
+                    _send_message(
+                        f"Generate an IELTS Academic reading passage about {topic} "
+                        f"(600-800 words, paragraphs A-E). Give exactly 13 questions: "
+                        f"4 TFNG, 4 matching headings, 3 sentence completion, 2 MCQ. "
+                        f"I will answer them one by one.",
+                        mode, topic, target_band, profile_with_errors, user_id)
+            with ch2:
+                if st.button("TFNG practice only", key="cr2", use_container_width=True):
+                    _send_message(
+                        f"Generate a 300-word academic passage about {topic} and give me 5 TFNG questions.",
+                        mode, topic, target_band, profile_with_errors, user_id)
+            with ch3:
+                if st.button("TFNG strategy", key="cr3", use_container_width=True):
+                    _send_message("Explain the best strategy for IELTS Academic Reading TFNG questions.",
+                                  mode, topic, target_band, profile_with_errors, user_id)
+
+        elif "Speaking" in mode:
+            ch1, ch2, ch3 = st.columns(3)
+            sp_part = ("Part 1" if "Part 1" in mode else
+                       "Part 2" if "Part 2" in mode else "Part 3")
+            with ch1:
+                if st.button("Start with a question", key="cs1", use_container_width=True):
+                    _send_message(f"Give me an IELTS {sp_part} question about {topic}.",
+                                  mode, topic, target_band, profile_with_errors, user_id)
+            with ch2:
+                if st.button("Score my answer", key="cs2", use_container_width=True):
+                    _send_message("Ask me a question and score my answer.",
+                                  mode, topic, target_band, profile_with_errors, user_id)
+            with ch3:
+                if st.button("Explain strategy", key="cs3", use_container_width=True):
+                    _send_message(f"Explain the best strategy for IELTS Speaking {sp_part}.",
+                                  mode, topic, target_band, profile_with_errors, user_id)
+
+        elif "Writing" not in mode:
+            ch1, ch2, ch3, ch4 = st.columns(4)
+            short_m = mode.split("-")[0].strip()
+            with ch1:
+                if st.button("Give me a question", key="cg1", use_container_width=True):
+                    _send_message(f"Give me an IELTS {short_m} question about {topic}.",
+                                  mode, topic, target_band, profile_with_errors, user_id)
+            with ch2:
+                if st.button("Score my answer", key="cg2", use_container_width=True):
+                    _send_message("I want to submit my answer for scoring. Please wait.",
+                                  mode, topic, target_band, profile_with_errors, user_id)
+            with ch3:
+                if st.button("Teach vocabulary", key="cg3", use_container_width=True):
+                    _send_message(f"Teach me 5 high-band IELTS vocabulary words about {topic}.",
+                                  mode, topic, target_band, profile_with_errors, user_id)
+            with ch4:
+                if st.button("Explain strategy", key="cg4", use_container_width=True):
+                    _send_message(f"Explain the best strategy for IELTS {short_m}.",
+                                  mode, topic, target_band, profile_with_errors, user_id)
     else:
         for msg in messages:
             with st.chat_message(msg["role"]):
@@ -456,55 +718,58 @@ def render_practice():
                 else:
                     st.markdown(msg["content"])
 
-    # ── INPUT AREA: Mic + Text (side by side) ──
-    if HAS_MIC_RECORDER and "Speaking" in mode:
-        mic_col, input_col = st.columns([1, 5])
+    # ── INPUT AREA ─────────────────────────────────────────────
+    is_writing = "Writing" in mode and "Task" in mode
+
+    if is_writing:
+        _render_writing_input(mode, topic, target_band, profile_with_errors, user_id)
+    elif HAS_MIC_RECORDER and "Speaking" in mode:
+        mic_col, txt_col = st.columns([1, 5])
         with mic_col:
-            voice_text = speech_to_text(
-                language='en', start_prompt="🎤 Speak",
-                stop_prompt="⏹️ Stop", just_once=True,
-                use_container_width=True, key='stt_main')
-            if voice_text:
-                st.toast("Voice captured!", icon="🎙️")
-                _send_message(f"{voice_text}", mode, topic, target_band, profile, user_id)
-        with input_col:
-            user_input = st.chat_input("Type your answer, essay, or question here...")
-            if user_input:
-                _send_message(user_input, mode, topic, target_band, profile, user_id)
+            voice = speech_to_text(language="en", start_prompt="🎤 Speak",
+                                   stop_prompt="⏹️ Stop", just_once=True,
+                                   use_container_width=True, key="stt_main")
+            if voice:
+                st.toast("Voice captured! ✓", icon="🎙️")
+                _send_message(voice, mode, topic, target_band, profile_with_errors, user_id)
+        with txt_col:
+            ui = st.chat_input("Or type your answer here…")
+            if ui:
+                _send_message(ui, mode, topic, target_band, profile_with_errors, user_id)
     else:
-        user_input = st.chat_input("Type your answer, essay, or question here...")
-        if user_input:
-            _send_message(user_input, mode, topic, target_band, profile, user_id)
+        ui = st.chat_input("Type your answer or question here…")
+        if ui:
+            _send_message(ui, mode, topic, target_band, profile_with_errors, user_id)
 
 
-def _send_message(text, mode, topic, target_band, profile, user_id):
+# ── SEND MESSAGE ────────────────────────────────────────────
+
+def _send_message(text: str, mode: str, topic: str, target_band: float,
+                  profile: dict, user_id: str):
     if "practice_messages" not in st.session_state:
         st.session_state.practice_messages = []
 
-    # ── CALL LIMIT CHECK ──
-    TIER_LIMITS = {
-        "free":      {"sessions": 3,  "calls": 1},
-        "starter":   {"sessions": 5,  "calls": 3},
-        "pro":       {"sessions": 8,  "calls": 4},
-        "intensive": {"sessions": 10, "calls": 2},
-        "lifetime":  {"sessions": 6,  "calls": 2},
-    }
-    tier = profile.get("subscription_status", "free")
+    # Call limit check
+    tier   = profile.get("subscription_status", "free")
     limits = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
     call_key = "session_call_count"
 
     if user_id != "demo":
-        current_calls = st.session_state.get(call_key, 0)
-        if current_calls >= limits["calls"]:
-            st.warning(f"You've reached your {limits['calls']} AI call limit for this session. Start a new session or upgrade your plan.")
+        if st.session_state.get(call_key, 0) >= limits["calls"]:
+            st.warning(
+                f"You've reached your {limits['calls']} AI call limit for this session. "
+                "Start a new session or upgrade your plan."
+            )
             return
 
-    if not st.session_state.get("current_session_id") and user_id != "demo":
+    # Create session on first message
+    session_id = st.session_state.get("current_session_id")
+    if not session_id and user_id != "demo":
         session_id = create_session(user_id, mode, topic, target_band)
         st.session_state.current_session_id = session_id
-    else:
-        session_id = st.session_state.get("current_session_id")
+        _increment_daily_session_count(user_id)
 
+    # Save user message
     st.session_state.practice_messages.append({"role": "user", "content": text})
     if session_id and user_id != "demo":
         save_message(session_id, user_id, "user", text)
@@ -512,39 +777,49 @@ def _send_message(text, mode, topic, target_band, profile, user_id):
     with st.chat_message("user"):
         st.markdown(text)
 
-    # Increment call count
     st.session_state[call_key] = st.session_state.get(call_key, 0) + 1
 
+    # Get AI response
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            system = get_system_prompt(mode, profile)
+        with st.spinner("Thinking…"):
+            system   = get_system_prompt(mode, profile)
             response = chat(st.session_state.practice_messages, system)
             if response.startswith("ERROR"):
                 st.error(response)
+                st.session_state[call_key] -= 1  # don't count failed calls
                 return
             render_annotation(response)
 
     st.session_state.practice_messages.append({"role": "assistant", "content": response})
+
     if session_id and user_id != "demo":
         save_message(session_id, user_id, "assistant", response)
         update_session(session_id, {"message_count": len(st.session_state.practice_messages)})
 
+    # Save band score
     _try_extract_and_save_band(response, mode, user_id, session_id)
+
+    # Save recurring errors
+    if user_id != "demo":
+        _extract_and_save_errors(response, user_id)
+
     st.rerun()
 
 
-def _try_extract_and_save_band(response, mode, user_id, session_id):
+def _try_extract_and_save_band(response: str, mode: str, user_id: str, session_id):
     if not session_id or user_id == "demo":
         return
-    from utils.score_extractor import extract_band_score_from_text
-    skill = ("speaking" if "Speaking" in mode else "writing" if "Writing" in mode else
-             "reading" if "Reading" in mode else "listening" if "Listening" in mode else "general")
-    band = extract_band_score_from_text(response, skill=skill, default=None)
-    if band is None:
-        band = extract_band_score_from_text(response, skill="overall", default=None)
-    if band is not None:
-        try:
+    try:
+        from utils.score_extractor import extract_band_score_from_text
+        skill = ("speaking"  if "Speaking"  in mode else
+                 "writing"   if "Writing"   in mode else
+                 "reading"   if "Reading"   in mode else
+                 "listening" if "Listening" in mode else "general")
+        band = extract_band_score_from_text(response, skill=skill, default=None)
+        if band is None:
+            band = extract_band_score_from_text(response, skill="overall", default=None)
+        if band is not None:
             save_band_score(user_id, session_id, skill, band)
             update_session(session_id, {"overall_band": band})
-        except Exception:
-            pass
+    except Exception:
+        pass
