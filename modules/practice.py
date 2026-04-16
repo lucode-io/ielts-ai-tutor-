@@ -1,5 +1,5 @@
 # ============================================================
-# modules/practice.py  —  FINAL VERSION (April 14 2026)
+# modules/practice.py  —  FINAL VERSION (April 16 2026)
 # CRITICAL_FIXES_REPORT items resolved:
 #   ✅ #1  Recurring errors saved after every AI response (3 extraction methods)
 #   ✅ #2  3-color annotation always rendered — dedup logic fully rewritten
@@ -7,10 +7,12 @@
 #   ✅ #6  Writing: st.text_area + live word counter (key/value collision fixed)
 #   ✅ #7  Listening: 2-column layout (audio+script left, questions right)
 # BUG FIXES vs previous version:
+#   🐛 render_practice — signature changed to zero-arg to match router call
+#        (fixes TypeError at ielts_master.py:363)
 #   🐛 render_annotation — dead `annotations` list + duplicate span renders removed
 #   🐛 text_area key collision — value no longer mirrors key in session_state
 #   🐛 Method 3 error extraction — false-positive guard added (scoring context only)
-#   🐛 get_daily_session_count/increment_daily_session_count — graceful fallback added
+#   🐛 get_daily_session_count/increment_daily_session_count — graceful fallback
 # ============================================================
 
 import streamlit as st
@@ -34,7 +36,6 @@ except ImportError:
     HAS_MIC_RECORDER = False
 
 # ── SCORING CONTEXT PHRASES ─────────────────────────────────
-# Method 3 only fires when response is clearly giving feedback on the student's work
 _SCORING_CONTEXT_RE = re.compile(
     r'\b(your (writing|essay|answer|response|speaking)|'
     r'you (wrote|used|said|made)|'
@@ -201,7 +202,6 @@ def get_system_prompt(mode: str, profile: dict) -> str:
 # ── RECURRING ERROR HELPERS ─────────────────────────────────
 
 def _load_recurring_errors_into_profile(profile: dict, user_id: str) -> dict:
-    """Fetch top-5 errors from DB and inject into profile for prompt building."""
     if user_id == "demo":
         return profile
     try:
@@ -215,7 +215,6 @@ def _load_recurring_errors_into_profile(profile: dict, user_id: str) -> dict:
 
 
 def _classify_error(text: str) -> tuple:
-    """Return (category, error_type) from free text."""
     t = text.lower()
     if any(w in t for w in ["verb", "tense", "agreement", "singular", "plural", "past", "present", "article"]):
         return "grammar", "grammar_error"
@@ -229,14 +228,10 @@ def _classify_error(text: str) -> tuple:
 
 
 def _extract_and_save_errors(response: str, user_id: str):
-    """
-    Extract errors from AI response and save to recurring_errors table.
-    Three methods in priority order.
-    """
     if user_id == "demo":
         return
 
-    # ── Method 1: Structured JSON block (from session_analyzer_prompt) ──
+    # ── Method 1: Structured JSON block ──
     try:
         json_match = re.search(
             r'\{"errors"\s*:\s*\[[\s\S]*?\]\s*\}', response)
@@ -250,12 +245,11 @@ def _extract_and_save_errors(response: str, user_id: str):
                     description=err.get("description", ""),
                     example=err.get("example", ""),
                 )
-            return  # structured data is authoritative — stop here
+            return
     except Exception:
         pass
 
     # ── Method 2: RED annotation parsing ──
-    # Match: 🔴 [RED — Band Killer]: "exact quote" → correction → reason
     try:
         red_re = re.compile(
             r'\U0001f534\s*\[RED[^\]]*\]:\s*'
@@ -279,22 +273,21 @@ def _extract_and_save_errors(response: str, user_id: str):
     except Exception:
         pass
 
-    # ── Method 3: Pattern matching — ONLY when scoring context confirmed ──
-    # Guard: only run if response is clearly feedback on the student's work
+    # ── Method 3: Pattern matching — scoring context guard ──
     if not _SCORING_CONTEXT_RE.search(response):
         return
 
     try:
         grammar_patterns = [
             (r'\bsubject[- ]verb agreement\b',   "subject_verb_agreement", "grammar"),
-            (r'\barticle (a|an|the)\b',           "article_usage",          "grammar"),
-            (r'\btense error\b',                  "tense_error",            "grammar"),
-            (r'\bplural (error|form)\b',          "plural_error",           "grammar"),
-            (r'\bpreposition (error|mistake)\b',  "preposition_error",      "grammar"),
-            (r'\bword order (error|problem)\b',   "word_order",             "grammar"),
-            (r'\bcollocation error\b',            "collocation_error",      "vocabulary"),
-            (r'\bfiller words? detected\b',       "filler_overuse",         "pronunciation"),
-            (r'\bno topic sentence\b',            "paragraph_structure",    "structure"),
+            (r'\barticle (a|an|the)\b',          "article_usage",          "grammar"),
+            (r'\btense error\b',                 "tense_error",            "grammar"),
+            (r'\bplural (error|form)\b',         "plural_error",           "grammar"),
+            (r'\bpreposition (error|mistake)\b', "preposition_error",      "grammar"),
+            (r'\bword order (error|problem)\b',  "word_order",             "grammar"),
+            (r'\bcollocation error\b',           "collocation_error",      "vocabulary"),
+            (r'\bfiller words? detected\b',      "filler_overuse",         "pronunciation"),
+            (r'\bno topic sentence\b',           "paragraph_structure",    "structure"),
         ]
         for pattern, etype, cat in grammar_patterns:
             if re.search(pattern, response, re.IGNORECASE):
@@ -312,23 +305,11 @@ def _extract_and_save_errors(response: str, user_id: str):
 # ── 3-COLOR ANNOTATION RENDERER ─────────────────────────────
 
 def render_annotation(text: str):
-    """
-    Parse and render 3-color annotation cards from AI response.
-    Falls back to plain markdown if no annotations found.
-
-    Fixed vs previous version:
-    - Single regex pass only (no duplicate iteration)
-    - Proper dedup by span start position
-    - Dead 'annotations' list removed
-    - emoji_map key normalised before lookup
-    """
-    # Single comprehensive pattern: emoji + optional label + content
-    # Captures: group(1)=emoji char, group(2)=everything after
     ANNO_RE = re.compile(
-        r'(\U0001f534|\U0001f535|\U0001f7e2)'   # red / blue / green circle
-        r'[^\S\n]*'                              # optional horizontal whitespace
-        r'(?:\[[^\]]{0,50}\][:\s\u2014\u2013\-]*)?'  # optional [LABEL]: prefix
-        r'([^\n]+)',                             # content to end of line
+        r'(\U0001f534|\U0001f535|\U0001f7e2)'
+        r'[^\S\n]*'
+        r'(?:\[[^\]]{0,50}\][:\s\u2014\u2013\-]*)?'
+        r'([^\n]+)',
         re.UNICODE,
     )
 
@@ -338,9 +319,8 @@ def render_annotation(text: str):
         '\U0001f7e2': ('#00e87a', '\U0001f7e2 Strategic Win'),
     }
 
-    # Collect all matches, dedup by start position
-    seen_starts: set = set()
-    spans: list = []  # (start, end, emoji, content)
+    seen_starts = set()
+    spans = []
 
     for m in ANNO_RE.finditer(text):
         start = m.start()
@@ -353,19 +333,15 @@ def render_annotation(text: str):
             spans.append((start, m.end(), emoji, content))
 
     if not spans:
-        # No annotations found — render as plain markdown
         st.markdown(text)
         return
 
-    # Build output: prose blocks interleaved with annotation cards
     last_pos = 0
     for start, end, emoji, content in spans:
-        # Prose before this annotation
         prose = text[last_pos:start].strip()
         if prose:
             st.markdown(prose)
 
-        # Annotation card
         color, label = COLOR_MAP.get(emoji, ('#4A9EFF', 'Note'))
         st.markdown(
             f'<div style="background:{color}12;border-left:3px solid {color};'
@@ -379,25 +355,18 @@ def render_annotation(text: str):
         )
         last_pos = end
 
-    # Remaining prose after last annotation
     remainder = text[last_pos:].strip()
     if remainder:
         st.markdown(remainder)
 
 
-# ── WRITING INPUT (text_area + word counter) ─────────────────
+# ── WRITING INPUT ───────────────────────────────────────────
 
 def _render_writing_input(mode: str, topic: str, target_band: float,
                            profile: dict, user_id: str):
-    """
-    Writing mode input: st.text_area with live word counter.
-    BUG FIX: use separate session_state key for stored value vs widget key
-    to avoid Streamlit DuplicateWidgetID / value-key conflict.
-    """
     min_words  = 150 if "Task 1" in mode else 250
     task_label = "Task 1" if "Task 1" in mode else "Task 2"
 
-    # Store value under _val key; widget uses _widget key
     val_key    = f"essay_val_{mode}"
     widget_key = f"essay_widget_{mode}"
 
@@ -419,7 +388,6 @@ def _render_writing_input(mode: str, topic: str, target_band: float,
         key=widget_key,
         label_visibility="collapsed",
     )
-    # Sync to val_key so we can read it reliably
     st.session_state[val_key] = essay_text
 
     word_count  = len(essay_text.split()) if essay_text.strip() else 0
@@ -465,27 +433,18 @@ def _render_writing_input(mode: str, topic: str, target_band: float,
                 mode, topic, target_band, profile, user_id,
             )
 
-    # Free-form chat still available for questions
     chat_in = st.chat_input("Ask anything about writing strategy, vocab, or grammar…")
     if chat_in:
         _send_message(chat_in, mode, topic, target_band, profile, user_id)
 
 
-# ── LISTENING 2-COLUMN LAYOUT ────────────────────────────────
-# Report #7: split audio+script (left) from questions+answers (right)
+# ── LISTENING 2-COLUMN LAYOUT ───────────────────────────────
 
 def _render_listening_chat(messages: list, mode: str, topic: str,
                             target_band: float, profile: dict, user_id: str):
-    """
-    2-column layout for Listening mode.
-    Left col (55%): script display + audio player placeholder.
-    Right col (45%): Q&A chat.
-    """
-    # Extract the most recent listening script from messages if available
     script_text = ""
     for msg in reversed(messages):
         if msg["role"] == "assistant":
-            # Look for script block
             m = re.search(
                 r'\*\*LISTENING SCRIPT[^*]*\*\*\s*\n([\s\S]+?)(?=\n---|\n\*\*QUESTIONS)',
                 msg["content"],
@@ -527,11 +486,9 @@ def _render_listening_chat(messages: list, mode: str, topic: str,
             'Questions & Answers</div>',
             unsafe_allow_html=True,
         )
-        # Show Q&A messages (filter out the script portion for clarity)
         for msg in messages:
             with st.chat_message(msg["role"]):
                 if msg["role"] == "assistant":
-                    # Strip script block from display in right column
                     display_content = re.sub(
                         r'\*\*LISTENING SCRIPT[^*]*\*\*\s*\n[\s\S]+?(?=\n---|\n\*\*QUESTIONS)',
                         '[Script shown on the left →]\n\n',
@@ -557,8 +514,16 @@ def _render_listening_chat(messages: list, mode: str, topic: str,
 
 
 # ── MAIN RENDER ─────────────────────────────────────────────
+# SIGNATURE FIX: zero-arg to match router call in ielts_master.py
 
-def render_practice(profile: dict, user_id: str):
+def render_practice():
+    """
+    Main practice module renderer.
+    Reads profile and user_id from st.session_state (router pattern).
+    """
+    profile = st.session_state.get("profile", {}) or {}
+    user_id = st.session_state.get("user_id", "demo")
+
     tier   = profile.get("subscription_status", "free")
     limits = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
 
@@ -786,7 +751,7 @@ def _send_message(text: str, mode: str, topic: str, target_band: float,
             response = chat(st.session_state.practice_messages, system)
             if response.startswith("ERROR"):
                 st.error(response)
-                st.session_state[call_key] -= 1  # don't count failed calls
+                st.session_state[call_key] -= 1
                 return
             render_annotation(response)
 
