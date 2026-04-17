@@ -35,6 +35,22 @@ try:
 except ImportError:
     HAS_MIC_RECORDER = False
 
+# ── VIP WHITELIST ───────────────────────────────────────────
+# Emails here bypass ALL session/call limits (unlimited free access)
+VIP_EMAILS = {
+    "ariukanyamraa@gmail.com",
+    # add more lowercase emails here
+}
+
+
+def _is_vip(profile: dict) -> bool:
+    """Return True if user email is whitelisted for unlimited access."""
+    if not profile:
+        return False
+    email = (profile.get("email") or "").strip().lower()
+    return email in VIP_EMAILS
+
+
 # ── SCORING CONTEXT PHRASES ─────────────────────────────────
 _SCORING_CONTEXT_RE = re.compile(
     r'\b(your (writing|essay|answer|response|speaking)|'
@@ -527,9 +543,10 @@ def render_practice():
     tier   = profile.get("subscription_status", "free")
     limits = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
 
-    # Daily session limit check
+    # Daily session limit check (VIPs bypass)
+    is_vip = _is_vip(profile)
     daily_sessions = _get_daily_session_count(user_id) if user_id != "demo" else 0
-    if user_id != "demo" and daily_sessions >= limits["sessions"]:
+    if user_id != "demo" and not is_vip and daily_sessions >= limits["sessions"]:
         st.markdown(f"""
 <div class="glass-card" style="text-align:center;padding:32px">
   <div style="font-size:32px;margin-bottom:12px">⏸️</div>
@@ -719,7 +736,7 @@ def _send_message(text: str, mode: str, topic: str, target_band: float,
     limits = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
     call_key = "session_call_count"
 
-    if user_id != "demo":
+    if user_id != "demo" and not _is_vip(profile):
         if st.session_state.get(call_key, 0) >= limits["calls"]:
             st.warning(
                 f"You've reached your {limits['calls']} AI call limit for this session. "
