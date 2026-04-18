@@ -1,8 +1,11 @@
 # ============================================================
-# utils/elevenlabs_audio.py
-# ElevenLabs TTS - with retry logic and silent fallback
+# utils/elevenlabs_audio.py  —  GODMODE FIX
+# ElevenLabs TTS with retry logic and silent fallback
+# FIX: Added `import os`, properly wired api_key/voice_id from env
+#      Previous version had broken floating os.environ.get() lines
 # ============================================================
 
+import os
 import streamlit as st
 import base64
 import requests
@@ -24,13 +27,20 @@ def generate_audio(text: str, voice_id: str = None) -> Optional[str]:
     tts_key = f"tts_count_{date.today().isoformat()}"
     current_tts = st.session_state.get(tts_key, 0)
     if current_tts >= max_tts:
-        return _fallback_tts(text)  # Use free gTTS when limit hit
+        return _fallback_tts(text)
     st.session_state[tts_key] = current_tts + 1
 
     try:
-        api_key = st.secrets.get("ELEVENLABS_API_KEY", "")
+        # ── READ KEYS FROM ENV FIRST, FALL BACK TO st.secrets ──
+        api_key = (
+            os.environ.get("ELEVENLABS_API_KEY")
+            or st.secrets.get("ELEVENLABS_API_KEY", "")
+        )
         if not voice_id:
-            voice_id = st.secrets.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
+            voice_id = (
+                os.environ.get("ELEVENLABS_VOICE_ID")
+                or st.secrets.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
+            )
 
         if not api_key:
             return _fallback_tts(text)
@@ -52,10 +62,8 @@ def generate_audio(text: str, voice_id: str = None) -> Optional[str]:
             }
         }
 
-        # First attempt
         response = requests.post(url, json=payload, headers=headers, timeout=30)
 
-        # Handle 429 rate limit — wait and retry once
         if response.status_code == 429:
             time.sleep(3)
             response = requests.post(url, json=payload, headers=headers, timeout=30)
@@ -63,7 +71,6 @@ def generate_audio(text: str, voice_id: str = None) -> Optional[str]:
         if response.status_code == 200:
             return base64.b64encode(response.content).decode()
 
-        # Any other error — silent fallback
         return _fallback_tts(text)
 
     except Exception:

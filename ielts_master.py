@@ -1,8 +1,9 @@
 # ============================================================
-# ielts_master.py
-# Main entry point — Navigation router + top nav
-# BUG FIX: Stale session cleared when ?new=1 param present
-#           (landing page "Start Free" CTA must link with ?new=1)
+# ielts_master.py  —  GODMODE FIX (April 18 2026)
+# FIXES:
+#   - Added "listening" route to router
+#   - Added "Listening" tab to nav bar
+#   - Fixed stale session cleanup via ?new=1 param
 # ============================================================
 
 import streamlit as st
@@ -37,13 +38,9 @@ def init_state():
 
 init_state()
 
-# ── BUG 1 FIX: Clear stale session for new visitors from landing page ──
-# Landing page CTAs must use: https://ielts-ai-tutor.streamlit.app/?new=1
-# This prevents a returning user's cached Supabase session from
-# auto-loading on a shared/family phone when a new user taps "Start Free".
+# ── Clear stale session for new visitors (landing page CTA ?new=1) ──
 _params = st.query_params
 if _params.get("new") == "1":
-    # Only run the forced sign-out once per page load
     if not st.session_state.get("_new_session_cleared"):
         try:
             from utils.database import get_supabase_client
@@ -51,20 +48,17 @@ if _params.get("new") == "1":
             _supabase.auth.sign_out()
         except Exception:
             pass
-        # Wipe all auth-related session state
         for _k in ["auth_user", "profile", "user_id", "is_demo", "auth_session"]:
             st.session_state[_k] = None if _k != "is_demo" else False
         st.session_state.current_view = "auth"
         st.session_state._new_session_cleared = True
-    # Remove the param so reloads don't re-trigger
     st.query_params.clear()
 
 # ── CHECK AUTH ──
 if st.session_state.current_view == "auth" and st.session_state.get("auth_user"):
     st.session_state.current_view = "dashboard"
 
-# ── AUTO-RESTORE SESSION (prevents logout on browser back button) ──
-# Only runs when NOT a forced new-session request
+# ── AUTO-RESTORE SESSION ──
 if not st.session_state.get("profile") and not st.session_state.get("auth_user"):
     try:
         from utils.database import get_supabase_client, get_user_profile
@@ -93,13 +87,13 @@ if st.session_state.current_view == "auth" or not st.session_state.get("profile"
     render_auth()
     st.stop()
 
-# ── ONBOARDING GATE (skip nav for onboarding) ──
+# ── ONBOARDING GATE ──
 if st.session_state.current_view == "onboarding":
     from modules.onboarding import render_onboarding
     render_onboarding()
     st.stop()
 
-# ── MOCK TEST GATE (full-screen, no nav) ──
+# ── MOCK TEST GATE ──
 if st.session_state.current_view == "mock_test":
     from modules.mock_test import render_mock_test
     render_mock_test()
@@ -111,10 +105,11 @@ name = profile.get("full_name", "Student").split()[0]
 streak = profile.get("streak_count", 0)
 current_view = st.session_state.current_view
 
-# ── NAV TABS CONFIG ──
+# ── NAV TABS — LISTENING ADDED ──
 nav_tabs = {
     "dashboard": ("🏠", "Dashboard"),
     "practice": ("🎯", "Practice"),
+    "listening": ("🎧", "Listening"),
     "reports": ("📊", "Reports"),
     "challenge": ("🚀", "21-Day"),
     "settings": ("⚙️", "HQ"),
@@ -149,7 +144,6 @@ tab_cols = st.columns(len(nav_tabs))
 for col, (view_key, (icon, label)) in zip(tab_cols, nav_tabs.items()):
     is_active = current_view == view_key
     with col:
-        btn_style = "btn-primary" if is_active else ""
         st.markdown(f'<div class="im-nav-tab {"im-nav-tab-active" if is_active else ""}">', unsafe_allow_html=True)
         if st.button(f"{icon} {label}", key=f"nav_{view_key}", use_container_width=True):
             st.session_state.current_view = view_key
@@ -167,6 +161,9 @@ if view == "dashboard":
 elif view == "practice":
     from modules.practice import render_practice
     render_practice()
+elif view == "listening":
+    from modules.practice_listening import render_listening_practice
+    render_listening_practice()
 elif view == "reports":
     from modules.reports import render_reports
     render_reports()
