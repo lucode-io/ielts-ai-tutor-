@@ -15,7 +15,7 @@ def inject_global_css(accent: str = "#4A9EFF"):
 
     [data-testid="stSidebar"],[data-testid="stSidebarCollapsedControl"],button[kind="headerNoPadding"],[data-testid="stSidebarNav"]{{display:none!important;visibility:hidden!important;width:0!important;min-width:0!important;max-width:0!important;overflow:hidden!important}}
 
-    .main .block-container{{background:transparent!important;padding-top:0.5rem;max-width:1280px;position:relative;z-index:2}}
+    .main .block-container{{background:transparent!important;padding-top:0.5rem;padding-left:2rem!important;padding-right:2rem!important;max-width:1200px!important;width:100%!important;margin:0 auto!important;position:relative;z-index:2}}
 
     /* ── GLASS CARD ── */
     .glass-card{{background:rgba(74,158,255,0.04);border-radius:16px;border:1px solid rgba(74,158,255,0.12);padding:20px;position:relative;overflow:hidden;margin-bottom:16px;transition:border-color 0.3s}}
@@ -84,31 +84,37 @@ def inject_global_css(accent: str = "#4A9EFF"):
     [data-testid="stChatMessage"] [data-testid="stAvatar"]{{width:28px!important;height:28px!important;min-width:28px!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span{{font-size:14px!important;line-height:1.8!important;color:rgba(200,220,255,0.88)!important;letter-spacing:0.01em!important;user-select:text!important;-webkit-user-select:text!important}}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span{{font-size:14.5px!important;line-height:1.75!important;color:#e8efff!important;letter-spacing:0.005em!important;user-select:text!important;-webkit-user-select:text!important;font-weight:400!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong{{color:{accent}!important;font-weight:600!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h1,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h2,
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h3{{color:{accent}!important;font-weight:700!important;font-size:15px!important;margin:0.8rem 0 0.3rem!important}}
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{margin-bottom:4px!important;color:rgba(180,210,255,0.75)!important}}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li{{margin-bottom:4px!important;color:#d8e3ff!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] hr{{border-color:rgba(74,158,255,0.15)!important;margin:10px 0!important}}
-    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] code{{background:rgba(74,158,255,0.1)!important;color:{accent}!important;padding:2px 7px!important;border-radius:5px!important;font-size:13px!important}}
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] code{{background:rgba(74,158,255,0.12)!important;color:{accent}!important;padding:2px 7px!important;border-radius:5px!important;font-size:13px!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"]{{user-select:text!important;-webkit-user-select:text!important;cursor:text!important}}
     [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] *{{user-select:text!important;-webkit-user-select:text!important}}
 
-    /* ── MOBILE RESPONSIVE ── */
+    /* ── TABLET (768px) ── */
     @media (max-width:768px) {{
+        .main .block-container{{padding-left:0.75rem!important;padding-right:0.75rem!important}}
         [data-testid="stChatMessage"][data-author="user"]>div:last-child{{margin-left:5%!important;max-width:95%!important}}
         [data-testid="stChatMessage"][data-author="assistant"]>div:last-child{{margin-right:0!important;max-width:100%!important;padding:14px 16px!important}}
-        .im-top-nav{{padding:8px 12px!important;border-radius:10px!important}}
-        .im-brand-text{{font-size:14px!important}}
-        .im-nav-tab{{font-size:11px!important;padding:6px 8px!important}}
-        .main .block-container{{padding-left:0.5rem!important;padding-right:0.5rem!important}}
+        .im-top-nav{{padding:10px 14px!important;border-radius:12px!important;flex-direction:column!important;gap:8px!important;text-align:center!important}}
+        .im-top-nav-left{{justify-content:center!important;width:100%!important}}
+        .im-top-nav-right{{width:100%!important;justify-content:center!important;gap:8px!important}}
+        .im-brand-text{{font-size:15px!important}}
         .glass-card{{padding:14px!important;border-radius:12px!important}}
-        /* Bigger tap targets on mobile to fix unresponsive buttons */
-        .stButton>button{{min-height:44px!important;font-size:12px!important;padding:8px 6px!important;line-height:1.2!important;-webkit-tap-highlight-color:rgba(74,158,255,0.3)!important;touch-action:manipulation!important}}
-        /* Prevent double-tap zoom on buttons */
+        /* Bigger tap targets on mobile */
+        .stButton>button{{min-height:46px!important;font-size:13px!important;padding:10px 8px!important;line-height:1.2!important;-webkit-tap-highlight-color:rgba(74,158,255,0.3)!important;touch-action:manipulation!important}}
+        /* Prevent iOS input zoom */
         [data-testid="stChatInput"] textarea{{font-size:16px!important;-webkit-user-select:text!important}}
         input,textarea,select{{font-size:16px!important}}
+        /* Selectboxes full width */
+        [data-testid="stSelectbox"]{{min-width:0!important;width:100%!important}}
+        /* Challenge calendar adjusts */
+        .challenge-day{{width:40px!important;height:40px!important;font-size:12px!important}}
+        .challenge-label{{font-size:8px!important}}
     }}
 
     /* ── HIDE STREAMLIT BRANDING ── */
@@ -176,14 +182,14 @@ def inject_global_css(accent: str = "#4A9EFF"):
     .quote-author{{font-size:10px;color:{accent};font-weight:600;letter-spacing:0.1em;text-transform:uppercase}}
 
     /* ── CHALLENGE DAYS ── */
-    .challenge-day{{width:44px;height:44px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin:0 auto 4px auto;border:1px solid rgba(74,158,255,0.08);background:rgba(74,158,255,0.03);color:rgba(180,210,255,0.25);cursor:default;transition:all 0.2s}}
-    .challenge-day.done{{background:rgba(74,158,255,0.12);border-color:rgba(74,158,255,0.4);color:{accent};box-shadow:0 0 10px rgba(74,158,255,0.15)}}
-    .challenge-day.today{{background:rgba(74,158,255,0.18);border-color:{accent};color:#fff;animation:pulse-blue 2s infinite;box-shadow:0 0 16px rgba(74,158,255,0.3)}}
-    .challenge-day.locked{{opacity:0.2}}
-    .challenge-day.clickable{{cursor:pointer;border-color:rgba(74,158,255,0.2);color:rgba(180,210,255,0.5)}}
-    .challenge-day.clickable:hover{{background:rgba(74,158,255,0.1);border-color:rgba(74,158,255,0.45);color:{accent};box-shadow:0 0 10px rgba(74,158,255,0.2)}}
-    .challenge-label{{font-size:9px;text-align:center;margin-top:2px;color:rgba(180,210,255,0.25);font-weight:500;letter-spacing:0.03em}}
-    .challenge-label.today-label{{color:{accent};font-weight:700}}
+    .challenge-day{{width:52px;height:52px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;margin:0 auto 6px auto;border:1px solid rgba(74,158,255,0.1);background:rgba(74,158,255,0.03);color:rgba(180,210,255,0.3);cursor:default;transition:all 0.2s}}
+    .challenge-day.done{{background:rgba(0,232,122,0.08);border-color:rgba(0,232,122,0.35);color:#00e87a;box-shadow:0 0 12px rgba(0,232,122,0.15)}}
+    .challenge-day.today{{background:linear-gradient(135deg,rgba(74,158,255,0.25),rgba(26,95,212,0.15));border:2px solid {accent};color:#fff;animation:pulse-blue 2s infinite;box-shadow:0 0 20px rgba(74,158,255,0.4);font-size:17px}}
+    .challenge-day.locked{{opacity:0.25}}
+    .challenge-day.clickable{{cursor:pointer;border-color:rgba(74,158,255,0.25);color:rgba(180,210,255,0.55)}}
+    .challenge-day.clickable:hover{{background:rgba(74,158,255,0.12);border-color:rgba(74,158,255,0.5);color:{accent};box-shadow:0 0 12px rgba(74,158,255,0.25);transform:translateY(-1px)}}
+    .challenge-label{{font-size:10px;text-align:center;margin-top:3px;color:rgba(180,210,255,0.35);font-weight:500;letter-spacing:0.04em}}
+    .challenge-label.today-label{{color:{accent};font-weight:700;font-size:11px}}
 
     @keyframes pulse-blue{{0%,100%{{box-shadow:0 0 12px rgba(74,158,255,0.3)}}50%{{box-shadow:0 0 24px rgba(74,158,255,0.6);border-color:rgba(74,158,255,0.9)}}}}
 
@@ -192,12 +198,18 @@ def inject_global_css(accent: str = "#4A9EFF"):
     .stat-num{{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;background:linear-gradient(135deg,#fff,{accent});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:4px}}
     .stat-label{{font-size:10px;color:rgba(180,210,255,0.38);letter-spacing:0.1em;text-transform:uppercase;font-weight:500}}
 
-    /* ── MOBILE SMALL SCREENS ── */
+    /* ── MOBILE SMALL PHONES (480px) ── */
     @media screen and (max-width:480px){{
-        .main .block-container{{padding-left:0.25rem!important;padding-right:0.25rem!important}}
-        .im-nav-tab{{font-size:10px!important;padding:5px 6px!important}}
-        .band-ring{{width:48px;height:48px;font-size:16px}}
-        .challenge-day{{width:32px;height:32px;font-size:10px;border-radius:6px}}
+        .main .block-container{{padding-left:0.5rem!important;padding-right:0.5rem!important}}
+        .band-ring{{width:52px;height:52px;font-size:17px}}
+        .challenge-day{{width:36px!important;height:36px!important;font-size:11px!important;border-radius:8px!important}}
+        .challenge-label{{font-size:7px!important}}
+        .hero-title{{font-size:22px!important}}
+        .stat-num{{font-size:22px!important}}
+        /* Make chat input larger on small phones */
+        [data-testid="stChatInput"]{{min-height:52px!important}}
+        /* Column padding on tiny screens */
+        [data-testid="column"]{{padding:0 4px!important}}
     }}
     </style>
 
