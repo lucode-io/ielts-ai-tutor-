@@ -1,10 +1,6 @@
 # ============================================================
-# ielts_master.py  —  GODMODE FIX v2 (April 19 2026)
-# FIXES:
-#   - Stray </div> no longer renders as literal text in nav
-#   - ?new=1 landing-page entry properly clears session + blocks auto-restore
-#   - Active nav tab uses button type="primary" (no HTML wrapper breakage)
-#   - Kept listening route + all existing gates (onboarding, mock_test)
+# ielts_master.py
+# Main entry point — Navigation router + top nav
 # ============================================================
 
 import streamlit as st
@@ -32,7 +28,6 @@ def init_state():
         "onboarding_step": 0,
         "diagnostic_messages": [],
         "show_settings_panel": False,
-        "_fresh_session_locked": False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -40,58 +35,27 @@ def init_state():
 
 init_state()
 
-# ── FRESH SESSION ENFORCEMENT (landing-page CTA ?new=1 or ?fresh=1) ──
-# This MUST run before auto-restore, otherwise Supabase will pull the old user back in.
-_params = st.query_params
-_is_fresh_request = _params.get("new") == "1" or _params.get("fresh") == "1"
-
-if _is_fresh_request and not st.session_state.get("_fresh_session_locked"):
-    # 1. Sign out Supabase (wipes local JWT storage)
+# ── PURGE STALE AUTH FROM CACHED CLIENT ──
+# On first load (no auth_user in session_state yet), force sign-out on the
+# cached Supabase client so we never inherit another user's token from the
+# shared client. This runs ONCE per browser session.
+if not st.session_state.get("_auth_purged"):
     try:
         from utils.database import get_supabase_client
-        _supabase = get_supabase_client()
-        _supabase.auth.sign_out()
+        _sb = get_supabase_client()
+        _sb.auth.sign_out()
     except Exception:
         pass
-
-    # 2. Wipe ALL session state keys
-    for _k in list(st.session_state.keys()):
-        del st.session_state[_k]
-
-    # 3. Re-init with defaults
-    init_state()
-
-    # 4. Lock so auto-restore below does NOT pull the old user back
-    st.session_state._fresh_session_locked = True
-    st.session_state.current_view = "auth"
-
-    # 5. Clear URL params and rerun clean
-    st.query_params.clear()
-    st.rerun()
+    st.session_state._auth_purged = True
 
 # ── CHECK AUTH ──
 if st.session_state.current_view == "auth" and st.session_state.get("auth_user"):
     st.session_state.current_view = "dashboard"
 
-# ── AUTO-RESTORE SESSION (skipped if fresh lock active) ──
-if (not st.session_state.get("_fresh_session_locked")
-    and not st.session_state.get("profile")
-    and not st.session_state.get("auth_user")):
-    try:
-        from utils.database import get_supabase_client, get_user_profile
-        supabase = get_supabase_client()
-        session = supabase.auth.get_session()
-        if session and session.user:
-            user_id = session.user.id
-            profile = get_user_profile(user_id)
-            if profile:
-                st.session_state.auth_user = session.user
-                st.session_state.user_id = user_id
-                st.session_state.profile = profile
-                if st.session_state.current_view == "auth":
-                    st.session_state.current_view = "dashboard"
-    except Exception:
-        pass
+# NOTE: Auto-restore session was REMOVED because @st.cache_resource makes the
+# Supabase client shared across all users on the server. Calling get_session()
+# would return the most recent user's session → logging in the wrong person.
+# Users must sign in each time — this is safer than cross-account leakage.
 
 # ── INJECT CSS ──
 accent = st.session_state.get("profile", {}).get("accent_color", "#4A9EFF") \
@@ -104,13 +68,13 @@ if st.session_state.current_view == "auth" or not st.session_state.get("profile"
     render_auth()
     st.stop()
 
-# ── ONBOARDING GATE ──
+# ── ONBOARDING GATE (skip nav for onboarding) ──
 if st.session_state.current_view == "onboarding":
     from modules.onboarding import render_onboarding
     render_onboarding()
     st.stop()
 
-# ── MOCK TEST GATE ──
+# ── MOCK TEST GATE (full-screen, no nav) ──
 if st.session_state.current_view == "mock_test":
     from modules.mock_test import render_mock_test
     render_mock_test()
@@ -122,17 +86,16 @@ name = profile.get("full_name", "Student").split()[0]
 streak = profile.get("streak_count", 0)
 current_view = st.session_state.current_view
 
-# ── NAV TABS ──
+# ── NAV TABS CONFIG ──
 nav_tabs = {
     "dashboard": ("🏠", "Dashboard"),
-    "practice":  ("🎯", "Practice"),
-    "listening": ("🎧", "Listening"),
-    "reports":   ("📊", "Reports"),
+    "practice": ("🎯", "Practice"),
+    "reports": ("📊", "Reports"),
     "challenge": ("🚀", "21-Day"),
-    "settings":  ("⚙️", "HQ"),
+    "settings": ("⚙️", "HQ"),
 }
 
-# ── HEADER ── (single markdown block — cannot leak stray tags)
+# Render header
 st.markdown(f"""
 <div class="im-top-nav">
     <div class="im-top-nav-left">
@@ -151,50 +114,308 @@ st.markdown(f"""
     </div>
     <div class="im-top-nav-right">
         <span class="im-user-badge">👋 {name}</span>
-        {f'<span class="im-streak-badge">🔥 {streak}</span>' if streak > 0 else ''}
+        <span class="im-streak-badge">🔥 {streak}</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── NAV TABS ── (NO HTML wrapper — active state via button type)
-tab_cols = st.columns(len(nav_tabs))
-for col, (view_key, (icon, label)) in zip(tab_cols, nav_tabs.items()):
-    is_active = current_view == view_key
-    with col:
-        if st.button(
-            f"{icon} {label}",
-            key=f"nav_{view_key}",
-            use_container_width=True,
-            type="primary" if is_active else "secondary",
-        ):
+# ── REAL STREAMLIT NAV BUTTONS (styled as tab bar) ──
+nav_cols = st.columns(len(nav_tabs))
+for i, (view_key, (icon, label)) in enumerate(nav_tabs.items()):
+    with nav_cols[i]:
+        is_active = current_view == view_key
+        # Style active tab differently
+        btn_type = "primary" if is_active else "secondary"
+        if st.button(f"{icon} {label}", key=f"nav_{view_key}", use_container_width=True, type=btn_type):
             st.session_state.current_view = view_key
+            st.session_state.show_settings_panel = False
             st.rerun()
+
+# ── INLINE SETTINGS PANEL ──
+if st.session_state.get("show_settings_panel"):
+    from modules.settings import LANGUAGES, ACCENT_OPTIONS
+    with st.container():
+        st.markdown(f"""
+        <div style="background:rgba(13,27,42,0.97);border:1px solid rgba(74,158,255,0.15);
+                    border-radius:20px;padding:20px;margin-bottom:16px;
+                    box-shadow:0 16px 48px rgba(0,0,0,0.5);">
+            <div style="font-size:13px;font-weight:700;color:{accent};
+                        letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px">
+                Quick Settings
+            </div>
+        """, unsafe_allow_html=True)
+
+        sc1, sc2, sc3, sc4 = st.columns(4)
+        with sc1:
+            tutor_name = st.text_input("Tutor Name", value=profile.get("tutor_name", "Alex"),
+                                       label_visibility="visible", key="qs_tutor")
+        with sc2:
+            lang = st.selectbox("Language", LANGUAGES,
+                                index=LANGUAGES.index(profile.get("response_language", "English"))
+                                      if profile.get("response_language") in LANGUAGES else 0,
+                                label_visibility="visible", key="qs_lang")
+        with sc3:
+            acc_label = st.selectbox("Accent", list(ACCENT_OPTIONS.keys()),
+                                     index=list(ACCENT_OPTIONS.values()).index(profile.get("accent_color", "#4A9EFF"))
+                                           if profile.get("accent_color") in ACCENT_OPTIONS.values() else 0,
+                                     label_visibility="visible", key="qs_accent")
+        with sc4:
+            st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+            if st.button("Save & Close", key="qs_save", use_container_width=True):
+                updates = {
+                    "tutor_name": tutor_name,
+                    "response_language": lang,
+                    "accent_color": ACCENT_OPTIONS[acc_label],
+                }
+                st.session_state.profile.update(updates)
+                if st.session_state.get("user_id") != "demo":
+                    from utils.database import update_user_profile
+                    update_user_profile(st.session_state.user_id, updates)
+                st.session_state.show_settings_panel = False
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-# ── ROUTE TO VIEW ──
+# ── ROUTER ──
 view = st.session_state.current_view
+
+# ── PAYWALL GATE ──────────────────────────────────────────────
+FREE_SESSION_LIMIT = 3  # 3 sessions per day for free users
+
+# Tier limits: sessions_per_day, calls_per_session
+TIER_LIMITS = {
+    "free":      {"sessions": 3,  "calls": 1},
+    "starter":   {"sessions": 5,  "calls": 3},
+    "pro":       {"sessions": 8,  "calls": 4},
+    "intensive": {"sessions": 10, "calls": 2},
+    "lifetime":  {"sessions": 6,  "calls": 2},
+}
+
+# PayPal/Gumroad payment URLs
+PAYPAL_URLS = {
+    "starter":   "https://mlogshir.gumroad.com/l/Starter",
+    "pro":       "https://mlogshir.gumroad.com/l/Pro",
+    "intensive": "https://mlogshir.gumroad.com/l/Intensive",
+    "lifetime":  "https://mlogshir.gumroad.com/l/Lifetime",
+}
+
+def _check_paywall(user_id, profile):
+    """Returns True if user is blocked by paywall. Shows 5-tier pricing wall."""
+    if user_id == "demo":
+        return False
+    sub = profile.get("subscription_status", "free")
+    if sub in ("lifetime", "pro", "starter", "intensive", "paid"):
+        return False
+
+    from utils.database import get_session_count
+    count = get_session_count(user_id)
+    st.session_state["_session_count"] = count
+
+    if count < FREE_SESSION_LIMIT:
+        remaining = FREE_SESSION_LIMIT - count
+        if remaining <= 2:
+            st.markdown(f"""
+            <div style="background:rgba(240,192,64,0.08);border:1px solid rgba(240,192,64,0.2);
+                        border-radius:12px;padding:12px 16px;margin-bottom:16px;
+                        display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                <div style="font-size:13px;color:#FCD34D">
+                    ⚡ <strong>{remaining} free session{'s' if remaining != 1 else ''} remaining</strong>
+                </div>
+                <div style="font-size:12px;color:rgba(180,210,255,0.45)">
+                    Upgrade for unlimited access
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        return False
+
+    # ── BLOCKED — 5-TIER PRICING WALL ──
+    st.markdown(f"""
+    <div style="text-align:center;padding:32px 20px 16px">
+        <div style="font-size:44px;margin-bottom:12px">🔒</div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;
+                    color:#f0f4ff;margin-bottom:8px">
+            Choose Your Plan
+        </div>
+        <div style="font-size:14px;color:rgba(180,210,255,0.5);line-height:1.7;margin-bottom:8px">
+            You've completed <strong style="color:#4A9EFF">{count} sessions</strong> — great progress!
+            Pick a plan to continue your IELTS journey.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Pricing cards
+    c1, c2, c3, c4 = st.columns(4)
+
+    # Starter
+    with c1:
+        st.markdown("""
+        <div style="background:rgba(74,158,255,0.04);border:1px solid rgba(74,158,255,0.12);
+                    border-radius:16px;padding:20px 16px;text-align:center;height:100%">
+            <div style="font-size:12px;color:rgba(180,210,255,0.5);text-transform:uppercase;
+                        letter-spacing:0.06em;margin-bottom:8px">Starter</div>
+            <div style="font-size:32px;font-weight:900;color:#38BDF8">$19</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.4);margin-bottom:12px">/month</div>
+            <div style="font-size:11px;color:rgba(180,210,255,0.45);line-height:1.8;text-align:left">
+                ✓ 5 sessions/day<br>
+                ✓ 3 AI calls/session<br>
+                ✓ Speaking + Writing<br>
+                ✓ Band scoring<br>
+                ✗ Listening + Reading<br>
+                ✗ 21-Day Challenge
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown(f'<a href="{PAYPAL_URLS["starter"]}" target="_blank" style="display:block;text-align:center;padding:10px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:9px;color:#38BDF8;font-weight:700;font-size:13px;text-decoration:none">Start — $19/mo</a>', unsafe_allow_html=True)
+
+    # Pro
+    with c2:
+        st.markdown("""
+        <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);
+                    border-radius:16px;padding:20px 16px;text-align:center;height:100%">
+            <div style="font-size:12px;color:#A78BFA;text-transform:uppercase;
+                        letter-spacing:0.06em;margin-bottom:8px">Pro</div>
+            <div style="font-size:32px;font-weight:900;color:#A78BFA">$29</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.4);margin-bottom:12px">/month</div>
+            <div style="font-size:11px;color:rgba(180,210,255,0.45);line-height:1.8;text-align:left">
+                ✓ 8 sessions/day<br>
+                ✓ 4 AI calls/session<br>
+                ✓ All 4 IELTS skills<br>
+                ✓ 3-color annotation<br>
+                ✓ Fluency gap analysis<br>
+                ✓ 21-Day Challenge
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown(f'<a href="{PAYPAL_URLS["pro"]}" target="_blank" style="display:block;text-align:center;padding:10px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:9px;color:#A78BFA;font-weight:700;font-size:13px;text-decoration:none">Go Pro — $29/mo</a>', unsafe_allow_html=True)
+
+    # Intensive
+    with c3:
+        st.markdown("""
+        <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);
+                    border-radius:16px;padding:20px 16px;text-align:center;height:100%">
+            <div style="font-size:12px;color:#34D399;text-transform:uppercase;
+                        letter-spacing:0.06em;margin-bottom:8px">Intensive</div>
+            <div style="font-size:32px;font-weight:900;color:#34D399">$79</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.4);margin-bottom:12px">one-time · 60 days</div>
+            <div style="font-size:11px;color:rgba(180,210,255,0.45);line-height:1.8;text-align:left">
+                ✓ 10 sessions/day<br>
+                ✓ 2 AI calls/session<br>
+                ✓ All 4 IELTS skills<br>
+                ✓ 3-color annotation<br>
+                ✓ Fluency gap analysis<br>
+                ✓ 21-Day Challenge
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown(f'<a href="{PAYPAL_URLS["intensive"]}" target="_blank" style="display:block;text-align:center;padding:10px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:9px;color:#34D399;font-weight:700;font-size:13px;text-decoration:none">Intensive — $79</a>', unsafe_allow_html=True)
+
+    # Lifetime (highlighted)
+    with c4:
+        st.markdown("""
+        <div style="background:rgba(240,192,64,0.06);border:2px solid rgba(240,192,64,0.3);
+                    border-radius:16px;padding:20px 16px;text-align:center;height:100%;position:relative">
+            <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+                        background:linear-gradient(135deg,#F0C040,#e6a817);color:#01010a;
+                        font-size:10px;font-weight:800;padding:3px 12px;border-radius:20px;
+                        letter-spacing:0.06em;text-transform:uppercase">Best Value</div>
+            <div style="font-size:12px;color:#F0C040;text-transform:uppercase;
+                        letter-spacing:0.06em;margin-bottom:8px;margin-top:4px">Lifetime</div>
+            <div style="font-size:32px;font-weight:900;color:#F0C040">$199</div>
+            <div style="font-size:12px;color:rgba(180,210,255,0.4);margin-bottom:4px">one-time · forever</div>
+            <div style="font-size:11px;color:rgba(240,192,64,0.6);margin-bottom:12px">
+                <s style="color:rgba(180,210,255,0.3)">$348/yr</s> save 43%
+            </div>
+            <div style="font-size:11px;color:rgba(180,210,255,0.45);line-height:1.8;text-align:left">
+                ✓ 6 sessions/day<br>
+                ✓ 2 AI calls/session<br>
+                ✓ All 4 IELTS skills<br>
+                ✓ All future updates<br>
+                ✓ Priority support<br>
+                ✓ Gold certificate
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
+        st.markdown(f'<a href="{PAYPAL_URLS["lifetime"]}" target="_blank" style="display:block;text-align:center;padding:12px;background:linear-gradient(135deg,#F0C040,#e6a817);border:none;border-radius:9px;color:#01010a;font-weight:800;font-size:14px;text-decoration:none">🏆 Lifetime — $199</a>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+    rpt_col, set_col, _ = st.columns([1, 1, 2])
+    with rpt_col:
+        if st.button("📊 View my reports", key="paywall_reports"):
+            st.session_state.current_view = "reports"
+            st.rerun()
+    with set_col:
+        if st.button("⚙️ Settings", key="paywall_settings"):
+            st.session_state.current_view = "settings"
+            st.rerun()
+
+    return True  # Blocked
 
 if view == "dashboard":
     from modules.dashboard import render_dashboard
     render_dashboard()
+
 elif view == "practice":
-    from modules.practice import render_practice
-    render_practice()
-elif view == "listening":
-    from modules.practice_listening import render_listening_practice
-    render_listening_practice()
+    if not _check_paywall(st.session_state.get("user_id", "demo"), profile):
+        from modules.practice import render_practice
+        render_practice()
+
 elif view == "reports":
     from modules.reports import render_reports
     render_reports()
+
 elif view == "challenge":
-    from modules.challenge import render_challenge
-    render_challenge()
+    if not _check_paywall(st.session_state.get("user_id", "demo"), profile):
+        from modules.challenge import render_challenge
+        render_challenge()
+
 elif view == "settings":
     from modules.settings import render_settings
     render_settings()
-elif view == "mock_test":
-    from modules.mock_test import render_mock_test
-    render_mock_test()
+
+elif view == "listening":
+    if not _check_paywall(st.session_state.get("user_id", "demo"), profile):
+        from modules.practice_listening import render_listening_practice
+        render_listening_practice()
+
+elif view == "privacy":
+    st.markdown("""
+    <div style="max-width:700px;margin:0 auto;padding:20px">
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#f0f4ff;margin-bottom:20px">Privacy Policy & Terms of Service</div>
+        <div style="font-size:14px;color:rgba(180,210,255,0.7);line-height:1.8">
+            <p><strong style="color:#4A9EFF">IELTS Master</strong> — ieltsmaster.org</p>
+            <p><strong>Last updated:</strong> April 12, 2026</p>
+            <br>
+            <p><strong style="color:#f0f4ff">1. What we collect</strong></p>
+            <p>Email address, name, practice session data (essays, speaking responses, band scores), and payment information processed by Gumroad/PayPal.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">2. How we use it</strong></p>
+            <p>Your data powers AI-driven IELTS feedback, tracks your progress, and manages your subscription. We never sell your data to third parties.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">3. AI processing</strong></p>
+            <p>Your essays and speaking responses are sent to Anthropic's Claude API for scoring and feedback. Anthropic does not store or train on your data.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">4. Payments</strong></p>
+            <p>Payments are processed by Gumroad and PayPal. We do not store credit card numbers. All transactions are in USD.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">5. Data retention</strong></p>
+            <p>Your account data is retained as long as your account is active. You may request deletion by emailing mlogshir@gmail.com.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">6. Refund policy</strong></p>
+            <p>30-day money-back guarantee on all plans. Email mlogshir@gmail.com with your receipt for a full refund.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">7. Terms of service</strong></p>
+            <p>By using IELTS Master, you agree to use the platform for personal IELTS preparation only. Sharing accounts, reselling access, or using the platform for automated scraping is prohibited.</p>
+            <br>
+            <p><strong style="color:#f0f4ff">8. Contact</strong></p>
+            <p>Email: mlogshir@gmail.com | Website: ieltsmaster.org</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 else:
     st.error(f"Unknown view: {view}")
+    st.session_state.current_view = "dashboard"
+    st.rerun()

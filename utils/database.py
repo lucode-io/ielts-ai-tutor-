@@ -59,6 +59,11 @@ def sign_out():
         supabase.auth.sign_out()
     except Exception:
         pass
+    # Clear the cache so next user gets a fresh client with no auth state
+    try:
+        get_supabase_client.clear()
+    except Exception:
+        pass
 
 
 def get_current_user():
